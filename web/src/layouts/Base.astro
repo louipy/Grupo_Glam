@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+import HeroNav from '../components/HeroNav.astro';
+import Footer from '../components/Footer.astro';
+import WhatsAppFab from '../components/WhatsAppFab.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  // La home usa el hero a pantalla completa con su propia navbar integrada,
+  // así que ahí ocultamos el header estándar para no duplicar la navegación.
+  showHeader?: boolean;
+}
+const {
+  title = 'Grupo Glam Inmobiliaria — Bienes raíces de alta gama en Caracas',
+  description = 'Catálogo curado de inmuebles de alta gama en las mejores urbanizaciones de Caracas. Venta y alquiler con asesoría integral.',
+  showHeader = true,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0B0A11" />
+  </head>
+  <body class="min-h-screen flex flex-col">
+    {showHeader && <HeroNav variant="solid" />}
+    <main class="flex-1 gg-main">
+      <slot />
+    </main>
+    <Footer />
+    <WhatsAppFab />
+  </body>
+</html>
+
+<style>
+  /* Lámina de contenido: opaca y por encima del footer (z-index) para que lo cubra por
+     completo mientras se scrollea. Al llegar al fondo, esta lámina "se levanta" y revela el
+     footer sticky que siempre estuvo detrás (mismo efecto que el scroll-over del hero).
+     La sombra inferior tintada vende la sensación de capa que se despega. */
+  .gg-main {
+    position: relative;
+    z-index: 1;
+    background: var(--color-lino);
+    box-shadow: 0 34px 60px -30px color-mix(in srgb, var(--color-tinta) 55%, transparent);
+  }
+</style>

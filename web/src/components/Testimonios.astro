@@ -1,0 +1,395 @@
+---
+// TESTIMONIOS · prueba social sobre la MISMA lámina de lino que "Aliados comerciales".
+// Estructura inspirada en la referencia DESIGN/HOMEPAGE/REVIEWS (título + reputación de
+// Google + carrusel de tarjetas-foto con nombre y cita), pero RE-DISEÑADA con nuestros
+// tokens (lino/tinta/bronce, Montserrat, hairlines) — no el estilo de la captura.
+// Layout: riel izquierdo con el logo de Google (monocromo) + estrellas doradas (4,5/5);
+// a su derecha, el carrusel de testimonios con placeholders de foto.
+
+const reputacion = {
+  rating: '4,5',
+  total: 273,               // PLACEHOLDER: total real del perfil de Google Business
+  href: 'https://www.google.com/maps', // PLACEHOLDER: URL pública de reseñas
+};
+
+// PLACEHOLDER: reseñas reales (nombre + zona + cita). Se muestran como tarjetas del carrusel.
+const testimonios = [
+  {
+    name: 'María Alejandra B.',
+    context: 'Los Palos Grandes',
+    quote: 'Llevábamos más de un año con el apartamento publicado sin una sola oferta seria. Grupo Glam lo vendió en menos de tres meses, y por encima del precio que esperábamos.',
+  },
+  {
+    name: 'Ricardo Estévez',
+    context: 'La Castellana',
+    quote: 'El acompañamiento fue impecable de principio a fin. Cada visita llegaba precalificada; no perdimos tiempo con curiosos.',
+  },
+  {
+    name: 'Carolina Machado',
+    context: 'Altamira',
+    quote: 'Compramos desde el exterior confiando en sus videos y su asesoría. La propiedad resultó tal cual la mostraron.',
+  },
+];
+
+// Estrella (24×24). Cinco adyacentes en un viewBox 120×24 → recortar al 90% = 4,5 de 5.
+const starPath = 'M12 1 L14.47 8.6 L22.46 8.6 L16 13.3 L18.47 20.9 L12 16.2 L5.53 20.9 L8 13.3 L1.54 8.6 L9.53 8.6 Z';
+const starsX = [0, 24, 48, 72, 96];
+---
+<section class="tst bg-[var(--color-lino)]" aria-labelledby="tst-title">
+  <div class="tst-wrap">
+    <header class="tst-head">
+      <h2 id="tst-title" class="tst-title">Lo que dicen quienes ya confiaron</h2>
+    </header>
+
+    <div class="tst-grid">
+      <!-- Riel izquierdo: reputación de Google (logo monocromo + estrellas doradas 4,5/5) -->
+      <div class="tst-review">
+        <div class="tst-review-rep">
+        <a
+          class="tst-review-link"
+          href={reputacion.href}
+          target="_blank"
+          rel="noopener"
+          aria-label="Ver nuestras reseñas en Google"
+        >
+          <svg class="tst-review-logo" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.88c2.27-2.09 3.58-5.17 3.58-8.81z"/>
+            <path d="M12 24c3.24 0 5.96-1.08 7.94-2.92l-3.88-3c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.71-4.95H1.28v3.09A12 12 0 0 0 12 24z"/>
+            <path d="M5.29 14.28a7.2 7.2 0 0 1 0-4.56V6.63H1.28a12 12 0 0 0 0 10.74z"/>
+            <path d="M12 4.75c1.76 0 3.34.6 4.58 1.79l3.44-3.44C17.95 1.16 15.24 0 12 0A12 12 0 0 0 1.28 6.63l4.01 3.09C6.23 6.86 8.88 4.75 12 4.75z"/>
+          </svg>
+        </a>
+
+        <span class="tst-stars" role="img" aria-label={`Calificación ${reputacion.rating} de 5 estrellas en Google`}>
+          <svg class="tst-stars-svg tst-stars-base" viewBox="0 0 120 24" aria-hidden="true">
+            {starsX.map((x) => (<path transform={`translate(${x})`} d={starPath} />))}
+          </svg>
+          <svg class="tst-stars-svg tst-stars-fill" viewBox="0 0 120 24" aria-hidden="true">
+            {starsX.map((x) => (<path transform={`translate(${x})`} d={starPath} />))}
+          </svg>
+        </span>
+
+        <p class="tst-review-note">{reputacion.rating} · {reputacion.total} reseñas en Google</p>
+        </div>
+
+        <a
+          class="tst-review-cta"
+          href={reputacion.href}
+          target="_blank"
+          rel="noopener"
+        >Déjame tu reseña</a>
+      </div>
+
+      <!-- Derecha: carrusel de testimonios (placeholders de foto + cita) -->
+      <div class="tst-carousel">
+        <div
+          class="tst-track"
+          role="list"
+          tabindex="0"
+          aria-label="Testimonios de clientes. Usa las flechas o desplázate para navegar."
+        >
+          {testimonios.map((t) => (
+            <article class="tst-card" role="listitem">
+              <div class="tst-card-ph" aria-hidden="true">
+                <svg viewBox="0 0 24 24" class="tst-card-ph-icon">
+                  <rect x="3" y="5" width="18" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                  <circle cx="8.5" cy="10" r="1.5" fill="currentColor"/>
+                  <path d="M5 17l4-4 3 2.5 3-3.5 4 5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                </svg>
+                <span>Fotografía del cliente</span>
+              </div>
+              <div class="tst-card-overlay">
+                <span class="tst-card-tag">{t.name} · {t.context}</span>
+                <p class="tst-card-quote">{`“${t.quote}”`}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .tst {
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    color: var(--color-tinta);
+    /* El cuerpo va full-bleed (como Aliados): clip evita cualquier scroll horizontal. */
+    overflow-x: clip;
+  }
+  .tst-wrap {
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: clamp(20px, 5vw, 24px);
+    padding-block: clamp(56px, 8vw, 104px) clamp(72px, 10vw, 128px);
+    /* Filete superior fino: separa esta lámina de "Aliados" sin romper la continuidad
+       del lino (lenguaje de hairlines de la marca). */
+    border-top: 1px solid color-mix(in srgb, var(--color-bronce) 22%, transparent);
+  }
+
+  .tst-head { margin-bottom: clamp(40px, 5.5vw, 76px); }
+  /* En VERSALES, conservando exactamente el mismo espacio/envoltura de antes (varias líneas):
+     en una sola línea se veía raro. */
+  .tst-title {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    line-height: 1.12;
+    letter-spacing: .01em;
+    text-transform: uppercase;
+    color: var(--color-tinta);
+    max-width: 22ch;
+  }
+
+  /* Rejilla: riel izquierdo (reputación Google) + carrusel a la derecha.
+     Full-bleed idéntico a "Aliados comerciales": rompe el contenedor de 1280 y usa los
+     laterales de la página hasta el ancho del viewport, SIN alterar el tamaño de la web. */
+  .tst-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(32px, 4vw, 56px);
+    align-items: start;
+    margin: 0 calc(50% - 50vw);
+    padding: 0 clamp(16px, 2.4vw, 44px);
+  }
+  @media (min-width: 900px) {
+    /* Col. izquierda = toda la banda libre; col. derecha = el placeholder (tope 1120).
+       column-gap 0 hace que el borde derecho de la banda coincida con el placeholder,
+       así centrar el contenido de la banda = centrarlo entre el margen y el placeholder. */
+    .tst-grid {
+      grid-template-columns: 1fr minmax(0, 1120px);
+      column-gap: 0;
+    }
+  }
+
+  /* El titular conserva su alineación de margen con "Quiénes somos" (no va full-bleed),
+     pero se recuesta un poco más a la izquierda en pantallas anchas. */
+  .tst-head { margin-left: clamp(-180px, calc((1280px - 100vw) / 2), 0px); }
+
+  /* ---- Riel: logo de Google + estrellas ---- */
+  /* Estira el riel a lo alto de la fila y empuja su contenido al fondo, de modo que la base
+     del logo/estrellas quede a la misma altura que la parte inferior del placeholder. */
+  .tst-review {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: stretch;
+    justify-content: flex-end;
+    /* Separación pedida: sube el bloque logo+estrellas ~2 cm y deja el botón debajo. */
+    gap: 2cm;
+  }
+  /* Agrupa logo + estrellas + nota para moverlos como una unidad, sin alterar su spacing. */
+  .tst-review-rep {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .tst-review-link {
+    display: inline-flex;
+    /* Negro pleno desde el inicio: sin animación de color, solo movimiento (GPU). */
+    transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tst-review-link:hover { transform: scale(1.08); }
+    .tst-review-link:active { transform: scale(1.03); }
+  }
+  .tst-review-link:focus-visible { outline: 2px solid var(--color-bronce); outline-offset: 8px; border-radius: 4px; }
+  @media (prefers-reduced-motion: reduce) {
+    .tst-review-link { transition: none; }
+    .tst-review-link:hover,
+    .tst-review-link:active { transform: none; }
+  }
+  .tst-review-logo {
+    display: block;
+    width: auto;
+    height: clamp(84px, 10vw, 140px);
+  }
+  /* Monocromo tinta (negro), como el muro de aliados: sobrescribe los fills de marca. */
+  .tst-review-logo path { fill: var(--color-tinta); }
+
+  /* Estrellas (4,5/5) con el amarillo real de Google; vacías en gris claro (como reseñas). */
+  .tst-stars {
+    --rating: 90%;
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+    margin-top: clamp(14px, 1.4vw, 20px);
+  }
+  .tst-stars-svg { display: block; height: clamp(20px, 2vw, 26px); width: auto; }
+  .tst-stars-base { color: #DADCE0; fill: currentColor; }
+  .tst-stars-fill {
+    position: absolute;
+    inset: 0;
+    color: #FBBC04;
+    fill: currentColor;
+    clip-path: inset(0 calc(100% - var(--rating)) 0 0);
+  }
+  .tst-review-note {
+    margin: clamp(12px, 1.2vw, 16px) 0 0;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    color: var(--color-humo);
+  }
+
+  /* CTA "Déjame tu reseña": botón hairline que se rellena de bronce en hover.
+     Animación sutil y limpia (color + leve elevación); feedback físico al presionar. */
+  .tst-review-cta {
+    display: inline-flex;
+    align-items: center;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .04em;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--color-tinta);
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--color-bronce) 52%, transparent);
+    border-radius: 2px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition:
+      background-color 240ms cubic-bezier(0.23, 1, 0.32, 1),
+      border-color 240ms cubic-bezier(0.23, 1, 0.32, 1),
+      transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tst-review-cta:hover {
+      background: var(--color-bronce);
+      border-color: var(--color-bronce);
+      transform: translateY(-1px);
+    }
+  }
+  .tst-review-cta:active { transform: translateY(0) scale(0.98); }
+  .tst-review-cta:focus-visible { outline: 2px solid var(--color-bronce); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    .tst-review-cta {
+      transition: background-color 240ms ease, border-color 240ms ease;
+    }
+    .tst-review-cta:hover,
+    .tst-review-cta:active { transform: none; }
+  }
+
+  /* ---- Carrusel de testimonios ---- */
+  /* Ancho acotado + empujado a la derecha de la sección: el placeholder es más pequeño y
+     muestra UNA sola imagen a la vez (la tarjeta llena el 100% de este carril, sin que
+     asomen las vecinas). */
+  .tst-carousel { position: relative; min-width: 0; width: 100%; }
+  .tst-track {
+    display: flex;
+    gap: clamp(16px, 1.6vw, 24px);
+    overflow-x: auto;
+    /* Proximity (no mandatory): el rueda→horizontal desliza libre y atado al scroll, y al
+       soltar asienta suave en la tarjeta más cercana sin pelear con el desplazamiento. */
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    /* Aire lateral para que asome la tarjeta vecina sin recortarse contra los bordes. */
+    padding-inline: 2px;
+    padding-bottom: 2px;
+  }
+  .tst-track::-webkit-scrollbar { display: none; }
+  /* Foco de teclado: reemplaza el acceso que daban las flechas (←/→ desplazan el carril). */
+  .tst-track:focus-visible {
+    outline: 2px solid var(--color-bronce);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+
+  .tst-card {
+    position: relative;
+    /* Una sola foto por vista: la tarjeta llena el 100% del carril (ya acotado y alineado a
+       la derecha), así se muestra una imagen a la vez y las flechas pasan de una a otra. */
+    flex: 0 0 100%;
+    aspect-ratio: 16 / 9;
+    scroll-snap-align: center;
+    border-radius: 3px;
+    overflow: hidden;
+    isolation: isolate;
+    /* Placeholder de foto: degradado oscuro (mimetiza un retrato) hasta cargar las reales. */
+    background: linear-gradient(158deg, #2b2732 0%, #16131c 100%);
+  }
+  .tst-card-ph {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 10px;
+    color: color-mix(in srgb, var(--color-lino) 28%, transparent);
+    text-align: center;
+    padding: 20px;
+  }
+  .tst-card-ph-icon { width: 38px; height: 38px; }
+  .tst-card-ph span { font-size: 11.5px; letter-spacing: .06em; }
+
+  .tst-card-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    padding: clamp(16px, 2vw, 26px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(10px, 1.2vw, 14px);
+    background: linear-gradient(
+      to top,
+      color-mix(in srgb, var(--color-tinta) 90%, transparent) 0%,
+      color-mix(in srgb, var(--color-tinta) 42%, transparent) 54%,
+      transparent 100%
+    );
+  }
+  /* Nombre + zona: sin recuadro, en versalitas doradas (bronce) sobre el degradado oscuro. */
+  .tst-card-tag {
+    font-weight: 600;
+    font-size: 11.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--color-bronce);
+  }
+  .tst-card-quote {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(1rem, 1.15vw, 1.15rem);
+    line-height: 1.5;
+    color: var(--color-lino);
+    text-wrap: pretty;
+  }
+
+  /* Movimiento reducido: sin asentamiento suave (el desplazamiento sigue siendo del usuario). */
+  @media (prefers-reduced-motion: reduce) {
+    .tst-track { scroll-behavior: auto; }
+  }
+</style>
+
+<script>
+  // Rueda/scroll dentro del placeholder → desplazamiento horizontal del carril, atado 1:1
+  // al gesto del usuario (sin autoplay, sin inercia añadida). En los extremos soltamos el
+  // scroll para que la página siga corriendo con normalidad (no atrapamos al usuario).
+  document.querySelectorAll<HTMLElement>('.tst-track').forEach((track) => {
+    track.addEventListener(
+      'wheel',
+      (e) => {
+        // El gesto horizontal nativo (trackpad) ya funciona: no lo tocamos.
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+        const max = track.scrollWidth - track.clientWidth;
+        if (max <= 0) return; // nada que desplazar
+
+        const atStart = track.scrollLeft <= 0;
+        const atEnd = track.scrollLeft >= max - 1;
+        const forward = e.deltaY > 0;
+
+        // Borde alcanzado en la dirección del gesto → dejar pasar el scroll a la página.
+        if ((forward && atEnd) || (!forward && atStart)) return;
+
+        e.preventDefault();
+        track.scrollLeft += e.deltaY;
+      },
+      { passive: false },
+    );
+  });
+</script>

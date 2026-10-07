@@ -1,0 +1,181 @@
+---
+import type { PropiedadDemo } from '../data/propiedades.sample';
+import { precioES } from '../lib/formato';
+
+interface Props {
+  p: PropiedadDemo;
+  /** Nombre base del asset en /public/destacados (sin sufijo de ancho ni extensión). */
+  img?: string;
+  alt?: string;
+  /** Índice para el escalonado de entrada (stagger). */
+  i?: number;
+}
+const { p, img, alt, i = 0 } = Astro.props;
+
+// Tarjeta del catálogo de propiedades (integración del diseño DESIGN/PROPIEDADES).
+// Imagen 4:3, título "Calle | Zona", precio y specs. Sin caja: imagen + texto sobre el
+// lino, con hover editorial (lift + zoom + subrayado dorado). La tarjeta completa es enlace.
+const slug = `${p.operacion}-${p.tipo}-${p.zonaSlug}-${p.ref.toLowerCase()}`;
+
+const sizes = '(min-width: 1080px) 42vw, (min-width: 560px) 46vw, 92vw';
+const srcset = (ext: string) =>
+  `/destacados/${img}-640.${ext} 640w, /destacados/${img}-1280.${ext} 1280w`;
+
+// Specs del catálogo: "4 Hab | 5 Baños | 420 m²" (§6.2: null/0 → no se renderiza).
+const specs = [
+  p.habitaciones ? `${p.habitaciones} Hab` : null,
+  p.banos ? `${p.banos} Baños` : null,
+  p.area ? `${p.area} m²` : null,
+].filter(Boolean).join('  |  ');
+
+// Texto para el buscador (calle + zona + ref, en minúscula).
+const buscable = `${p.calle ?? ''} ${p.zona} ${p.ref}`.toLowerCase();
+---
+<a
+  class="cc-card"
+  href={`/propiedad/${slug}`}
+  style={`--delay:${(i * 0.07).toFixed(2)}s`}
+  data-card
+  data-i={i}
+  data-ref={p.ref}
+  data-operacion={p.operacion}
+  data-tipo={p.tipo}
+  data-hab={p.habitaciones ?? 0}
+  data-precio={p.aConsultar || p.precio === null ? '' : p.precio}
+  data-text={buscable}
+>
+  <div class="cc-media">
+    {img ? (
+      <picture>
+        <source type="image/avif" srcset={srcset('avif')} sizes={sizes} />
+        <source type="image/webp" srcset={srcset('webp')} sizes={sizes} />
+        <img
+          class="cc-img"
+          src={`/destacados/${img}-1280.jpg`}
+          srcset={srcset('jpg')}
+          sizes={sizes}
+          width="1280"
+          height="960"
+          alt={alt ?? `Propiedad en ${p.zona}`}
+          loading="lazy"
+          decoding="async"
+        />
+      </picture>
+    ) : (
+      <div class="cc-ph cc-img" style={`background:${p.tono}`}>
+        <span class="cc-pending">Imagen pendiente</span>
+      </div>
+    )}
+  </div>
+
+  <div class="cc-info">
+    <h3 class="cc-name">
+      <span class="cc-name-txt">{p.calle ?? p.titulo}<span class="cc-sep" aria-hidden="true">|</span>{p.zona}</span>
+    </h3>
+    <p class="cc-price">{precioES(p.precio, p.aConsultar)}</p>
+    {specs && <p class="cc-specs">{specs}</p>}
+  </div>
+</a>
+
+<style>
+  .cc-card {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    will-change: transform;
+    transition: transform .55s var(--ease-editorial, cubic-bezier(.2, 0, 0, 1)),
+                box-shadow .55s ease;
+  }
+  .cc-card:focus-visible { outline: 2px solid var(--color-bronce); outline-offset: 4px; }
+
+  .cc-media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #EEEAE1;
+    border-radius: 2px;
+  }
+  .cc-media picture { display: block; width: 100%; height: 100%; }
+  .cc-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .95s var(--ease-editorial, cubic-bezier(.2, 0, 0, 1));
+  }
+  .cc-ph { display: grid; place-items: start center; }
+  .cc-pending {
+    margin-top: 16px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(246, 243, 236, .32);
+  }
+
+  .cc-info { padding-top: clamp(13px, 1.1vw, 17px); }
+  .cc-name {
+    margin: 0;
+    font-weight: 500;
+    font-size: clamp(1.1rem, 1.35vw, 1.32rem);
+    line-height: 1.16;
+    letter-spacing: .005em;
+    color: var(--color-tinta);
+  }
+  /* Subrayado dorado que aparece en hover (sombra interior, sin reflow). */
+  .cc-name-txt {
+    display: inline;
+    box-shadow: inset 0 -1px 0 rgba(201, 164, 106, 0);
+    transition: box-shadow .4s ease;
+  }
+  .cc-sep {
+    font-weight: 300;
+    color: var(--color-humo);
+    padding: 0 .42em;
+  }
+  .cc-price {
+    margin: 8px 0 0;
+    font-weight: 400;
+    font-size: clamp(.98rem, 1.1vw, 1.1rem);
+    letter-spacing: .01em;
+    color: var(--color-grafito);
+  }
+  .cc-specs {
+    margin: 7px 0 0;
+    font-weight: 400;
+    font-size: 12.5px;
+    letter-spacing: .04em;
+    color: var(--color-humo);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Entrada escalonada al cargar. */
+  @media (prefers-reduced-motion: no-preference) {
+    .cc-card {
+      opacity: 0;
+      animation: cc-rise .85s var(--ease-editorial, cubic-bezier(.2, 0, 0, 1)) both;
+      animation-delay: var(--delay);
+    }
+  }
+  @keyframes cc-rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Hover: solo con puntero fino y sin reducción de movimiento (transform = motion). */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .cc-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 26px 50px -28px rgba(20, 16, 28, .42);
+    }
+    .cc-card:hover .cc-img { transform: scale(1.055); }
+    .cc-card:hover .cc-name-txt { box-shadow: inset 0 -1px 0 rgba(201, 164, 106, .9); }
+  }
+
+  /* Estado oculto por filtros (lo aplica el script del catálogo). */
+  .cc-card[hidden] { display: none; }
+</style>

@@ -1,0 +1,203 @@
+---
+import type { PropiedadDemo } from '../data/propiedades.sample';
+import { precioES } from '../lib/formato';
+
+interface Props {
+  p: PropiedadDemo;
+  /** Nombre base del asset en /public/<dir> (sin sufijo de ancho ni extensión) */
+  img?: string;
+  alt?: string;
+  /** Encuadre del recorte cover (por si una foto necesita afinar el centro) */
+  pos?: string;
+  /** Carpeta del asset dentro de /public (las miniaturas de la home viven en
+      destacados/home, separadas de las fotos de hero en destacados/). */
+  dir?: string;
+  /** Foto apaisada (16:9) cuyo recorte vertical en esta tarjeta portrait la amplía mucho y la
+      vuelve borrosa en retina. Usa las mismas variantes reescaladas en alta calidad del hero
+      de detalle (hasta 2560/3840 en /destacados) y pide una resolución acorde a esa
+      ampliación del cover (sizes ~2× el ancho de columna). */
+  hiRes?: boolean;
+}
+const { p, img, alt, pos = 'center', dir = 'destacados', hiRes = false } = Astro.props;
+
+// Tarjeta destacada · diseño §Homepage/Inmuebles destacados. Foto vertical con velo degradado
+// y datos centrados abajo: zona, filete dorado, specs y precio. Tipografía Montserrat (navbar).
+// La tarjeta es enlace completo. La foto se sirve con <picture> responsive (AVIF/WebP/JPEG,
+// pre-optimizadas en /public/destacados); si aún no hay imagen, cae al placeholder de marca.
+const slug = `${p.operacion}-${p.tipo}-${p.zonaSlug}-${p.ref.toLowerCase()}`;
+
+// En hiRes se añaden las variantes grandes (1920/2560/3840) y el `sizes` se declara por el ancho
+// REALMENTE renderizado: el cover de una foto apaisada recorta una franja vertical, así que el
+// ancho mostrado = alto de la tarjeta × 16/9. Ese alto es un clamp(500–660px) casi constante,
+// luego el ancho pedido ronda 890–1173px independientemente del viewport (no del ancho de
+// columna). Así la tarjeta no amplía el 1280 y deja de verse borrosa, sin sobre-pedir en móvil.
+const widths = hiRes ? [640, 1280, 1920, 2560, 3840] : [640, 1280];
+const sizes = hiRes
+  ? '(min-width: 1024px) 1200px, 850px'
+  : '(min-width: 1024px) 25vw, (min-width: 640px) 46vw, 92vw';
+const srcset = (ext: string) =>
+  widths.map((w) => `/${dir}/${img}-${w}.${ext} ${w}w`).join(', ');
+
+// Specs breves para el overlay (§6.2: null/0 → no se renderiza; nunca "0 hab")
+const specs = [
+  p.habitaciones ? `${p.habitaciones} Hab` : null,
+  p.banos ? `${p.banos} Baños` : null,
+  p.puestos ? `${p.puestos} Est` : null,
+].filter(Boolean).join(' · ');
+---
+<a href={`/propiedad/${slug}`} class="fcard">
+  <div class="fcard-media" style={`--pos:${pos}`}>
+    {img ? (
+      <picture>
+        <source type="image/avif" srcset={srcset('avif')} sizes={sizes} />
+        <source type="image/webp" srcset={srcset('webp')} sizes={sizes} />
+        <img
+          src={`/${dir}/${img}-1280.jpg`}
+          srcset={srcset('jpg')}
+          sizes={sizes}
+          width="1280"
+          height="1828"
+          alt={alt ?? `Propiedad en ${p.zona}`}
+          loading="lazy"
+          decoding="async"
+        />
+      </picture>
+    ) : (
+      <div class="fcard-ph" style={`background:${p.tono}`}>
+        <span class="fcard-pending">Imagen pendiente</span>
+      </div>
+    )}
+  </div>
+
+  <div class="fcard-scrim" aria-hidden="true"></div>
+
+  <div class="fcard-body">
+    <h3 class="fcard-city">{p.zona}</h3>
+    <span class="fcard-rule" aria-hidden="true"></span>
+    {specs && <p class="fcard-specs">{specs}</p>}
+    <p class="fcard-price">{precioES(p.precio, p.aConsultar)}</p>
+  </div>
+</a>
+
+<style>
+  .fcard {
+    position: relative;
+    display: block;
+    /* Alto fijo (el "largo" que ya gusta): así se pueden ensanchar las tarjetas sin que
+       el alto crezca. Antes lo derivaba aspect-ratio 57/92 desde el ancho de columna.
+       Subido ~10% para que las fotos se vean ligeramente más grandes. */
+    height: clamp(500px, 41vw, 660px);
+    overflow: hidden;
+    text-decoration: none;
+    color: #F6F3EC;
+    background: #161320;
+    border-radius: 1px;
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+  }
+
+  .fcard-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transition: transform .7s var(--ease-editorial, cubic-bezier(0.2, 0, 0, 1));
+  }
+
+  /* La foto real rellena y recorta cover, sin perder nitidez. */
+  .fcard-media picture { display: block; width: 100%; height: 100%; }
+  .fcard-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--pos, center);
+    display: block;
+  }
+
+  .fcard-ph { position: absolute; inset: 0; }
+
+  /* Marca discreta de "foto pendiente" (solo mientras no hay imagen cargada) */
+  .fcard-pending {
+    position: absolute;
+    top: 16px; left: 0; right: 0;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(246, 243, 236, .30);
+  }
+
+  /* Velo inferior para legibilidad del texto sobre la foto (valores del diseño) */
+  .fcard-scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(0deg,
+      rgba(9, 8, 14, .86) 0%,
+      rgba(9, 8, 14, .52) 24%,
+      rgba(9, 8, 14, .06) 48%,
+      rgba(9, 8, 14, 0) 66%);
+  }
+
+  .fcard-body {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: clamp(20px, 2vw, 30px) 18px clamp(22px, 2.2vw, 32px);
+  }
+
+  .fcard-city {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(1.35rem, 1.7vw, 1.85rem);
+    line-height: 1.02;
+    letter-spacing: .005em;
+    color: #F6F3EC;
+    text-shadow: 0 1px 18px rgba(9, 8, 14, .6);
+  }
+
+  .fcard-rule {
+    height: 1px;
+    width: 34px;
+    background: linear-gradient(90deg,
+      rgba(201, 164, 106, 0),
+      rgba(201, 164, 106, .85),
+      rgba(201, 164, 106, 0));
+    transition: width .5s var(--ease-editorial, cubic-bezier(0.2, 0, 0, 1));
+  }
+
+  .fcard-specs {
+    margin: 0;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: rgba(246, 243, 236, .86);
+  }
+
+  .fcard-price {
+    margin: 0;
+    font-weight: 400;
+    font-size: clamp(.92rem, 1.1vw, 1.05rem);
+    line-height: 1;
+    letter-spacing: .04em;
+    color: #F6F3EC;
+  }
+
+  .fcard:focus-visible {
+    outline: 2px solid #C9A46A;
+    outline-offset: 4px;
+  }
+
+  /* Hover: leve acercamiento de la foto + filete dorado que crece. Solo con puntero fino
+     y sin reducción de movimiento (transform = motion). */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .fcard:hover .fcard-media { transform: scale(1.045); }
+    .fcard:hover .fcard-rule { width: 54px; }
+  }
+</style>

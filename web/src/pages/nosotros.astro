@@ -1,0 +1,578 @@
+---
+// NOSOTROS — port fiel del comp de Claude Design (DESIGN/NOSOTROS).
+// Lenguaje editorial crema + oro + Montserrat, con su propio header/footer.
+// Solo se modificó la INFORMACIÓN, con datos reales del Brochure y de oscar-moncada.com.
+// La lógica dinámica del comp (sc-for / sc-if / {{ }} / grid por JS) se resolvió a HTML + CSS.
+import '@fontsource-variable/montserrat';
+import { Picture } from 'astro:assets';
+import WhatsAppFab from '../components/WhatsAppFab.astro';
+import HeroNav from '../components/HeroNav.astro';
+import Footer from '../components/Footer.astro';
+
+
+const steps = [
+  { n: '01', t: 'Auditoría técnica', d: 'Due diligence integral de la propiedad antes de salir al mercado.' },
+  { n: '02', t: 'Validación legal', d: 'Cumplimiento normativo ante SAREN y SUSCERTE.' },
+  { n: '03', t: 'Blindaje patrimonial', d: 'Prevención de fraudes y retrasos administrativos, hasta una protocolización impecable.' },
+  { n: '04', t: 'Compra y venta de empresas', d: 'Cuando la operación se hace a través de una compañía, acompañamos la valoración, la búsqueda de contrapartes y el cierre.' },
+];
+
+const clauses = [
+  { t: 'Sin exclusividad forzada', d: 'Nuestra propuesta no requiere contrato de exclusividad obligatoria. Si en cualquier momento desea pausar la promoción, basta con un simple correo electrónico.' },
+  { t: 'Nos ganamos el lugar', d: 'Conservamos tu preferencia con atención y resultados, sin retenciones forzadas.' },
+  { t: 'Registro constante', d: 'Cada gestión se reporta. Cuentas y decides con datos certeros y verificables.' },
+];
+
+const backing = [
+  { name: 'NAR®', note: 'Estándares y buenas prácticas inspirados en NAR.' },
+  { name: 'Cámara Inmobiliaria Metropolitana', note: 'Procesos avalados por la Cámara Inmobiliaria Metropolitana.' },
+];
+
+// EQUIPO — integrantes para el carrusel de auto-rotación (fotos en src/assets/equipo,
+// optimizadas por Astro). Falta un integrante: su tarjeta queda con el placeholder (photo:null).
+import oscarMoncada from '../assets/equipo/oscar-moncada.jpg';
+import duniaArteta from '../assets/equipo/dunia-arteta.jpg';
+import sofiaGrauer from '../assets/equipo/sofia-grauer.jpg';
+import carlosGuevara from '../assets/equipo/carlos-guevara.jpg';
+import danielaSarli from '../assets/equipo/daniela-sarli.jpg';
+import ileanaColmenares from '../assets/equipo/ileana-colmenares.jpg';
+import liduskaHernandez from '../assets/equipo/liduska-hernandez.jpg';
+import mariaLuisaNolck from '../assets/equipo/maria-luisa-nolck.jpg';
+
+const team = [
+  { name: 'Oscar Moncada', photo: oscarMoncada },
+  { name: 'Dunia Arteta', photo: duniaArteta },
+  { name: 'Sofía Grauer', photo: sofiaGrauer },
+  { name: 'Carlos Guevara', photo: carlosGuevara },
+  { name: 'Daniela Sarli', photo: danielaSarli },
+  { name: 'Ileana Colmenares', photo: ileanaColmenares },
+  { name: 'Liduska Hernández', photo: liduskaHernandez },
+  { name: 'María Luisa Nolck', photo: mariaLuisaNolck },
+  { name: 'Próximamente', photo: null },
+];
+
+// Fotos en /destacados. Las dos usadas aquí (hero Altamira + apertura Los Palos Grandes) tienen
+// máster de alta resolución con variante -3840, así que se incluye ese candidato para que las
+// fotos a sangre (sizes=100vw) no pierdan nitidez en pantallas 4K/retina.
+const destSrcset = (img: string, ext: string) =>
+  `/destacados/${img}-640.${ext} 640w, /destacados/${img}-1280.${ext} 1280w, /destacados/${img}-1920.${ext} 1920w, /destacados/${img}-2560.${ext} 2560w, /destacados/${img}-3840.${ext} 3840w`;
+// Hero: foto a casi pantalla completa. Landscape nativa → encuadra perfecto sin ampliar.
+const heroImg = 'altamira-terraza';
+const heroAlt = 'Terraza con vista al cerro Ávila en Altamira, Caracas';
+// Bloque "Un club": foto de fondo a sangre con tarjeta blanca flotante (ref. de diseño).
+const valueImg = 'los-palos-grandes-interior';
+const valueAlt = 'Salón luminoso de un apartamento de alta gama en Los Palos Grandes, Caracas';
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nosotros — Grupo Glam Inmobiliaria</title>
+  <meta name="description" content="Un club inmobiliario en Caracas: gestionamos patrimonio, no solo propiedades. Más de diez años protegiendo cada operación con estándares internacionales." />
+  <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <meta name="theme-color" content="#0B0A11" />
+  <!-- Tema: fija data-theme ANTES de pintar para evitar parpadeo. Default = claro (sin atributo). -->
+  <script is:inline>
+    (function () {
+      try {
+        var t = localStorage.getItem('gg-theme');
+        if (t === 'dark') document.documentElement.dataset.theme = 'dark';
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    *{box-sizing:border-box}
+
+    /* ============================================================================
+       TOKENS DE TEMA (prueba de modo oscuro en Nosotros)
+       Claro = paleta actual exacta (cero cambio visual). Oscuro = inversión:
+       el morado berenjena #14101C pasa de acento a FONDO dominante; el crema a texto.
+       El bronce/dorado se mantiene como acento en ambos modos. El tema se fija con
+       data-theme en <html> (script anti-flash en <head> + botón de toggle).
+       ============================================================================ */
+    :root{
+      --bg:#E8E4DB;              /* fondo de página (lino) */
+      --surface:#FFFFFF;         /* tarjetas blancas */
+      --surface-warm:#F6F4EF;    /* tarjetas cálidas (pactos) */
+      --surface-tint:#F3F0E9;    /* sección tenue (filtro) */
+      --surface-tint2:#EDE9E0;   /* fondo sección apertura */
+      --value-card-bg:#FFFFFF;   /* tarjeta "Más que una simple inmobiliaria" (ver nota oscuro) */
+      --title:#14101C;           /* títulos de sección — color ORIGINAL del modo claro */
+      --text:#14101C;            /* texto principal (tinta) */
+      --text-body:#454049;       /* cuerpo */
+      --text-soft:#4A4650;       /* cuerpo suave */
+      --text-muted:#8A857C;      /* notas/leyendas */
+      --text-faint:#514C57;      /* texto tenue en tarjetas */
+      --accent:#C9A46A;          /* dorado (acento) */
+      --accent-deep:#B98F55;     /* dorado profundo (hover/labels) */
+      --on-accent:#100E17;       /* texto sobre dorado */
+      --hairline:rgba(20,16,28,.09);        /* reglas finas */
+      --hairline-soft:rgba(20,16,28,.08);
+      --hairline-strong:rgba(20,16,28,.14);
+      --gold-rule:rgba(201,164,106,.55);
+      --gold-rule-soft:rgba(201,164,106,.45);
+    }
+    html[data-theme="dark"]{
+      --bg:#100E17;              /* = fondo de "Quiénes somos" (.cc-oscura) en la home */
+      --surface:#221B30;
+      --surface-warm:#292036;
+      --surface-tint:#1A1426;
+      --surface-tint2:#171220;
+      --value-card-bg:#FFFFFF;   /* hardcodeada blanca TAMBIÉN en oscuro (isla clara); independiente del claro */
+      --title:#C9A46A;           /* títulos de sección DORADOS — solo en oscuro, independiente del claro */
+      --text:#F5F3EE;
+      --text-body:#C7C1D0;
+      --text-soft:#BAB3C4;
+      --text-muted:#948DA0;
+      --text-faint:#A79FB2;
+      --accent:#C9A46A;
+      --accent-deep:#D8B87C;
+      --on-accent:#14101C;
+      --hairline:rgba(245,243,238,.12);
+      --hairline-soft:rgba(245,243,238,.08);
+      --hairline-strong:rgba(245,243,238,.18);
+      --gold-rule:rgba(201,164,106,.42);
+      --gold-rule-soft:rgba(201,164,106,.32);
+    }
+    /* Transición suave al conmutar tema (no afecta reduced-motion, ver más abajo) */
+    body,.gg-scroll-over,.gg-hero-band,.gg-value,.gg-pacto,.gg-value-card{transition:background-color .4s ease,color .4s ease}
+
+    /* ---- Botón de toggle de tema (abajo-izquierda; el FAB de WhatsApp va a la derecha) ---- */
+    .theme-toggle{position:fixed;left:20px;bottom:20px;z-index:60;width:46px;height:46px;display:grid;place-items:center;border-radius:999px;border:1px solid var(--hairline-strong);background:var(--surface);color:var(--text);cursor:pointer;box-shadow:0 8px 24px -10px rgba(9,5,14,.5);transition:background .3s ease,color .3s ease,border-color .3s ease,transform .16s ease}
+    .theme-toggle:hover{transform:translateY(-2px)}
+    .theme-toggle:active{transform:scale(.95)}
+    .theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+    .theme-toggle svg{width:21px;height:21px}
+    .theme-toggle .ic-sun{display:none}
+    html[data-theme="dark"] .theme-toggle .ic-moon{display:none}
+    html[data-theme="dark"] .theme-toggle .ic-sun{display:block}
+
+    /* Standalone (no importa global.css): replicamos aquí lo que allí es global.
+       · html con fondo oscuro = footer → sin línea clara al overscrollear el fondo.
+       · barra de scroll lateral oculta (igual que el resto del sitio).
+       · body conserva el fondo lino del contenido. */
+    html{margin:0;padding:0;background:#100E17;scroll-behavior:smooth;overscroll-behavior:none;scrollbar-width:none;-ms-overflow-style:none}
+    html::-webkit-scrollbar{width:0;height:0;display:none}
+    body{margin:0;padding:0;background:var(--bg)}
+    /* Tokens de marca que usan los componentes compartidos (HeroNav / Footer / WhatsAppFab).
+       Esta página es standalone (no importa global.css), así que los definimos aquí con los
+       MISMOS valores de global.css para que esos componentes rendericen igual que en la home. */
+    body{font-family:'Montserrat Variable','Montserrat',system-ui,sans-serif;color:var(--text);min-height:100vh;--color-tinta:#0B0C0E;--color-lino:#E8E4DB;--color-papel:#F5F3EE;--color-bronce:#B4884E}
+    /* Los componentes compartidos asumen border-box (que en el resto del sitio da el preflight
+       de Tailwind). El reset *{} de arriba va scoped a esta página, así que aquí forzamos
+       border-box en esos componentes para que sus tamaños fijos no se descuadren. */
+    :global(.heronav),:global(.heronav *),:global(.ft),:global(.ft *),:global(.gg-fab),:global(.gg-fab *){box-sizing:border-box}
+    a{color:var(--accent)}
+    a:hover{color:var(--accent-deep)}
+
+    @keyframes gg-rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+    @keyframes gg-fade{from{opacity:0}to{opacity:1}}
+
+    /* ---- estados interactivos (reemplazan style-hover/style-focus del comp) ---- */
+    .gg a:focus-visible,.gg button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+    .cta-text{transition:color .3s ease}
+    .cta-text:hover{color:var(--accent-deep)}
+    .cta-solid{transition:background .3s ease,color .3s ease,border-color .3s ease}
+    .cta-solid:hover{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+    .cta-solid:hover .cta-arrow{transform:translateX(6px);color:var(--on-accent)}
+    .cta-arrow{transition:transform .3s ease,color .3s ease}
+    .team-photo{filter:grayscale(15%) contrast(1.03);transition:filter .7s ease}
+    .team-photo:hover{filter:grayscale(0) contrast(1)}
+    /* CTA final (intercambiada desde la Home) */
+    .gg-cta-final:hover{background:var(--color-lino);color:var(--color-tinta)}
+
+    /* ---- rejillas responsivas (reemplazan el cálculo por JS del comp) ---- */
+    .gg-mercado{display:grid;grid-template-columns:1fr;gap:clamp(28px,4vw,56px);align-items:start}
+    .gg-filtro{display:grid;grid-template-columns:1fr;gap:clamp(38px,5vw,92px);align-items:start}
+    .gg-personas{display:grid;grid-template-columns:1fr;gap:clamp(34px,5vw,80px);align-items:end}
+    .gg-respaldo{display:grid;grid-template-columns:1fr;gap:clamp(28px,3.4vw,64px);align-items:start}
+    /* "Nuestro compromiso de confianza": tarjetas claras flotando sobre el fondo morado
+       (adaptación de la ref. de diseño). Sin foto de fondo y sin botones. */
+    .gg-pactos{display:grid;grid-template-columns:1fr;gap:clamp(16px,1.8vw,24px)}
+    @media (min-width:760px){.gg-pactos{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    .gg-pactos{perspective:1400px}
+    .gg-pacto{position:relative;display:flex;flex-direction:column;gap:clamp(12px,1.2vw,18px);background:var(--surface-warm);padding:clamp(30px,3vw,46px) clamp(26px,2.6vw,40px);border-radius:3px;box-shadow:0 1px 1px rgba(9,5,14,.5),0 6px 10px -4px rgba(9,5,14,.45),0 18px 30px -10px rgba(9,5,14,.55),0 44px 70px -28px rgba(9,5,14,.72),inset 0 1px 0 rgba(255,255,255,.75);transition:transform .5s cubic-bezier(.2,0,0,1),box-shadow .5s cubic-bezier(.2,0,0,1)}
+    .gg-pacto:hover{transform:translateY(-8px);box-shadow:0 1px 1px rgba(9,5,14,.5),0 10px 16px -6px rgba(9,5,14,.5),0 28px 44px -12px rgba(9,5,14,.62),0 64px 96px -30px rgba(9,5,14,.82),inset 0 1px 0 rgba(255,255,255,.82)}
+    .gg-pacto-h{margin:0;font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:clamp(1.24rem,1.7vw,1.6rem);line-height:1.14;letter-spacing:.012em;text-transform:uppercase;color:var(--text);text-wrap:balance}
+    .gg-pacto-p{margin:0;font-weight:300;font-size:clamp(.96rem,1.05vw,1.05rem);line-height:1.7;letter-spacing:.006em;color:var(--text-faint);text-wrap:pretty}
+    .gg-office{display:grid;grid-template-columns:1fr;gap:clamp(22px,3vw,48px)}
+    .gg-quote{margin-left:0;width:100%}
+
+    @media (min-width:640px){
+      .gg-office{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+    @media (min-width:980px){
+      .gg-mercado{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}
+      .gg-filtro{grid-template-columns:minmax(0,0.82fr) minmax(0,1.18fr)}
+      .gg-personas{grid-template-columns:minmax(0,1.15fr) minmax(280px,0.85fr)}
+      .gg-respaldo{grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr)}
+      .gg-quote{margin-left:calc(-1 * clamp(0px,6vw,110px));width:calc(100% + clamp(0px,6vw,110px))}
+    }
+
+
+    /* ---- HERO + efecto SCROLL-OVER (igual que el hero de la home): la foto queda fija
+       (sticky) detrás y la lámina de contenido sube y la CUBRE al bajar, en vez de empujarla.
+       La foto ocupa 100svh − banda; la banda (con el titular) es lo primero de la lámina y
+       queda al pie del primer pliegue. La cabecera flota transparente y se vuelve sólida al
+       bajar (toggle .is-solid por scroll). El TAMAÑO total no cambia. ---- */
+    .gg{--gg-band-h:clamp(150px,22vh,232px);timeline-scope:--cover}
+
+    /* La foto se ancla; la lámina opaca (z superior) la cubre. Núcleo puro layout, sin JS. */
+    /* z-index:1 (igual que la lámina) para que la foto del hero también cubra el footer sticky
+       (z-index:0) que queda anclado al fondo del viewport; si no, el footer asomaba por encima
+       de la foto. La lámina, al ir después en el DOM con el mismo z, sigue cubriendo la foto. */
+    .gg-hero-sticky{position:sticky;top:0;z-index:1;overflow:clip;background:#0B0A11}
+    .gg-scroll-over{position:relative;z-index:1;background:var(--bg);box-shadow:0 -34px 60px -24px color-mix(in srgb,#14101C 60%,transparent),0 34px 60px -30px color-mix(in srgb,#14101C 55%,transparent)}
+    .gg-reveal-sentinel{view-timeline:--cover block;height:1px;margin-bottom:-1px}
+    /* Oscurecido progresivo de la foto conforme la cubre la lámina (mismo recorrido --cover). */
+    .gg-hero-darken{position:absolute;inset:0;z-index:6;pointer-events:none;background:#0B0A11;opacity:0}
+    @keyframes gg-hero-darken{from{opacity:0}to{opacity:.4}}
+    @supports (animation-timeline:view()){
+      .gg-hero-darken{animation:gg-hero-darken linear both;animation-timeline:--cover;animation-range:cover 0% cover 85%}
+    }
+
+    .gg-hero{position:relative;height:64svh;min-height:430px;overflow:hidden;background:#0B0A11}
+    @media (min-width:768px){.gg-hero{height:calc(100svh - var(--gg-band-h));min-height:540px}}
+    .gg-hero-media{position:absolute;inset:0;z-index:0;transform-origin:center;will-change:transform;animation:gg-ken 36s ease-in-out infinite alternate}
+    .gg-hero-media picture,.gg-hero-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+    @keyframes gg-ken{from{transform:scale(1)}to{transform:scale(1.06)}}
+    .gg-hero-veil-top{position:absolute;left:0;right:0;top:0;height:34%;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(11,10,17,.42) 0%,rgba(11,10,17,0) 100%)}
+    .gg-hero-veil-bottom{position:absolute;left:0;right:0;bottom:0;height:46%;z-index:1;pointer-events:none;background:linear-gradient(0deg,rgba(11,10,17,.5) 0%,rgba(11,10,17,.08) 60%,rgba(11,10,17,0) 100%)}
+    .gg-hero-band{position:relative;background:var(--bg)}
+    .gg-hero-band-inner{max-width:1600px;margin:0 auto;min-height:var(--gg-band-h);display:flex;flex-direction:column;justify-content:center;gap:clamp(12px,1.4vw,18px);padding:clamp(28px,3.4vw,44px) clamp(20px,5vw,54px)}
+    .gg-hero-title{margin:0;font-weight:300;font-size:clamp(1.4rem,3.2vw,2.6rem);line-height:1.12;letter-spacing:.01em;text-transform:uppercase;color:var(--title);animation:gg-rise .95s cubic-bezier(.2,0,0,1) .12s both}
+
+    /* ---- "Del mercadeo pasivo a la visibilidad activa" (fila traída de la home) ----
+       Texto a la izquierda (título versal pequeño + cuerpo + capacidades) y la foto del salón
+       a la derecha, más protagonista. Colores por tokens de tema para que funcione en claro y
+       oscuro. El orden del grid pone la foto a la derecha en escritorio. */
+    .gg-mercado-text{order:1;min-width:0}
+    .gg-mercado-media{order:2;margin:0}
+    .gg-mercado-media img{display:block;width:100%;height:auto;border-radius:2px}
+    .gg-mercado-title{margin:0;font-weight:300;font-size:clamp(1.05rem,1.5vw,1.4rem);line-height:1.2;letter-spacing:.06em;text-transform:uppercase;color:var(--title)}
+    .gg-mercado-body{margin-top:clamp(16px,1.8vw,22px);display:grid;gap:.85rem;max-width:60ch}
+    .gg-mercado-body p{margin:0;font-weight:300;font-size:clamp(.95rem,1.05vw,1.0625rem);line-height:1.8;letter-spacing:.006em;color:var(--text-body);text-wrap:pretty}
+    .gg-mercado-features{margin-top:clamp(20px,2.4vw,30px);display:grid;gap:clamp(14px,1.6vw,20px)}
+    .gg-mercado-desc{margin:0;font-weight:300;font-size:clamp(.9rem,1vw,1rem);line-height:1.7;letter-spacing:.006em;color:var(--text-soft);text-wrap:pretty}
+    .gg-mercado-desc strong{font-weight:600;color:var(--text)}
+
+    .gg-hero-title span{font-weight:600}
+
+    /* ---- APERTURA: foto a sangre + tarjeta blanca flotante (réplica de la referencia) ----
+       Móvil: la foto es un bloque arriba y la tarjeta sube y la solapa. Desktop (≥900px):
+       la foto va a sangre y la tarjeta FLOTA anclada a la derecha, centrada verticalmente. */
+    .gg-value{position:relative;background:var(--surface-tint2)}
+    .gg-value-media{position:relative;width:100%;height:clamp(260px,62vw,400px)}
+    .gg-value-media picture,.gg-value-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:30% center;display:block}
+    .gg-value-inner{position:relative;z-index:1;max-width:1600px;margin:0 auto;padding:0 clamp(20px,5vw,54px) clamp(38px,6vw,72px)}
+    .gg-value-card{position:relative;margin-top:clamp(-72px,-11vw,-44px);background:var(--value-card-bg);padding:clamp(28px,7vw,40px);box-shadow:0 34px 64px -34px rgba(20,16,28,.45)}
+    /* La tarjeta es blanca en ambos modos. En oscuro, re-escopamos SUS tokens de texto a los
+       valores del modo claro (solo dentro de la tarjeta) para que su contenido siga legible
+       sobre el blanco. No afecta al resto de la página ni al modo claro. */
+    html[data-theme="dark"] .gg-value-card{--text:#14101C;--text-soft:#4A4650;--bg:#E8E4DB}
+    .gg-value-h{margin:0 0 clamp(14px,1.5vw,20px);font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:clamp(1.6rem,2.6vw,2.25rem);line-height:1.12;letter-spacing:-.01em;color:var(--title)}
+    .gg-value-p{margin:0 0 1em;font-weight:300;font-size:clamp(.98rem,1.1vw,1.08rem);line-height:1.72;letter-spacing:.006em;color:var(--text-soft);text-wrap:pretty;max-width:46ch}
+    .gg-value-btn{display:inline-flex;align-items:center;gap:9px;margin-top:clamp(14px,1.6vw,22px);background:var(--text);color:var(--bg);text-decoration:none;border-radius:999px;padding:14px 28px;font-weight:600;font-size:12px;letter-spacing:.08em;transition:background .3s ease,color .3s ease,transform .16s ease}
+    .gg-value-btn:hover{background:var(--accent);color:var(--on-accent)}
+    .gg-value-btn:active{transform:scale(.98)}
+    @media (min-width:900px){
+      .gg-value-media{position:absolute;inset:0;height:auto}
+      .gg-value-media picture,.gg-value-media img{object-position:32% center}
+      .gg-value-inner{display:flex;align-items:center;justify-content:flex-end;min-height:clamp(460px,55vh,640px);padding:clamp(56px,7vw,110px) clamp(20px,5vw,54px)}
+      .gg-value-card{margin-top:0;width:100%;max-width:clamp(380px,40vw,560px);padding:clamp(38px,3.4vw,58px)}
+    }
+
+    /* ---- EQUIPO: carrusel de auto-rotación (marquee infinito y fluido) ----
+       El track lleva DOS copias idénticas de las tarjetas y se desplaza -50%: al terminar
+       una copia, la segunda ya está en su lugar → bucle sin salto. El espacio entre tarjetas
+       se define con margin-right (no con gap) para que el -50% caiga exacto en un borde de
+       tarjeta. Se pausa al pasar el cursor; los usuarios con reduced-motion lo ven estático. */
+    /* Medidas de la tarjeta como variables → la banda morada se calcula desde la altura real
+       de la foto (no depende del alto del bloque, que incluye el pie con nombre/teléfono). */
+    .gg-team{margin-top:clamp(38px,4.6vw,66px)}
+    .gg-team-viewport{--tm-w:clamp(240px,26vw,320px);--tm-photoH:calc(var(--tm-w) * 4 / 3);position:relative;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 1.5%,#000 98.5%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 1.5%,#000 98.5%,transparent 100%)}
+    /* Banda morada con degradado a oscuro (arriba→abajo), centrada tras la fila de fotos y
+       más baja que la tarjeta: su borde queda dentro de la foto, sin tocar arriba ni abajo. */
+    .gg-team-band{position:absolute;left:0;right:0;z-index:0;pointer-events:none;top:calc(var(--tm-photoH) * .12);height:calc(var(--tm-photoH) * .76);background:linear-gradient(180deg,#7B2A9D 0%,#3D1B52 50%,#171021 100%)}
+    .gg-team-track{position:relative;z-index:1;display:flex;width:max-content;will-change:transform;transform:translateZ(0);backface-visibility:hidden;animation:gg-team-scroll 72s linear infinite}
+    .gg-team-viewport:hover .gg-team-track,.gg-team-viewport:focus-within .gg-team-track{animation-play-state:paused}
+    @keyframes gg-team-scroll{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+    .gg-tm-card{flex:0 0 auto;width:var(--tm-w);margin-right:clamp(18px,2vw,30px)}
+    .gg-tm-photo{position:relative;transition:transform .45s cubic-bezier(.2,0,0,1)}
+    .gg-tm-card:hover .gg-tm-photo{transform:translateY(-6px)}
+    /* Placeholder de foto igual al del resto del sitio: degradado oscuro + ícono + rótulo,
+       con las puntas redondeadas. Ocupa todo el tamaño de la tarjeta (sin marco blanco).
+       Al llegar la foto real, entra el <img>. */
+    /* translateZ(0): rasteriza el recorte redondeado en su propia capa una sola vez → sin
+       costura de subpíxel que parpadee mientras el marquee desplaza la fila. */
+    .gg-tm-frame{position:relative;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:linear-gradient(158deg,#2b2732 0%,#16131c 100%);box-shadow:0 12px 26px -14px rgba(9,5,14,.42);transition:box-shadow .45s cubic-bezier(.2,0,0,1);transform:translateZ(0)}
+    .gg-tm-card:hover .gg-tm-frame{box-shadow:0 22px 40px -16px rgba(9,5,14,.5)}
+    /* La foto rebasa 1px el marco (inset:-1px) para cubrir el borde redondeado sin dejar ver
+       el fondo oscuro del frame en los cantos (la línea negra que asomaba arriba). */
+    .gg-tm-frame img{position:absolute;inset:-1px;width:calc(100% + 2px);height:calc(100% + 2px);object-fit:cover;object-position:50% 28%;display:block;backface-visibility:hidden;filter:grayscale(12%) contrast(1.02);transition:filter .7s ease}
+    .gg-tm-card:hover .gg-tm-frame img{filter:grayscale(0) contrast(1)}
+    .gg-tm-ph{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:9px;padding:16px;text-align:center;color:color-mix(in srgb,#F6F3EC 30%,transparent)}
+    .gg-tm-ph-icon{width:34px;height:34px}
+    .gg-tm-ph span{font-size:11px;letter-spacing:.08em}
+    .gg-tm-cap{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:clamp(14px,1.5vw,19px);text-align:center}
+    .gg-tm-name{font-weight:500;font-size:clamp(1rem,1.2vw,1.16rem);letter-spacing:.008em;color:var(--text)}
+
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<div class="gg">
+
+  <!-- Navbar compartido (mismo que el resto del sitio). Sobre la foto va transparente y adopta
+       fondo oscuro al cubrirlo la lámina de contenido, igual que la home (variante overlay). -->
+  <HeroNav variant="overlay" />
+
+  <!-- 1 · HERO (foto fija; la lámina de contenido la cubre al bajar — efecto scroll-over) -->
+  <div class="gg-hero-sticky" data-navtone="dark">
+    <section class="gg-hero" aria-label="Grupo Glam — Nosotros">
+      <div class="gg-hero-media">
+        <picture>
+          <source type="image/avif" srcset={destSrcset(heroImg, 'avif')} sizes="100vw" />
+          <source type="image/webp" srcset={destSrcset(heroImg, 'webp')} sizes="100vw" />
+          <img src={`/destacados/${heroImg}-2560.jpg`} srcset={destSrcset(heroImg, 'jpg')} sizes="100vw" width="1920" height="1140" alt={heroAlt} fetchpriority="high" decoding="async" />
+        </picture>
+      </div>
+      <div class="gg-hero-veil-top" aria-hidden="true"></div>
+      <div class="gg-hero-veil-bottom" aria-hidden="true"></div>
+    </section>
+    <div class="gg-hero-darken" aria-hidden="true"></div>
+  </div>
+
+  <!-- Lámina de contenido: sube y CUBRE la foto fija (mismo efecto que el hero de la home). -->
+  <div class="gg-scroll-over" data-navtone="light">
+    <!-- Centinela de 1px: su recorrido mide cuánto se ha cubierto la foto (view-timeline --cover). -->
+    <div class="gg-reveal-sentinel" aria-hidden="true"></div>
+
+    <!-- Banda clara con el titular (marca el fin de la foto → cabecera sólida a partir de aquí) -->
+    <div class="gg-hero-band">
+      <div id="gg-hero-end" aria-hidden="true"></div>
+      <div class="gg-hero-band-inner">
+        <h1 class="gg-hero-title">Gestionamos <span>patrimonio</span>, no<br />solo propiedades.</h1>
+      </div>
+    </div>
+
+  <!-- 2 · APERTURA (foto a sangre + tarjeta blanca flotante · ref. de diseño) -->
+  <section class="gg-value" aria-label="Somos un club inmobiliario en Caracas">
+    <div class="gg-value-media">
+      <picture>
+        <source type="image/avif" srcset={destSrcset(valueImg, 'avif')} sizes="(min-width:900px) 100vw, 100vw" />
+        <source type="image/webp" srcset={destSrcset(valueImg, 'webp')} sizes="(min-width:900px) 100vw, 100vw" />
+        <img src={`/destacados/${valueImg}-1920.jpg`} srcset={destSrcset(valueImg, 'jpg')} sizes="100vw" width="1920" height="1140" alt={valueAlt} loading="lazy" decoding="async" />
+      </picture>
+    </div>
+    <div class="gg-value-inner">
+      <div class="gg-value-card">
+        <h2 class="gg-value-h">Más que una simple inmobiliaria.</h2>
+        <p class="gg-value-p">Somos un club inmobiliario en Caracas para quienes ven una propiedad como parte de un patrimonio, hemos evolucionado de una agencia tradicional a una plataforma de alto rendimiento.</p>
+        <p class="gg-value-p">Más de diez años acompañando y asesorando en una de las decisiones más importantes en la vida. Asesoramiento constante y prioritario, uso de tecnologías, segmentación, y aplicamos estándares internacionales para proteger cada operación antes de que llegue a tu firma.</p>
+        <a href="#conversacion" class="gg-value-btn">Conversemos</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · DEL MERCADEO PASIVO A LA VISIBILIDAD ACTIVA (traída desde la home) -->
+  <section style="border-top:1px solid var(--hairline);overflow-x:clip">
+    <div style="max-width:1600px;margin:0 auto;padding:clamp(52px,7vw,110px) clamp(20px,5vw,54px)">
+      <div class="gg-mercado">
+        <div class="gg-mercado-text">
+          <h2 class="gg-mercado-title">Del mercadeo pasivo a la visibilidad activa</h2>
+
+          <div class="gg-mercado-body">
+            <p>Convertimos su inmueble en una oportunidad irresistible frente a inversores nacionales e internacionales, obtenemos citas precalificadas y máxima visibilidad en ecosistemas MLS.</p>
+          </div>
+
+          <div class="gg-mercado-features">
+            <p class="gg-mercado-desc"><strong>Segmentación algorítmica.</strong> Campañas dirigidas a nichos con el poder adquisitivo exacto para su propiedad.</p>
+            <p class="gg-mercado-desc"><strong>Contenido audiovisual.</strong> Drones, estabilizadores y fotografía arquitectónica que resaltan el valor real del inmueble.</p>
+            <p class="gg-mercado-desc"><strong>Formatos virales.</strong> Reels con ganchos diseñados para captar la atención de inversores.</p>
+            <p class="gg-mercado-desc"><strong>Posicionamiento SEO.</strong> Máxima visibilidad en plataformas líderes y ecosistemas MLS.</p>
+          </div>
+        </div>
+
+        <figure class="gg-mercado-media">
+          <picture>
+            <source type="image/avif" srcset="/complementario/salon-interior-640.avif 640w, /complementario/salon-interior-1280.avif 1280w, /complementario/salon-interior-1600.avif 1600w" sizes="(min-width:980px) 55vw, 92vw" />
+            <source type="image/webp" srcset="/complementario/salon-interior-640.webp 640w, /complementario/salon-interior-1280.webp 1280w, /complementario/salon-interior-1600.webp 1600w" sizes="(min-width:980px) 55vw, 92vw" />
+            <img
+              src="/complementario/salon-interior-1280.jpg"
+              srcset="/complementario/salon-interior-640.jpg 640w, /complementario/salon-interior-1280.jpg 1280w, /complementario/salon-interior-1600.jpg 1600w"
+              sizes="(min-width:980px) 55vw, 92vw"
+              width="1600"
+              height="1200"
+              alt="Salón interior de apartamento de alta gama en Caracas"
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · EL FILTRO GLAM -->
+  <section style="background:var(--surface-tint);border-top:1px solid var(--hairline-soft);border-bottom:1px solid var(--hairline-soft)">
+    <div class="gg-filtro" style="max-width:1600px;margin:0 auto;padding:clamp(56px,7.5vw,120px) clamp(20px,5vw,54px)">
+      <div style="position:sticky;top:96px">
+        <span style="display:block;font-weight:600;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:18px">El método</span>
+        <h2 style="margin:0 0 clamp(20px,2.4vw,30px);font-weight:300;font-size:clamp(2rem,4vw,3.2rem);line-height:1.02;letter-spacing:-.014em;color:var(--title)">El Filtro Glam</h2>
+        <p style="margin:0;max-width:42ch;font-weight:300;font-size:clamp(1rem,1.2vw,1.14rem);line-height:1.72;letter-spacing:.008em;color:var(--text-body);text-wrap:pretty">Antes de que una propiedad llegue a ti, pasa por una revisión de riesgo con estándares internacionales. Es el paso que más te protege, y el que muchos se saltan.</p>
+      </div>
+
+      <ol style="list-style:none;margin:0;padding:0">
+        {steps.map((s) => (
+          <li style="display:grid;grid-template-columns:auto 1fr;gap:clamp(18px,2.4vw,38px);padding:clamp(24px,2.8vw,38px) 0;border-top:1px solid var(--hairline-strong)">
+            <span style="font-weight:300;font-size:clamp(1.5rem,2.6vw,2.2rem);letter-spacing:.02em;color:var(--accent-deep);line-height:1;font-variant-numeric:tabular-nums">{s.n}</span>
+            <div>
+              <h3 style="margin:0 0 9px;font-weight:600;font-size:clamp(1.08rem,1.5vw,1.34rem);letter-spacing:.005em;color:var(--text)">{s.t}</h3>
+              <p style="margin:0;max-width:52ch;font-weight:300;font-size:clamp(.98rem,1.15vw,1.1rem);line-height:1.66;letter-spacing:.008em;color:var(--text-soft);text-wrap:pretty">{s.d}</p>
+            </div>
+          </li>
+        ))}
+        <li style="padding:clamp(22px,2.6vw,34px) 0 0;border-top:1px solid var(--hairline-strong)">
+          <p style="margin:0;font-weight:400;font-size:12.5px;letter-spacing:.02em;color:var(--text-muted);max-width:60ch">Procesos avalados por la Cámara Inmobiliaria Metropolitana y estándares NAR®. Ningún resultado se comunica sin respaldo documental.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 4 · COMPROMISO DE CONFIANZA — tarjetas claras flotando sobre el fondo morado
+       (adaptación de la ref. de diseño: banda con tarjetas, sin foto ni botones). -->
+  <section style="background:radial-gradient(135% 130% at 50% 42%,#241A2E 52%,#1B1324 100%);color:#E8E4DB">
+    <div style="max-width:1600px;margin:0 auto;padding:clamp(44px,5.5vw,80px) clamp(20px,5vw,54px)">
+      <p style="margin:0 0 clamp(28px,3.5vw,52px);max-width:15ch;font-weight:300;font-size:clamp(2.4rem,6.2vw,5rem);line-height:1;letter-spacing:-.02em;text-transform:uppercase;color:#F5F3EE;text-wrap:balance;text-shadow:0 1px 0 #1b1226,0 2px 0 #191124,0 3px 0 #160f20,0 9px 16px rgba(6,3,12,.55),0 -1px 0 rgba(255,255,255,.09)">Nuestro compromiso de <span style="color:#C9A46A">confianza.</span></p>
+      <div class="gg-pactos">
+        {clauses.map((c) => (
+          <article class="gg-pacto">
+            <h3 class="gg-pacto-h">{c.t}</h3>
+            <p class="gg-pacto-p">{c.d}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · LAS PERSONAS + RESPALDO -->
+  <section style="border-top:1px solid var(--hairline)">
+    <div style="max-width:1600px;margin:0 auto;padding:clamp(56px,7.5vw,120px) clamp(20px,5vw,54px)">
+      <div class="gg-personas" style="margin-bottom:clamp(44px,5vw,80px)">
+        <div>
+          <h2 style="margin:0 0 clamp(22px,2.6vw,34px);font-weight:300;font-size:clamp(1.9rem,4vw,3rem);line-height:1.02;letter-spacing:-.014em;text-transform:uppercase;color:var(--title);max-width:18ch">Las personas detrás de cada gestión.</h2>
+          <div style="max-width:56ch;display:flex;flex-direction:column;gap:1em">
+            <p style="margin:0;font-weight:300;font-size:clamp(1rem,1.2vw,1.14rem);line-height:1.76;letter-spacing:.008em;color:var(--text-body);text-wrap:pretty">Detrás de cada mandato hay consultores certificados que operan bajo un solo estándar de servicio, con más de diez años en el mercado premium de Caracas.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carrusel del equipo (auto-rotación fluida). Track con DOS copias → bucle sin salto.
+           Banda morada de fondo tras las fotos; placeholder = degradado + ícono (foto pendiente).
+           Con foto real, poner {m.photo} en <img>. -->
+      <div class="gg-team">
+        <div class="gg-team-viewport">
+          <div class="gg-team-band" aria-hidden="true"></div>
+          <div class="gg-team-track">
+            {[...team, ...team].map((m, i) => (
+              <figure class="gg-tm-card" aria-hidden={i >= team.length ? 'true' : undefined}>
+                <div class="gg-tm-photo">
+                  <div class="gg-tm-frame">
+                    {m.photo ? (
+                      <Picture
+                        src={m.photo}
+                        formats={['avif', 'webp']}
+                        widths={[320, 480, 640]}
+                        sizes="(min-width:640px) 320px, 46vw"
+                        quality={82}
+                        alt={`Retrato de ${m.name}, equipo de Grupo Glam`}
+                        loading="eager"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div class="gg-tm-ph">
+                        <svg class="gg-tm-ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+                          <rect x="3" y="5" width="18" height="14" rx="1.5" />
+                          <circle cx="8.5" cy="10" r="1.5" fill="currentColor" stroke="none" />
+                          <path d="M5 17l4-4 3 2.5 3-3.5 4 5" stroke-linejoin="round" />
+                        </svg>
+                        <span>Fotografía</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <figcaption class="gg-tm-cap">
+                  <span class="gg-tm-name">{m.name}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:clamp(48px,5.5vw,84px);padding-top:clamp(30px,3.4vw,44px);border-top:1px solid var(--hairline)">
+        <div style="display:flex;flex-direction:column;margin-left:auto;width:min(100%,560px)">
+          {backing.map((b) => (
+            <div style="display:grid;grid-template-columns:1fr auto;gap:20px;align-items:baseline;padding:clamp(18px,2vw,24px) 0;border-top:1px solid var(--hairline-strong)">
+              <span style="font-weight:400;font-size:clamp(1.15rem,1.6vw,1.5rem);letter-spacing:.005em;color:var(--text)">{b.name}</span>
+              <span style="font-weight:400;font-size:12px;letter-spacing:.04em;color:var(--text-muted);text-align:right;max-width:34ch">{b.note}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · CTA FINAL (intercambiada desde la Home) -->
+  <!-- Sin data-navtone propio: hereda el "light" de .gg-scroll-over para que el navbar
+       conserve su barra oscura sólida sobre esta sección (no se vuelve transparente ni
+       choca con el contenido claro durante la transición al llegar al fondo). -->
+  <section id="conversacion" style="background:var(--color-tinta);color:var(--color-lino)">
+    <div style="max-width:1280px;margin:0 auto;padding:clamp(96px,10vw,128px) clamp(20px,5vw,24px);text-align:center">
+      <h2 style="margin:0 auto;max-width:48rem;font-weight:400;font-size:clamp(2rem,4vw,3.25rem);line-height:1;text-wrap:balance">¿Busca vender, comprar o alquilar en Caracas?</h2>
+      <p style="margin:24px auto 0;max-width:36rem;color:rgba(232,228,219,.7)">Cuéntenos qué necesita. Un asesor le responde el mismo día.</p>
+      <a href="/contacto" class="gg-cta-final" style="display:inline-block;margin-top:40px;padding:16px 32px;background:var(--color-bronce);color:var(--color-tinta);border-radius:2px;font-weight:500;font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;transition:background .4s ease,color .4s ease">
+        Hablar con un asesor
+      </a>
+    </div>
+  </section>
+
+  </div><!-- /.gg-scroll-over -->
+
+</div><!-- /.gg -->
+
+<!-- Footer compartido (mismo del resto del sitio), con su reveal sticky. Va FUERA de .gg:
+     así el hero sticky (dentro de .gg) deja de taparlo al final y el reveal funciona igual
+     que en el resto del sitio (Base: footer hermano de la lámina de contenido opaca). -->
+<Footer />
+
+<WhatsAppFab />
+
+<!-- Botón de tema (prueba de modo oscuro en Nosotros). Luna = claro actual → pasa a oscuro;
+     Sol = oscuro actual → vuelve a claro. Preferencia recordada en localStorage. -->
+<button type="button" class="theme-toggle" id="themeToggle" aria-label="Cambiar entre modo claro y oscuro" title="Modo claro / oscuro">
+  <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" stroke-linejoin="round"/></svg>
+  <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke-linecap="round"/></svg>
+</button>
+<script is:inline>
+  (function () {
+    var btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var dark = document.documentElement.dataset.theme === 'dark';
+      if (dark) {
+        document.documentElement.removeAttribute('data-theme');
+        try { localStorage.setItem('gg-theme', 'light'); } catch (e) {}
+      } else {
+        document.documentElement.dataset.theme = 'dark';
+        try { localStorage.setItem('gg-theme', 'dark'); } catch (e) {}
+      }
+    });
+  })();
+</script>
+</body>
+</html>

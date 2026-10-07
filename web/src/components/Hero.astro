@@ -1,0 +1,120 @@
+---
+// Hero · portado desde el diseño de ClaudeDesign (Hero.dc.html).
+// Solo el fondo (vídeo HD) + contenido central + indicador de scroll.
+// La NAVBAR se extrajo a HeroNav.astro: debe quedar FIJA por encima del contenido
+// para poder cambiar de color cuando la página de abajo lo cubre (no dentro del hero,
+// que queda cubierto). Contraste texto/vídeo: 4 scrims calibrados para WCAG AA.
+---
+<section
+  id="top"
+  data-hero-anim
+  class="gg-hero"
+  style="position:relative;height:100svh;min-height:600px;overflow:hidden;background:radial-gradient(120% 90% at 50% 8%, #241A2E 0%, #14101C 42%, #0B0A11 100%);font-family:'Montserrat Variable','Montserrat',system-ui,sans-serif;color:#F6F3EC"
+>
+  <!-- Capa de fondo · el vídeo se reproduce en cover estático (sin transform encima),
+       lo que mantiene la ruta de vídeo por hardware del navegador → reproducción fluida.
+       El Ken Burns (gg-ken) se reserva para el póster estático (móvil / movimiento reducido). -->
+  <div data-ken style="position:absolute;inset:0;z-index:0">
+    <video
+      class="gg-hero-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      poster="/hero/caracas-poster.jpg"
+      width="1920"
+      height="1080"
+      style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block"
+    >
+      <!-- MP4 H.264 primero: decodificación por hardware (GPU) → sin traba. WebM VP9 de respaldo. -->
+      <source src="/hero/caracas-hero.mp4" type="video/mp4" />
+      <source src="/hero/caracas-hero.webm" type="video/webm" />
+    </video>
+  </div>
+
+  <!-- Scrims de contraste · calibrados para legibilidad AA sobre metraje cálido -->
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;background:rgba(11,10,17,.18)"></div>
+  <div style="position:absolute;top:0;left:0;right:0;height:42%;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(11,10,17,.82) 0%,rgba(11,10,17,.34) 46%,rgba(11,10,17,0) 100%)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:48%;z-index:1;pointer-events:none;background:linear-gradient(0deg,rgba(11,10,17,.86) 0%,rgba(11,10,17,.32) 52%,rgba(11,10,17,0) 100%)"></div>
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(58% 52% at 50% 46%,rgba(11,10,17,.56) 0%,rgba(11,10,17,.14) 55%,rgba(11,10,17,0) 78%)"></div>
+
+  <!-- Contenido central -->
+  <div class="gg-hero-reveal" style="position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(80px,14vh,140px) 24px;pointer-events:none">
+    <img src="/brand/grupoglam-diamond-white.png" alt="" width="384" height="410" style="width:clamp(48px,6vw,72px);height:auto;display:block;margin:0 0 clamp(18px,2.6vh,26px)" />
+
+    <h1 style="margin:0;font-weight:300;font-size:clamp(1.9rem,6vw,3.7rem);line-height:.98;letter-spacing:-.01em;color:#F6F3EC"><span style="font-weight:700">GRUPO</span><span style="font-weight:300">GLAM</span></h1>
+
+    <div style="display:flex;align-items:center;gap:clamp(14px,2.2vw,22px);margin-top:clamp(16px,2.4vh,22px)">
+      <span style="height:1px;width:clamp(22px,4vw,46px);background:linear-gradient(90deg,rgba(201,164,106,0),rgba(201,164,106,.75))"></span>
+      <span style="font-weight:400;font-size:clamp(.72rem,1.7vw,1rem);letter-spacing:.58em;text-transform:uppercase;color:rgba(246,243,236,.82);padding-left:.58em">Inmobiliaria</span>
+      <span style="height:1px;width:clamp(22px,4vw,46px);background:linear-gradient(90deg,rgba(201,164,106,.75),rgba(201,164,106,0))"></span>
+    </div>
+  </div>
+
+  <!-- Indicador de scroll (también oculto al cargar y revelado con el contenido) -->
+  <div class="gg-hero-reveal" style="position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:flex-end;justify-content:center;gap:20px;padding:clamp(18px,2.8vw,30px) clamp(20px,5vw,54px);pointer-events:none">
+    <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:11px">
+      <span style="font-weight:500;font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:rgba(246,243,236,.5)">Deslizar</span>
+      <span style="position:relative;width:1px;height:46px;background:rgba(246,243,236,.18);overflow:hidden;display:block"><span style="position:absolute;left:0;top:0;width:1px;height:16px;background:linear-gradient(180deg,rgba(201,164,106,0),#C9A46A);animation:gg-cue 2.4s cubic-bezier(.4,0,.2,1) infinite;display:block"></span></span>
+    </div>
+  </div>
+</section>
+
+<style>
+  @keyframes gg-ken  { from { transform: scale(1.06) translate3d(0,0,0) } to { transform: scale(1.15) translate3d(-1.4%,-1.2%,0) } }
+  @keyframes gg-cue  { 0% { transform: translateY(-70%); opacity: 0 } 30% { opacity: 1 } 100% { transform: translateY(120%); opacity: 0 } }
+
+  /* Reveal del contenido del hero (logo + "GRUPO GLAM" + "Inmobiliaria" + indicador): oculto
+     al cargar —para que NO se vea a través de la silueta del .enter-cover— y aparece por scroll
+     DESPUÉS de que termina el zoom del cover (cover 46%–64%), todo junto con un fade. Se anima el
+     contenedor (no cada hijo) para que salgan a la vez con la misma animación. Enganchado al
+     mismo view-timeline --enter (en scope vía .reveal-root de index.astro).
+     Base (sin soporte de scroll-timeline): opacidad 1 → visible como fallback. */
+  @keyframes gg-copy-in { from { opacity: 0 } to { opacity: 1 } }
+
+  @supports (animation-timeline: view()) {
+    .gg-hero-reveal {
+      animation: gg-copy-in linear both;
+      animation-timeline: --enter;
+      animation-range: cover 46% cover 64%;
+    }
+  }
+
+  /* En móvil el vídeo no se descarga: póster con Ken Burns (imagen estática, sin penalizar decodificación) */
+  @media (max-width: 880px) {
+    .gg-hero-video { display: none !important; }
+    [data-ken] {
+      background-image: url('/hero/caracas-poster.jpg');
+      background-size: cover;
+      background-position: center;
+      animation: gg-ken 26s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gg-hero [data-ken] { animation: none !important; transform: scale(1.04) !important; }
+    .gg-hero * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+    /* El reveal es solo opacidad (no es movimiento vestibular): se conserva restaurando la
+       duración auto que el reset de arriba fija a .001ms (rompería el scrub por scroll). */
+    .gg-hero-reveal { animation-duration: auto !important; }
+    .gg-hero-video { display: none !important; }
+    .gg-hero [data-ken] {
+      background-image: url('/hero/caracas-poster.jpg');
+      background-size: cover;
+      background-position: center;
+    }
+  }
+</style>
+
+<script>
+  // No descargar el vídeo en móvil (ahorro de datos): se retiran las <source>.
+  const mq = window.matchMedia('(max-width: 880px)');
+  const video = document.querySelector<HTMLVideoElement>('.gg-hero-video');
+  if (video && mq.matches) {
+    video.querySelectorAll('source').forEach((s) => s.remove());
+    video.removeAttribute('autoplay');
+    video.load();
+  }
+</script>

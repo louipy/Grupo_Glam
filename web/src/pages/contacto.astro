@@ -1,0 +1,966 @@
+---
+import Base from '../layouts/Base.astro';
+
+// CONTÁCTANOS — rediseño. Tres tarjetas de intención (misma proporción que los destacados de la
+// home) que, al pulsarlas, se expanden con una animación FLIP hasta el centro de la pantalla y
+// despliegan su formulario; el resto de la web queda desenfocado (backdrop-filter). Lenguaje de
+// marca intacto: Fraunces (display) + Inter (body) + acento bronce + radios nítidos.
+//
+// Sin backend todavía: el envío muestra el estado "gracias" (la captación real de leads con
+// Turnstile/registro es una fase posterior, §10.2).
+
+// NAP verificado · §12.2. Dato real, no placeholder. (WhatsApp para el estado "gracias" del modal.)
+const wa = 'https://wa.me/584122398253';
+
+// Opciones compartidas por los selects
+const tiposInmueble = ['Apartamento', 'Casa / Quinta', 'Townhouse', 'Penthouse', 'Oficina', 'Local comercial', 'Terreno'];
+
+type Field =
+  | { name: string; label: string; type: 'text' | 'email' | 'tel'; required?: boolean; optional?: boolean; placeholder?: string; inputmode?: 'numeric' | 'tel' | 'text' | 'email' | 'url' | 'search' | 'decimal' | 'none'; autocomplete?: string }
+  | { name: string; label: string; type: 'select'; required?: boolean; placeholder: string; options: string[] }
+  | { name: string; label: string; type: 'textarea'; optional?: boolean }
+  | { name: string; label: string; type: 'toggle'; options: string[] };
+
+const commonHead: Field[] = [
+  { name: 'nombre', label: 'Nombre', type: 'text', required: true, autocomplete: 'name' },
+  { name: 'email', label: 'Email', type: 'email', required: true, autocomplete: 'email' },
+  { name: 'whatsapp', label: 'WhatsApp', type: 'tel', optional: true, autocomplete: 'tel', inputmode: 'tel' },
+];
+
+type Intent = {
+  key: string;
+  title: string;      // título largo de la tarjeta
+  sub: string;        // apoyo breve en la tarjeta
+  img: string;        // base del asset en /public/destacados
+  pos: string;        // encuadre del cover
+  fields: Field[];
+  done: { h: string; p1: string; p2: string };
+};
+
+// Orden de las tarjetas: comprar · vender · invertir (izq → der).
+const intents: Intent[] = [
+  {
+    key: 'comprar',
+    title: 'Compra o alquila tu próximo patrimonio',
+    sub: 'Encontramos el inmueble indicado con un asesor dedicado a tu búsqueda.',
+    img: 'los-palos-grandes-interior',
+    pos: 'center',
+    fields: [
+      ...commonHead,
+      { name: 'operacion', label: '¿Comprar o alquilar?', type: 'toggle', options: ['Comprar', 'Alquilar'] },
+      { name: 'tipo', label: 'Tipo de inmueble', type: 'select', required: true, placeholder: 'Selecciona un tipo', options: tiposInmueble },
+      { name: 'zona', label: 'Zona de interés', type: 'text', required: true, placeholder: 'Ej. Las Mercedes, La Castellana…' },
+      { name: 'presupuesto', label: 'Presupuesto', type: 'select', required: true, placeholder: 'Selecciona un rango', options: ['Hasta US$ 150.000', 'US$ 150.000 a 350.000', 'US$ 350.000 a 700.000', 'US$ 700.000 o más', 'Alquiler mensual'] },
+      { name: 'mensaje', label: 'Mensaje', type: 'textarea', optional: true },
+    ],
+    done: { h: 'Gracias. Hemos recibido tu solicitud.', p1: 'Te respondemos en menos de 2 horas con un consultor dedicado a tu búsqueda.', p2: 'Si prefieres, seguimos la conversación directo por WhatsApp.' },
+  },
+  {
+    key: 'vender',
+    title: 'Vende o alquila tu propiedad',
+    sub: 'Valoramos tu inmueble y lo colocamos ante compradores calificados.',
+    img: 'la-castellana-jardin',
+    pos: 'center',
+    fields: [
+      ...commonHead,
+      { name: 'operacion', label: '¿Vender o alquilar?', type: 'toggle', options: ['Vender', 'Alquilar'] },
+      { name: 'tipo', label: 'Tipo de inmueble', type: 'select', required: true, placeholder: 'Selecciona un tipo', options: tiposInmueble },
+      { name: 'ubicacion', label: 'Ubicación / urbanización', type: 'text', required: true },
+      { name: 'area', label: 'Área aprox. (m²)', type: 'text', required: true, inputmode: 'numeric' },
+      { name: 'detalles', label: 'Detalles', type: 'textarea', optional: true },
+    ],
+    done: { h: 'Gracias. Hemos recibido tu propiedad.', p1: 'Te respondemos en menos de 2 horas para coordinar la valoración y el due diligence.', p2: 'Si prefieres, seguimos la conversación directo por WhatsApp.' },
+  },
+  {
+    key: 'invertir',
+    title: 'Invierte en Venezuela desde el extranjero',
+    sub: 'Estructuramos tu inversión patrimonial desde donde te encuentres.',
+    img: 'altamira-terraza',
+    pos: 'center',
+    fields: [
+      ...commonHead,
+      { name: 'pais', label: 'País de residencia', type: 'text', required: true, autocomplete: 'country-name' },
+      { name: 'rango', label: 'Rango de inversión', type: 'select', required: true, placeholder: 'Selecciona un rango', options: ['US$ 100.000 a 250.000', 'US$ 250.000 a 500.000', 'US$ 500.000 a 1.000.000', 'US$ 1.000.000 o más'] },
+      { name: 'interes', label: 'Interés', type: 'select', required: true, placeholder: 'Selecciona un interés', options: ['Residencial', 'Comercial', 'Industrial', 'Compra de empresas'] },
+      { name: 'horizonte', label: 'Horizonte de inversión', type: 'select', required: true, placeholder: 'Selecciona un horizonte', options: ['Inmediato (0 a 3 meses)', 'Corto plazo (3 a 12 meses)', 'Mediano plazo (1 a 3 años)', 'Largo plazo (3+ años)'] },
+      { name: 'mensaje', label: 'Mensaje', type: 'textarea', optional: true },
+    ],
+    done: { h: 'Gracias. Hemos recibido tu solicitud.', p1: 'Te respondemos en menos de 2 horas con el consultor indicado para inversión.', p2: 'Si prefieres, seguimos la conversación directo por WhatsApp.' },
+  },
+];
+
+// <picture> responsive reutilizando los assets pre-optimizados en /public/destacados (AVIF/WebP/JPEG).
+// El cover de una foto apaisada en una tarjeta portrait amplía una franja vertical, así que se pide
+// un ancho acorde a esa ampliación (~1100px, casi constante) en vez del ancho de columna.
+const cardWidths = [640, 1280, 1920, 2560];
+const cardSizes = '(min-width: 900px) 1100px, 92vw';
+const srcset = (img: string, ext: string) =>
+  cardWidths.map((w) => `/destacados/${img}-${w}.${ext} ${w}w`).join(', ');
+---
+<Base
+  title="Contacto — Grupo Glam Inmobiliaria"
+  description="Hable con un asesor de Grupo Glam Inmobiliaria. Invertir, comprar, alquilar o vender inmuebles de alta gama en Caracas."
+>
+  <!-- Marca <html> antes de pintar: habilita el fade-in de las fotos solo con JS (sin JS quedan visibles). -->
+  <script is:inline>document.documentElement.classList.add('gg-js');</script>
+
+  <section class="gg-contact">
+    <p class="display-xl gg-c-head text-balance">
+      Hablemos de tu próximo movimiento <span class="gg-c-accent">patrimonial.</span>
+    </p>
+
+    <span class="label gg-c-kicker">Elige una opción para continuar</span>
+
+    <!-- Tres tarjetas de intención (proporción de los destacados) -->
+    <div class="gg-cards" role="group" aria-label="Selecciona el tipo de solicitud">
+      {intents.map((it) => (
+        <button type="button" class="gg-card" data-card={it.key} aria-haspopup="dialog">
+          <span class="gg-card-media" style={`--pos:${it.pos}`} aria-hidden="true">
+            <picture>
+              <source type="image/avif" srcset={srcset(it.img, 'avif')} sizes={cardSizes} />
+              <source type="image/webp" srcset={srcset(it.img, 'webp')} sizes={cardSizes} />
+              <img src={`/destacados/${it.img}-1280.jpg`} srcset={srcset(it.img, 'jpg')} sizes={cardSizes} width="1280" height="1828" alt="" loading="lazy" decoding="async" />
+            </picture>
+          </span>
+          <span class="gg-card-scrim" aria-hidden="true"></span>
+          <span class="gg-card-body">
+            <span class="gg-card-title">{it.title}</span>
+            <span class="gg-card-rule" aria-hidden="true"></span>
+            <span class="gg-card-sub">{it.sub}</span>
+            <span class="gg-card-cta" aria-hidden="true">
+              <svg width="26" height="8" viewBox="0 0 26 8" fill="none"><path d="M0 4h24M21 1l4 3-4 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </span>
+        </button>
+      ))}
+    </div>
+  </section>
+
+  <!-- Overlay del morph-modal. El script lo mueve a <body> para quedar por encima de la navbar. -->
+  <div class="gg-overlay" id="gg-overlay" hidden>
+    {intents.map((it) => (
+      <div
+        class="gg-modal"
+        data-modal={it.key}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`m-${it.key}-title`}
+        hidden
+      >
+        <div class="gg-modal-inner">
+        <div class="gg-modal-veil" style={`--pos:${it.pos}`} aria-hidden="true">
+          <picture>
+            <source type="image/avif" srcset={srcset(it.img, 'avif')} sizes="(min-width: 640px) 720px, 92vw" />
+            <source type="image/webp" srcset={srcset(it.img, 'webp')} sizes="(min-width: 640px) 720px, 92vw" />
+            <img src={`/destacados/${it.img}-1280.jpg`} srcset={srcset(it.img, 'jpg')} sizes="(min-width: 640px) 720px, 92vw" width="1280" height="1828" alt="" loading="lazy" decoding="async" />
+          </picture>
+        </div>
+        <div class="gg-modal-media" style={`--pos:${it.pos}`} aria-hidden="true">
+          <picture>
+            <source type="image/avif" srcset={srcset(it.img, 'avif')} sizes="(min-width: 640px) 600px, 92vw" />
+            <source type="image/webp" srcset={srcset(it.img, 'webp')} sizes="(min-width: 640px) 600px, 92vw" />
+            <img src={`/destacados/${it.img}-1280.jpg`} srcset={srcset(it.img, 'jpg')} sizes="(min-width: 640px) 600px, 92vw" width="1280" height="1828" alt="" loading="lazy" decoding="async" />
+          </picture>
+          <span class="gg-modal-scrim"></span>
+          <h2 class="gg-modal-title" id={`m-${it.key}-title`} tabindex="-1">{it.title}</h2>
+        </div>
+
+        <button type="button" class="gg-modal-close" data-close aria-label="Cerrar">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+
+        <div class="gg-modal-body">
+          <!-- Formulario -->
+          <form class="gg-form" novalidate data-form={it.key}>
+            {it.fields.map((f) => (
+              <div class="gg-field" class:list={[f.type === 'toggle' && 'gg-field--seg']}>
+                {f.type === 'toggle' ? (
+                  <fieldset class="gg-seg">
+                    <legend class="gg-label">{f.label}</legend>
+                    <div class="gg-seg-track" role="radiogroup" aria-label={f.label}>
+                      {f.options.map((opt, i) => (
+                        <button
+                          type="button"
+                          class="gg-seg-btn"
+                          class:list={[i === 0 && 'is-on']}
+                          role="radio"
+                          aria-checked={i === 0 ? 'true' : 'false'}
+                          data-seg-val={opt}
+                        >{opt}</button>
+                      ))}
+                    </div>
+                    <input type="hidden" name={f.name} value={f.options[0]} />
+                  </fieldset>
+                ) : (
+                  <>
+                    <label class="gg-label" for={`${it.key}-${f.name}`}>
+                      {f.label}
+                      {f.type !== 'textarea' && f.required && <span class="gg-req" aria-hidden="true"> *</span>}
+                      {'optional' in f && f.optional && <span class="gg-opt"> (opcional)</span>}
+                    </label>
+
+                    {f.type === 'select' ? (
+                      <div class="gg-select">
+                        <select id={`${it.key}-${f.name}`} name={f.name} required={f.required}>
+                          <option value="">{f.placeholder}</option>
+                          {f.options.map((opt) => <option value={opt}>{opt}</option>)}
+                        </select>
+                        <span class="gg-select-chev" aria-hidden="true">
+                          <svg width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M1 1l4.5 4.5L10 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                      </div>
+                    ) : f.type === 'textarea' ? (
+                      <textarea id={`${it.key}-${f.name}`} name={f.name} rows="3"></textarea>
+                    ) : (
+                      <input
+                        id={`${it.key}-${f.name}`}
+                        name={f.name}
+                        type={f.type}
+                        required={f.required}
+                        placeholder={'placeholder' in f ? f.placeholder : undefined}
+                        inputmode={'inputmode' in f ? f.inputmode : undefined}
+                        autocomplete={'autocomplete' in f ? f.autocomplete : undefined}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+
+            <div class="gg-form-foot">
+              <button type="submit" class="gg-submit">Enviar solicitud</button>
+              <p class="gg-form-note">Te respondemos en menos de 2 horas.</p>
+              <p class="gg-form-fine">Tus datos se usan solo para gestionar tu solicitud.</p>
+            </div>
+          </form>
+
+          <!-- Estado "gracias" -->
+          <div class="gg-done" data-done={it.key} hidden>
+            <span class="gg-c-tick" aria-hidden="true"></span>
+            <h3 class="gg-done-h" tabindex="-1">{it.done.h}</h3>
+            <p class="gg-done-p">{it.done.p1}</p>
+            <p class="gg-done-p">{it.done.p2}</p>
+            <div class="gg-done-actions">
+              <a href={wa} target="_blank" rel="noopener" class="gg-submit gg-submit--link">Abrir WhatsApp</a>
+              <button type="button" class="gg-reset" data-reset={it.key}>Enviar otra solicitud</button>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .gg-contact {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: clamp(48px, 7vw, 104px) clamp(20px, 5vw, 54px) clamp(64px, 9vw, 120px);
+  }
+
+  /* --- Titular + intro --- */
+  .gg-c-head {
+    margin: 0;
+    /* Ancho pensado para que el titular ocupe 2 líneas (no 3) */
+    max-width: 24ch;
+    color: var(--color-tinta);
+    font-size: clamp(2rem, 4.2vw, 3.5rem);
+    line-height: 1.02;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    animation: gg-rise .9s var(--ease-editorial) .05s both;
+  }
+  /* Nudge hacia la izquierda, dentro del gutter (no altera el tamaño de la web) */
+  @media (min-width: 900px) {
+    .gg-c-head { margin-left: calc(-1 * clamp(12px, 3vw, 40px)); }
+  }
+  .gg-c-accent { color: var(--color-bronce); }
+
+  .gg-c-kicker {
+    display: block;
+    color: var(--color-humo);
+    margin: clamp(26px, 3vw, 40px) 0 clamp(18px, 2.2vw, 26px);
+    animation: gg-rise .8s var(--ease-editorial) .22s both;
+  }
+
+  /* ---- Tarjetas de intención (misma proporción que los destacados) ---- */
+  .gg-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(14px, 1.4vw, 22px);
+  }
+  @media (min-width: 900px) {
+    .gg-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  .gg-card {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: clamp(500px, 41vw, 660px);
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    border-radius: 1px;
+    background: #161320;
+    color: #F6F3EC;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    /* Entrada escalonada */
+    animation: gg-rise .7s var(--ease-editorial) both;
+    /* Crecer/elevarse en hover (fuera del keyframe de entrada) */
+    transition: transform .5s var(--ease-out), box-shadow .5s var(--ease-out);
+  }
+  .gg-card:nth-child(1) { animation-delay: .30s; }
+  .gg-card:nth-child(2) { animation-delay: .38s; }
+  .gg-card:nth-child(3) { animation-delay: .46s; }
+
+  /* La tarjeta activa se oculta mientras su modal está en vuelo (evita el doble) */
+  .gg-card.is-lifted { visibility: hidden; }
+
+  .gg-card-media {
+    position: absolute;
+    inset: 0;
+    display: block;
+    transition: transform .7s var(--ease-editorial);
+  }
+  .gg-card-media picture { display: block; width: 100%; height: 100%; }
+  .gg-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--pos, center);
+    display: block;
+  }
+  /* Fade-in de la foto al cargar (solo con JS). El fondo oscuro de la tarjeta actúa de estado de
+     carga, así la imagen nunca "parpadea" ni aparece de golpe antes de estar renderizada. */
+  :global(.gg-js) .gg-card-media img {
+    opacity: 0;
+    transition: opacity .7s var(--ease-editorial);
+  }
+  :global(.gg-js) .gg-card-media img.is-ready { opacity: 1; }
+
+  .gg-card-scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(0deg,
+      rgba(9, 8, 14, .90) 0%,
+      rgba(9, 8, 14, .60) 30%,
+      rgba(9, 8, 14, .18) 58%,
+      rgba(9, 8, 14, .04) 100%);
+  }
+
+  .gg-card-body {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: clamp(24px, 2.4vw, 34px);
+  }
+  .gg-card-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.5rem, 2vw, 2rem);
+    line-height: 1.08;
+    letter-spacing: -.01em;
+    color: #F6F3EC;
+    text-wrap: balance;
+    text-shadow: 0 1px 20px rgba(9, 8, 14, .55);
+  }
+  .gg-card-rule {
+    height: 1px;
+    width: 40px;
+    background: linear-gradient(90deg, rgba(201, 164, 106, .95), rgba(201, 164, 106, 0));
+    transition: width .5s var(--ease-editorial);
+  }
+  .gg-card-sub {
+    margin: -2px 0 2px;
+    max-width: 34ch;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: rgba(246, 243, 236, .82);
+  }
+  .gg-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--color-bronce);
+  }
+  .gg-card-cta svg { transition: transform .35s var(--ease-out); }
+
+  /* Hover: la tarjeta crece y se eleva; la foto hace un zoom mayor por dentro; filete y flecha
+     crecen (eco de los destacados). z-index para que la tarjeta ampliada quede sobre las vecinas. */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .gg-card:hover {
+      transform: scale(1.055) translateY(-8px);
+      z-index: 2;
+      box-shadow: 0 40px 80px -28px rgba(9, 8, 14, .55);
+    }
+    .gg-card:hover .gg-card-media { transform: scale(1.1); }
+    .gg-card:hover .gg-card-rule { width: 72px; }
+    .gg-card:hover .gg-card-cta svg { transform: translateX(7px); }
+  }
+  .gg-card:active { transform: scale(.992); }
+  .gg-card:focus-visible { outline: 2px solid var(--color-bronce); outline-offset: 4px; }
+
+  @keyframes gg-rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gg-c-head, .gg-c-kicker, .gg-card {
+      animation: none !important; opacity: 1 !important; transform: none !important;
+    }
+  }
+</style>
+
+<!-- Estilos del overlay/modal: global porque el script mueve #gg-overlay fuera de este componente
+     (a <body>) para que el desenfoque quede por encima de la navbar fija. -->
+<style is:global>
+  .gg-overlay {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(14px, 4vw, 44px);
+    background: color-mix(in srgb, var(--color-tinta) 0%, transparent);
+    opacity: 0;
+    -webkit-backdrop-filter: blur(0px);
+    backdrop-filter: blur(0px);
+    transition: opacity .3s ease, background .45s ease,
+                backdrop-filter .45s ease, -webkit-backdrop-filter .45s ease;
+  }
+  .gg-overlay.is-open {
+    opacity: 1;
+    background: color-mix(in srgb, var(--color-tinta) 40%, transparent);
+    -webkit-backdrop-filter: blur(12px) saturate(104%);
+    backdrop-filter: blur(12px) saturate(104%);
+  }
+  /* Sin soporte de backdrop-filter: el tinte más oscuro mantiene el foco en el modal. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .gg-overlay.is-open { background: color-mix(in srgb, var(--color-tinta) 68%, transparent); }
+  }
+
+  /* Exterior: solo recorta y transforma (viaja desde la tarjeta). */
+  .gg-modal {
+    position: relative;
+    overflow: hidden;
+    border-radius: 3px;
+    box-shadow: 0 40px 120px -30px rgba(9, 8, 14, .6);
+    transform-origin: top left;
+    will-change: transform;
+  }
+  /* Interior: contenido real a tamaño final. En el vuelo recibe la escala inversa del exterior,
+     así el contenido NO se deforma ni se queda en blanco; se revela al crecer la ventana y
+     permanece visible de principio a fin (y en reversa al cerrar). */
+  .gg-modal-inner {
+    position: relative;
+    width: min(720px, 100%);
+    max-height: min(88vh, 860px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--color-papel);
+    border-radius: 3px;
+    transform-origin: top left;
+    will-change: transform;
+  }
+  /* En ancho: dos columnas — imagen (más estrecha) + formulario (más ancho). */
+  @media (min-width: 760px) {
+    .gg-modal-inner {
+      width: min(960px, 100%);
+      flex-direction: row;
+    }
+  }
+
+  /* Capa-velo: misma foto con velo oscuro. Cubre el formulario durante el vuelo para que lo que
+     crece/encoge siempre se vea oscuro (como la tarjeta), nunca en blanco. El JS controla su
+     opacidad: 1 mientras vuela, 0 (crossfade) al asentarse; y a la inversa al cerrar. */
+  .gg-modal-veil {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background: #161320;
+  }
+  .gg-modal-veil picture { display: block; width: 100%; height: 100%; }
+  .gg-modal-veil img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: var(--pos, center);
+    display: block;
+  }
+  .gg-modal-veil::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(0deg, rgba(9, 8, 14, .74) 0%, rgba(9, 8, 14, .44) 100%);
+  }
+
+  .gg-modal-media {
+    position: relative;
+    flex: 0 0 auto;
+    height: clamp(128px, 20vh, 168px);
+    overflow: hidden;
+    background: #161320;
+  }
+  @media (min-width: 760px) {
+    /* Columna de imagen: más estrecha que el formulario */
+    .gg-modal-media { flex: 0 0 38%; height: auto; align-self: stretch; }
+  }
+  .gg-modal-media picture { display: block; width: 100%; height: 100%; }
+  .gg-modal-media img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: var(--pos, center);
+    display: block;
+  }
+  .gg-modal-scrim {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(0deg,
+      rgba(9, 8, 14, .88) 0%,
+      rgba(9, 8, 14, .40) 46%,
+      rgba(9, 8, 14, .10) 100%);
+  }
+  .gg-modal-title {
+    position: absolute;
+    left: 0; right: 56px; bottom: 0;
+    margin: 0;
+    padding: clamp(18px, 2.4vw, 26px);
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.4rem, 2.2vw, 1.85rem);
+    line-height: 1.06;
+    letter-spacing: -.01em;
+    color: #F6F3EC;
+    text-wrap: balance;
+    text-shadow: 0 1px 20px rgba(9, 8, 14, .5);
+    outline: none;
+  }
+
+  .gg-modal-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    z-index: 5;
+    width: 38px; height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-tinta) 55%, transparent);
+    color: var(--color-papel);
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: background .25s ease, transform .16s var(--ease-out);
+  }
+  .gg-modal-close:hover { background: var(--color-bronce); color: var(--color-tinta); }
+  .gg-modal-close:active { transform: scale(.92); }
+
+  .gg-modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: clamp(24px, 3vw, 38px);
+    scrollbar-width: thin;
+  }
+  @media (min-width: 760px) {
+    /* Tarjeta del formulario: ocupa más ancho que la columna de imagen (62% vs 38%) */
+    .gg-modal-body { flex: 1 1 62%; max-height: min(88vh, 860px); }
+  }
+
+  /* --- Formulario (dentro del modal) --- */
+  .gg-form { display: flex; flex-direction: column; gap: clamp(18px, 2.2vw, 24px); }
+  .gg-field { display: flex; flex-direction: column; }
+  .gg-label {
+    display: block;
+    margin: 0 0 8px;
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    color: var(--color-tinta);
+  }
+  .gg-req { color: var(--color-bronce); }
+  .gg-opt { font-weight: 400; color: color-mix(in srgb, var(--color-tinta) 45%, transparent); }
+
+  .gg-field input,
+  .gg-field textarea,
+  .gg-select select {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-tinta) 22%, transparent);
+    padding: 10px 2px;
+    font-family: inherit;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--color-tinta);
+    outline: none;
+    transition: border-color .3s ease;
+  }
+  .gg-field textarea { resize: vertical; min-height: 82px; }
+  .gg-field input:focus,
+  .gg-field textarea:focus,
+  .gg-select select:focus { border-bottom-color: var(--color-bronce); }
+  .gg-field input::placeholder,
+  .gg-field textarea::placeholder { color: color-mix(in srgb, var(--color-tinta) 35%, transparent); }
+
+  .gg-select { position: relative; }
+  .gg-select select { padding-right: 28px; appearance: none; -webkit-appearance: none; cursor: pointer; }
+  .gg-select-chev {
+    position: absolute;
+    right: 3px; bottom: 12px;
+    pointer-events: none;
+    color: var(--color-bronce);
+    display: inline-flex;
+    transition: transform .3s var(--ease-out);
+  }
+  .gg-select select:focus + .gg-select-chev { transform: translateY(1px); }
+
+  .gg-seg { border: 0; margin: 0; padding: 0; }
+  .gg-seg legend { padding: 0; }
+  .gg-seg-track { display: flex; align-items: center; margin-top: 2px; }
+  .gg-seg-btn {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid color-mix(in srgb, var(--color-tinta) 18%, transparent);
+    padding: 9px 0;
+    margin-right: 38px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: .01em;
+    color: color-mix(in srgb, var(--color-tinta) 55%, transparent);
+    cursor: pointer;
+    transition: color .25s ease, border-color .25s ease, transform .16s var(--ease-out);
+  }
+  .gg-seg-btn:active { transform: scale(.96); }
+  .gg-seg-btn.is-on { color: var(--color-bronce); border-bottom-color: var(--color-bronce); }
+
+  .gg-form-foot { margin-top: clamp(4px, 1vw, 10px); }
+  .gg-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--color-tinta);
+    color: var(--color-papel);
+    border: 0;
+    border-radius: var(--radius-control);
+    padding: 15px 34px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .3s ease, transform .16s var(--ease-out);
+  }
+  .gg-submit:hover { background: var(--color-bronce); color: var(--color-tinta); }
+  .gg-submit:active { transform: scale(.97); }
+  .gg-form-note { margin: 16px 0 0; font-size: 13.5px; color: color-mix(in srgb, var(--color-tinta) 62%, transparent); }
+  .gg-form-fine { margin: 8px 0 0; font-size: 12px; letter-spacing: .02em; color: color-mix(in srgb, var(--color-tinta) 45%, transparent); }
+
+  /* --- Estado "gracias" --- */
+  .gg-done { animation: gg-formin .3s var(--ease-out) both; }
+  .gg-c-tick { display: block; width: 46px; height: 2px; background: var(--color-bronce); margin-bottom: clamp(16px, 2vw, 24px); }
+  .gg-done-h {
+    margin: 0 0 14px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    line-height: 1.1;
+    letter-spacing: -.01em;
+    color: var(--color-tinta);
+    outline: none;
+  }
+  .gg-done-p { margin: 0 0 6px; font-size: 16px; line-height: 1.6; color: var(--color-humo); }
+  .gg-done-p:last-of-type { margin-bottom: clamp(20px, 2.4vw, 28px); }
+  .gg-done-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; }
+  .gg-reset {
+    background: transparent;
+    border: 0;
+    padding: 6px 0;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--color-bronce);
+    cursor: pointer;
+    box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--color-bronce) 45%, transparent);
+    transition: color .25s ease;
+  }
+  .gg-reset:hover { color: var(--color-tinta); }
+
+  @keyframes gg-formin { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* Bloqueo de scroll del fondo mientras el modal está abierto */
+  html.gg-locked, body.gg-locked { overflow: hidden; }
+
+  /* Reduced-motion: sin vuelo FLIP ni scrub; el modal aparece centrado con un fundido breve. */
+  @media (prefers-reduced-motion: reduce) {
+    .gg-overlay { transition: opacity .2s ease, background .2s ease; }
+    .gg-modal, .gg-modal-inner { transition: none !important; transform: none !important; }
+  }
+</style>
+
+<script>
+  // Morph-modal con técnica FLIP en vanilla (solo transform/opacity).
+  // La tarjeta pulsada "vuela" desde su posición en la grilla hasta el modal centrado; al cerrar,
+  // regresa a la tarjeta. El fondo se desenfoca vía backdrop-filter en el overlay.
+
+  const overlay = document.getElementById('gg-overlay');
+  const cards = Array.from(document.querySelectorAll<HTMLButtonElement>('.gg-card'));
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  // Revelar la foto de cada tarjeta con un fundido cuando termina de cargar (evita el parpadeo de
+  // la imagen antes de que la tarjeta esté renderizada). Las ya cacheadas se revelan al instante.
+  cards.forEach((card) => {
+    const img = card.querySelector<HTMLImageElement>('.gg-card-media img');
+    if (!img) return;
+    const reveal = () => img.classList.add('is-ready');
+    if (img.complete) reveal();
+    else img.addEventListener('load', reveal, { once: true });
+  });
+
+  if (overlay && cards.length) {
+    // Mover el overlay a <body> para escapar del stacking context de <main> y cubrir la navbar.
+    document.body.appendChild(overlay);
+
+    const modals = new Map<string, HTMLElement>();
+    overlay.querySelectorAll<HTMLElement>('.gg-modal').forEach((m) => {
+      const key = m.dataset.modal;
+      if (key) modals.set(key, m);
+    });
+
+    let activeKey: string | null = null;
+    let activeModal: HTMLElement | null = null;
+    let lastTrigger: HTMLButtonElement | null = null;
+
+    const getTrigger = (key: string) =>
+      cards.find((c) => c.dataset.card === key) ?? null;
+
+    const OPEN_DUR = 500;   // ms — entrada
+
+    // FLIP con contra-escala: el exterior viaja/encoge hasta la tarjeta y el interior aplica la
+    // escala inversa, de modo que el contenido se mantiene a tamaño real (ni se deforma ni parpadea).
+    const applyFlip = (modal: HTMLElement, inner: HTMLElement, first: DOMRect, last: DOMRect) => {
+      const sx = first.width / last.width;
+      const sy = first.height / last.height;
+      const dx = first.left - last.left;
+      const dy = first.top - last.top;
+      modal.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+      inner.style.transform = `scale(${1 / sx}, ${1 / sy})`;
+    };
+
+    const clearFlip = (modal: HTMLElement, inner: HTMLElement | null) => {
+      modal.style.transition = '';
+      modal.style.transform = '';
+      if (inner) { inner.style.transition = ''; inner.style.transform = ''; }
+    };
+
+    const VEIL_FADE = 300;  // ms — crossfade foto ↔ formulario
+
+    const open = (key: string, trigger: HTMLButtonElement) => {
+      const modal = modals.get(key);
+      if (!modal || activeKey) return;
+      const inner = modal.querySelector<HTMLElement>('.gg-modal-inner');
+      const veil = modal.querySelector<HTMLElement>('.gg-modal-veil');
+      activeKey = key;
+      activeModal = modal;
+      lastTrigger = trigger;
+
+      document.documentElement.classList.add('gg-locked');
+      document.body.classList.add('gg-locked');
+
+      overlay.hidden = false;
+      modal.hidden = false;
+
+      const first = trigger.getBoundingClientRect();
+
+      if (reduce.matches || !inner) {
+        // Sin vuelo: aparece centrado con un fundido.
+        requestAnimationFrame(() => overlay.classList.add('is-open'));
+        focusModal(modal);
+        return;
+      }
+
+      trigger.classList.add('is-lifted');
+
+      // El velo (foto oscura) cubre el contenido durante el vuelo → se ve como la tarjeta, no en blanco.
+      if (veil) { veil.style.transition = 'none'; veil.style.opacity = '1'; }
+
+      // Estado inicial (sobre la tarjeta) sin transición, luego animar hacia la posición final.
+      const last = modal.getBoundingClientRect();
+      modal.style.transition = 'none';
+      inner.style.transition = 'none';
+      applyFlip(modal, inner, first, last);
+      void modal.offsetWidth; // confirmar el estado inicial antes de animar
+
+      requestAnimationFrame(() => {
+        overlay.classList.add('is-open');
+        const t = `transform ${OPEN_DUR}ms var(--ease-drawer)`;
+        modal.style.transition = t;
+        inner.style.transition = t;
+        modal.style.transform = 'none';
+        inner.style.transform = 'none';
+      });
+
+      const onEnd = (e: TransitionEvent) => {
+        if (e.target !== modal || e.propertyName !== 'transform') return;
+        modal.removeEventListener('transitionend', onEnd);
+        clearFlip(modal, inner);
+        // Al asentarse, el velo se desvanece y revela el formulario (crossfade, sin salto).
+        if (veil) { veil.style.transition = `opacity ${VEIL_FADE}ms ease`; veil.style.opacity = '0'; }
+        focusModal(modal);
+      };
+      modal.addEventListener('transitionend', onEnd);
+    };
+
+    const close = () => {
+      if (!activeKey || !activeModal) return;
+      const modal = activeModal;
+      const key = activeKey;
+      const inner = modal.querySelector<HTMLElement>('.gg-modal-inner');
+      const veil = modal.querySelector<HTMLElement>('.gg-modal-veil');
+      const trigger = lastTrigger ?? getTrigger(key);
+
+      // Restaurar la tarjeta detrás desde ya, para que el overlay se funda sobre ella (sin hueco).
+      trigger?.classList.remove('is-lifted');
+
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        overlay.hidden = true;
+        modal.hidden = true;
+        overlay.removeEventListener('transitionend', onEnd);
+        clearFlip(modal, inner);
+        if (veil) { veil.style.transition = ''; veil.style.opacity = ''; }
+        document.documentElement.classList.remove('gg-locked');
+        document.body.classList.remove('gg-locked');
+        trigger?.focus();
+        activeKey = null;
+        activeModal = null;
+        lastTrigger = null;
+      };
+
+      // Desvanecer el overlay completo (modal + blur) suavemente hasta desaparecer. Sin encoger:
+      // así no reaparece el área blanca; el modal se funde en su sitio revelando la tarjeta detrás.
+      const onEnd = (e: TransitionEvent) => {
+        if (e.target !== overlay || e.propertyName !== 'opacity') return;
+        finish();
+      };
+      overlay.addEventListener('transitionend', onEnd);
+      overlay.classList.remove('is-open');
+
+      // Red de seguridad por si el transitionend no dispara.
+      window.setTimeout(finish, 460);
+    };
+
+    const focusModal = (modal: HTMLElement) => {
+      (modal.querySelector<HTMLElement>('.gg-modal-title'))?.focus();
+    };
+
+    // Trampa de foco mínima dentro del modal
+    const trapFocus = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !activeModal) return;
+      const focusables = activeModal.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+
+    cards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const key = card.dataset.card;
+        if (key) open(key, card);
+      });
+    });
+
+    // Click fuera del panel cierra
+    overlay.addEventListener('mousedown', (e) => {
+      if (e.target === overlay) close();
+    });
+
+    overlay.querySelectorAll<HTMLButtonElement>('[data-close]').forEach((btn) => {
+      btn.addEventListener('click', close);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && activeKey) { e.preventDefault(); close(); }
+      else trapFocus(e);
+    });
+
+    // --- Lógica de cada formulario (segmented control, envío → gracias, reset) ---
+    overlay.querySelectorAll<HTMLElement>('.gg-modal').forEach((modal) => {
+      const form = modal.querySelector<HTMLFormElement>('.gg-form');
+      const done = modal.querySelector<HTMLElement>('.gg-done');
+
+      modal.querySelectorAll<HTMLElement>('.gg-seg').forEach((seg) => {
+        const btns = Array.from(seg.querySelectorAll<HTMLButtonElement>('.gg-seg-btn'));
+        const hidden = seg.querySelector<HTMLInputElement>('input[type="hidden"]');
+        btns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            btns.forEach((b) => {
+              const on = b === btn;
+              b.classList.toggle('is-on', on);
+              b.setAttribute('aria-checked', String(on));
+            });
+            if (hidden) hidden.value = btn.dataset.segVal ?? hidden.value;
+          });
+        });
+      });
+
+      form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!form.reportValidity()) return;
+        form.hidden = true;
+        if (done) {
+          done.hidden = false;
+          (done.querySelector<HTMLElement>('.gg-done-h'))?.focus();
+          modal.querySelector('.gg-modal-body')?.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      modal.querySelector<HTMLButtonElement>('.gg-reset')?.addEventListener('click', () => {
+        form?.reset();
+        if (done) done.hidden = true;
+        if (form) form.hidden = false;
+        modal.querySelectorAll<HTMLElement>('.gg-seg').forEach((seg) => {
+          const btns = Array.from(seg.querySelectorAll<HTMLButtonElement>('.gg-seg-btn'));
+          const hidden = seg.querySelector<HTMLInputElement>('input[type="hidden"]');
+          btns.forEach((b, i) => {
+            b.classList.toggle('is-on', i === 0);
+            b.setAttribute('aria-checked', String(i === 0));
+          });
+          if (hidden && btns[0]) hidden.value = btns[0].dataset.segVal ?? hidden.value;
+        });
+      });
+    });
+  }
+</script>

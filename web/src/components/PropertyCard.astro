@@ -1,0 +1,38 @@
+---
+import type { PropiedadDemo } from '../data/propiedades.sample';
+import { precioES, spec } from '../lib/formato';
+
+interface Props { p: PropiedadDemo }
+const { p } = Astro.props;
+
+// Tarjeta · §9.2. Imagen 4:3, radio 0, toda la tarjeta es enlace, datos en mono tabular.
+const slug = `${p.operacion}-${p.tipo}-${p.zonaSlug}-${p.ref.toLowerCase()}`;
+const datos = [
+  spec(p.area, 'm²'),
+  spec(p.habitaciones, 'hab'),
+  spec(p.banos, 'baños'),
+  spec(p.puestos, 'est'),
+].filter(Boolean) as string[];
+---
+<a href={`/propiedad/${slug}`} class="group block">
+  <!-- portada 4:3 · radio 0 (§8.3) -->
+  <div class="relative aspect-[4/3] overflow-hidden" style={`background:${p.tono}`}>
+    <span class="absolute top-3 left-3 label px-2 py-1 bg-[var(--color-tinta)]/80 text-[var(--color-lino)] backdrop-blur-sm">
+      {p.operacion === 'venta' ? 'En venta' : 'En alquiler'}
+    </span>
+    <span class="absolute bottom-2 right-3 label text-[var(--color-lino)]/40 text-[0.6rem]">imagen pendiente</span>
+  </div>
+
+  <div class="pt-4">
+    <p class="display-l text-[1.6rem] text-[var(--color-tinta)] group-hover:text-[var(--color-bronce)] transition-colors" style="transition-duration:400ms">
+      {precioES(p.precio, p.aConsultar)}
+    </p>
+    <h3 class="mt-1 title text-[1.15rem] leading-snug text-balance">{p.titulo}</h3>
+    <p class="label text-[var(--color-humo)] mt-1">{p.zona}</p>
+    {datos.length > 0 && (
+      <p class="data text-[var(--color-humo)] mt-3 pt-3 border-t rule-bronce flex gap-4 flex-wrap">
+        {datos.map((d) => <span>{d}</span>)}
+      </p>
+    )}
+  </div>
+</a>

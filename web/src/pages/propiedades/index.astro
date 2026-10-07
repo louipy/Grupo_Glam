@@ -1,0 +1,891 @@
+---
+import Base from '../../layouts/Base.astro';
+import CatalogoPropiedadCard from '../../components/CatalogoPropiedadCard.astro';
+import { propiedadesDemo } from '../../data/propiedades.sample';
+import { precioES } from '../../lib/formato';
+
+// Fotos reales por propiedad (las que ya existen en /public/destacados). El resto cae al
+// placeholder de marca de la tarjeta. Mismo criterio que la home (index.astro).
+const fotos: Record<string, { img: string; alt: string }> = {
+  'DEMO-01': { img: 'sebucan-edificio', alt: 'Edificio residencial de alta gama en Sebucán' },
+  'DEMO-02': { img: 'la-castellana-jardin', alt: 'Casa con jardín y piscina en La Castellana' },
+  'DEMO-03': { img: 'los-palos-grandes-interior', alt: 'Salón luminoso de apartamento en Los Palos Grandes' },
+  'DEMO-04': { img: 'altamira-terraza', alt: 'Terraza con vista al Ávila en Altamira' },
+};
+
+// Mismo slug que usa la tarjeta (CatalogoPropiedadCard) para enlazar pin → detalle.
+const slugDe = (p: (typeof propiedadesDemo)[number]) =>
+  `${p.operacion}-${p.tipo}-${p.zonaSlug}-${p.ref.toLowerCase()}`;
+
+// Puntos para el mapa (solo los que tienen coordenadas). El filtrado del catálogo los
+// enciende/apaga por referencia desde el script del cliente. Cada punto lleva además los
+// datos para el popup (miniatura, nombre, precio, enlace) y el vínculo tarjeta ↔ pin.
+const mapPoints = propiedadesDemo
+  .filter((p) => p.lat != null && p.lng != null)
+  .map((p) => ({
+    ref: p.ref,
+    lat: p.lat as number,
+    lng: p.lng as number,
+    name: `${p.calle ?? p.titulo} · ${p.zona}`,
+    price: precioES(p.precio, p.aConsultar),
+    href: `/propiedad/${slugDe(p)}`,
+    img: fotos[p.ref]?.img ? `/destacados/${fotos[p.ref]!.img}-640.jpg` : null,
+    tono: p.tono,
+  }));
+
+const GOLD = '#C9A46A';
+const TINTA = '#100E17';
+---
+<Base
+  title="Propiedades — Grupo Glam Inmobiliaria"
+  description="Catálogo de inmuebles de alta gama en las mejores urbanizaciones de Caracas. Venta y alquiler con asesoría integral."
+>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <section class="cat">
+    <header class="cat-head">
+      <h1 class="cat-h1">Catálogo de propiedades</h1>
+    </header>
+
+    <!-- Barra de filtros (funcional: filtra la rejilla y el mapa en vivo). -->
+    <div class="cat-filtros" role="search" aria-label="Filtros del catálogo">
+      <label class="cat-search">
+        <span class="cat-search-ico" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.2" stroke="currentColor" stroke-width="1.3"></circle><path d="M11 11l3.4 3.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"></path></svg>
+        </span>
+        <input type="text" id="cat-q" placeholder="Ciudad, urbanización o código" aria-label="Buscar por ciudad, urbanización o código" autocomplete="off" />
+      </label>
+
+      <div class="cat-op" role="group" aria-label="Tipo de operación">
+        <button type="button" id="cat-buy" class="cat-op-btn is-active" aria-pressed="true">Comprar</button>
+        <button type="button" id="cat-rent" class="cat-op-btn" aria-pressed="false">Alquilar</button>
+      </div>
+
+      <div class="cat-selects">
+        <div class="cat-field">
+          <select id="cat-tipo" class="cat-select" aria-label="Tipo de inmueble">
+            <option value="">Tipo</option>
+            <option value="apartamento">Apartamento</option>
+            <option value="casa">Casa</option>
+            <option value="edificio">Edificio</option>
+            <option value="local">Local</option>
+            <option value="oficina">Oficina</option>
+            <option value="terreno">Terreno</option>
+          </select>
+        </div>
+        <div class="cat-field">
+          <select id="cat-hab" class="cat-select" aria-label="Habitaciones mínimas">
+            <option value="">Habitaciones</option>
+            <option value="1">1+ hab</option>
+            <option value="2">2+ hab</option>
+            <option value="3">3+ hab</option>
+            <option value="4">4+ hab</option>
+            <option value="5">5+ hab</option>
+          </select>
+        </div>
+        <div class="cat-field">
+          <select id="cat-precio" class="cat-select" aria-label="Rango de precio">
+            <option value="">Precio</option>
+            <option value="-1000000">Hasta US$ 1M</option>
+            <option value="1000000-2000000">US$ 1M – 2M</option>
+            <option value="2000000-3500000">US$ 2M – 3,5M</option>
+            <option value="3500000-">Más de US$ 3,5M</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subbarra: resultados + orden. -->
+    <div class="cat-subbar">
+      <p class="cat-count" id="cat-count" aria-live="polite"></p>
+      <div class="cat-sort">
+        <span class="cat-sort-lbl">Ordenar</span>
+        <select id="cat-sort" class="cat-select cat-select--bare" aria-label="Ordenar propiedades">
+          <option value="destacadas">Destacadas</option>
+          <option value="precio-asc">Precio ascendente</option>
+          <option value="precio-desc">Precio descendente</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Split: rejilla de tarjetas + mapa sticky. -->
+    <div class="cat-split">
+      <div class="cat-left">
+        <div class="cat-grid" id="cat-grid">
+          {propiedadesDemo.map((p, i) => (
+            <CatalogoPropiedadCard p={p} img={fotos[p.ref]?.img} alt={fotos[p.ref]?.alt} i={i} />
+          ))}
+        </div>
+        <p class="cat-empty" id="cat-empty" hidden>
+          No hay propiedades que coincidan con estos filtros. Ajusta la búsqueda para ver más opciones.
+        </p>
+      </div>
+
+      <aside class="cat-mapwrap" aria-label="Mapa de propiedades en Caracas">
+        <div class="cat-map-inner">
+          <div id="gg-map"></div>
+          <button type="button" id="cat-map-expand" class="cat-map-expand" aria-label="Ver mapa en pantalla completa">
+            <svg class="cat-map-ico-open" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 1H1v5M10 1h5v5M10 15h5v-5M6 15H1v-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <svg class="cat-map-ico-close" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 6h4V2M14 6h-4V2M14 10h-4v4M2 10h4v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script is:inline define:vars={{ mapPoints, GOLD, TINTA }}>
+    (function () {
+      const grid = document.getElementById('cat-grid');
+      if (!grid) return;
+      const cards = Array.from(grid.querySelectorAll('[data-card]'));
+      const qEl = document.getElementById('cat-q');
+      const buyBtn = document.getElementById('cat-buy');
+      const rentBtn = document.getElementById('cat-rent');
+      const tipoEl = document.getElementById('cat-tipo');
+      const habEl = document.getElementById('cat-hab');
+      const precioEl = document.getElementById('cat-precio');
+      const sortEl = document.getElementById('cat-sort');
+      const countEl = document.getElementById('cat-count');
+      const emptyEl = document.getElementById('cat-empty');
+      let mode = 'comprar';
+
+      // ---- Mapa (Leaflet, tiles a color, pines dorados) ----
+      let map = null, markersLayer = null;
+      const markerByRef = {};                 // ref → marker (se reconstruye al filtrar)
+      const cardByRef = {};                   // ref → tarjeta del grid
+      cards.forEach((c) => { cardByRef[c.dataset.ref] = c; });
+
+      function makeIcon() {
+        const html = '<div class="gg-pin-inner"><span class="gg-pin-dot"></span></div>';
+        return window.L.divIcon({ className: 'gg-pin', html, iconSize: [1, 1] });
+      }
+      function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+      function popupHtml(pt) {
+        const media = pt.img
+          ? '<span class="gg-pop-media" style="background-image:url(' + pt.img + ')"></span>'
+          : '<span class="gg-pop-media gg-pop-media--ph" style="background:' + pt.tono + '"></span>';
+        const dir = 'https://www.google.com/maps/dir/?api=1&destination=' + pt.lat + ',' + pt.lng;
+        return '<a class="gg-pop" href="' + pt.href + '">'
+          + media
+          + '<span class="gg-pop-body">'
+          +   '<span class="gg-pop-name">' + esc(pt.name) + '</span>'
+          +   '<span class="gg-pop-price">' + esc(pt.price) + '</span>'
+          +   '<span class="gg-pop-cta">Ver propiedad ›</span>'
+          + '</span>'
+          + '</a>'
+          + '<a class="gg-pop-dir" href="' + dir + '" target="_blank" rel="noopener">Cómo llegar</a>';
+      }
+
+      // Vínculo tarjeta ↔ pin: resalta el pin y su tarjeta a la vez.
+      function pinEl(ref) {
+        const m = markerByRef[ref];
+        const el = m && m.getElement ? m.getElement() : null;
+        return el ? el.querySelector('.gg-pin-inner') : null;
+      }
+      function setActive(ref, on) {
+        const card = cardByRef[ref];
+        if (card) card.classList.toggle('is-map-active', on);
+        const pe = pinEl(ref);
+        if (pe) pe.classList.toggle('is-active', on);
+      }
+      function initMap() {
+        const el = document.getElementById('gg-map');
+        if (!window.L || !el) return;
+        // Sin controles de zoom: el usuario hace zoom con la rueda al tener el cursor encima.
+        map = window.L.map(el, { scrollWheelZoom: true, zoomControl: false });
+        // Basemap OpenStreetMap estándar (gratis, sin API key). Los verdes de parques y del
+        // Ávila se realzan por CSS (.leaflet-tile-pane) para dar contraste a la web.
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          subdomains: 'abc', maxZoom: 19, attribution: '© OpenStreetMap',
+        }).addTo(map);
+        markersLayer = window.L.layerGroup().addTo(map);
+        [120, 400, 900].forEach((t) => setTimeout(() => { if (map) map.invalidateSize(); }, t));
+      }
+      function updateMap(refs) {
+        if (!map || !markersLayer) return;
+        markersLayer.clearLayers();
+        for (const k in markerByRef) delete markerByRef[k];
+        const bounds = [];
+        mapPoints.forEach((pt) => {
+          if (refs.indexOf(pt.ref) !== -1) {
+            const m = window.L.marker([pt.lat, pt.lng], { icon: makeIcon(), riseOnHover: true });
+            m.bindPopup(popupHtml(pt), { closeButton: false, offset: [0, -26], className: 'gg-pop-wrap', minWidth: 214, maxWidth: 240 });
+            m.on('mouseover', () => setActive(pt.ref, true));
+            m.on('mouseout', () => { if (!m.isPopupOpen()) setActive(pt.ref, false); });
+            m.on('popupopen', () => setActive(pt.ref, true));
+            m.on('popupclose', () => setActive(pt.ref, false));
+            m.addTo(markersLayer);
+            markerByRef[pt.ref] = m;
+            bounds.push([pt.lat, pt.lng]);
+          }
+        });
+        if (bounds.length) map.fitBounds(bounds, { padding: [58, 58], maxZoom: 14.4 });
+      }
+
+      // Hover/foco en la tarjeta → resalta su pin (y viceversa via updateMap).
+      cards.forEach((c) => {
+        const ref = c.dataset.ref;
+        c.addEventListener('mouseenter', () => setActive(ref, true));
+        c.addEventListener('mouseleave', () => setActive(ref, false));
+      });
+
+      // ---- Filtrado + orden ----
+      function inRange(precioAttr, token) {
+        if (!token) return true;
+        if (precioAttr === '') return false; // "a consultar" no entra en rangos de precio
+        const precio = parseFloat(precioAttr);
+        const parts = token.split('-');
+        const min = parts[0] ? parseFloat(parts[0]) : 0;
+        const max = parts[1] ? parseFloat(parts[1]) : Infinity;
+        return precio >= min && precio <= max;
+      }
+      function sortVisible() {
+        const v = sortEl.value;
+        const vis = cards.filter((c) => !c.hidden);
+        if (v === 'precio-asc' || v === 'precio-desc') {
+          vis.sort((a, b) => {
+            const pa = a.dataset.precio === '' ? null : parseFloat(a.dataset.precio);
+            const pb = b.dataset.precio === '' ? null : parseFloat(b.dataset.precio);
+            if (pa === null) return 1;              // "a consultar" siempre al final
+            if (pb === null) return -1;
+            return v === 'precio-asc' ? pa - pb : pb - pa;
+          });
+        } else {
+          vis.sort((a, b) => (+a.dataset.i) - (+b.dataset.i));
+        }
+        vis.forEach((c) => grid.appendChild(c));
+      }
+      function apply() {
+        const q = qEl.value.trim().toLowerCase();
+        const t = tipoEl.value;
+        const h = parseInt(habEl.value, 10) || 0;
+        const pr = precioEl.value;
+        const wantOp = mode === 'comprar' ? 'venta' : 'alquiler';
+        const refs = [];
+        cards.forEach((c) => {
+          let ok = c.dataset.operacion === wantOp;
+          if (ok && q) ok = c.dataset.text.indexOf(q) !== -1;
+          if (ok && t) ok = c.dataset.tipo === t;
+          if (ok && h) ok = (+c.dataset.hab) >= h;
+          if (ok && pr) ok = inRange(c.dataset.precio, pr);
+          c.hidden = !ok;
+          if (ok) refs.push(c.dataset.ref);
+        });
+        sortVisible();
+        updateMap(refs);
+        const n = refs.length;
+        const txt = n + (n === 1 ? ' propiedad' : ' propiedades');
+        countEl.textContent = txt;
+        emptyEl.hidden = n > 0;
+      }
+
+      function setMode(m) {
+        mode = m;
+        const buy = m === 'comprar';
+        buyBtn.classList.toggle('is-active', buy);
+        rentBtn.classList.toggle('is-active', !buy);
+        buyBtn.setAttribute('aria-pressed', String(buy));
+        rentBtn.setAttribute('aria-pressed', String(!buy));
+        apply();
+      }
+      buyBtn.addEventListener('click', () => setMode('comprar'));
+      rentBtn.addEventListener('click', () => setMode('alquiler'));
+      [qEl, tipoEl, habEl, precioEl, sortEl].forEach((el) => {
+        el.addEventListener('input', apply);
+        el.addEventListener('change', apply);
+      });
+
+      // ---- Dropdown propio (reemplaza la lista nativa: alineada, animada, sin outline
+      // pegado). El <select> nativo se mantiene oculto como fuente de verdad y sigue
+      // emitiendo 'change' → el filtrado no cambia. Enter/flechas/Escape + clic fuera. ----
+      const CHEV = '<span class="gg-dd-chev" aria-hidden="true"><svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+      function enhanceSelect(select) {
+        const bare = select.classList.contains('cat-select--bare');
+        const wrap = document.createElement('div');
+        wrap.className = 'gg-dd' + (bare ? ' gg-dd--end' : '');
+        select.parentNode.insertBefore(wrap, select);
+        wrap.appendChild(select);
+        select.classList.add('gg-dd-native');
+        select.setAttribute('tabindex', '-1');
+        select.setAttribute('aria-hidden', 'true');
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'gg-dd-btn' + (bare ? ' gg-dd-btn--bare' : '');
+        btn.setAttribute('aria-haspopup', 'listbox');
+        btn.setAttribute('aria-expanded', 'false');
+        if (select.getAttribute('aria-label')) btn.setAttribute('aria-label', select.getAttribute('aria-label'));
+        const lbl = document.createElement('span');
+        lbl.className = 'gg-dd-label';
+        btn.appendChild(lbl);
+        btn.insertAdjacentHTML('beforeend', CHEV);
+
+        const menu = document.createElement('ul');
+        menu.className = 'gg-dd-menu';
+        menu.setAttribute('role', 'listbox');
+        menu.hidden = true;
+        const opts = Array.from(select.options);
+        opts.forEach((o, idx) => {
+          const li = document.createElement('li');
+          li.className = 'gg-dd-opt';
+          li.setAttribute('role', 'option');
+          li.textContent = o.textContent;
+          li.setAttribute('aria-selected', String(o.selected));
+          li.addEventListener('click', () => choose(idx));
+          menu.appendChild(li);
+        });
+        wrap.appendChild(btn);
+        wrap.appendChild(menu);
+
+        const syncLabel = () => { lbl.textContent = select.options[select.selectedIndex].textContent; };
+        syncLabel();
+
+        let open = false, hi = -1;
+        function highlight(i) {
+          const items = menu.children;
+          if (hi >= 0 && items[hi]) items[hi].classList.remove('is-hi');
+          hi = Math.max(0, Math.min(i, items.length - 1));
+          if (items[hi]) { items[hi].classList.add('is-hi'); items[hi].scrollIntoView({ block: 'nearest' }); }
+        }
+        function onDoc(e) { if (!wrap.contains(e.target)) setOpen(false); }
+        function setOpen(v) {
+          if (v === open) return;
+          open = v;
+          btn.setAttribute('aria-expanded', String(v));
+          if (v) {
+            menu.hidden = false;
+            requestAnimationFrame(() => menu.classList.add('is-open'));
+            highlight(select.selectedIndex);
+            document.addEventListener('click', onDoc, true);
+          } else {
+            menu.classList.remove('is-open');
+            document.removeEventListener('click', onDoc, true);
+            setTimeout(() => { if (!open) menu.hidden = true; }, 200);
+          }
+        }
+        function choose(idx) {
+          select.selectedIndex = idx;
+          Array.from(menu.children).forEach((li, i) => li.setAttribute('aria-selected', String(i === idx)));
+          syncLabel();
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          setOpen(false);
+          btn.focus();
+        }
+        btn.addEventListener('click', () => setOpen(!open));
+        btn.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!open) setOpen(true); else highlight(hi + (e.key === 'ArrowDown' ? 1 : -1));
+          } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (open) choose(hi); else setOpen(true);
+          } else if (e.key === 'Escape') {
+            if (open) { setOpen(false); btn.focus(); }
+          }
+        });
+      }
+      [tipoEl, habEl, precioEl, sortEl].forEach(enhanceSelect);
+
+      // ---- Pantalla completa del mapa ----
+      const expandBtn = document.getElementById('cat-map-expand');
+      const mapwrap = document.querySelector('.cat-mapwrap');
+      function toggleFs(force) {
+        const on = force === undefined ? !mapwrap.classList.contains('is-fs') : force;
+        mapwrap.classList.toggle('is-fs', on);
+        document.body.classList.toggle('cat-map-lock', on);
+        expandBtn.setAttribute('aria-label', on ? 'Cerrar pantalla completa' : 'Ver mapa en pantalla completa');
+        [60, 260].forEach((t) => setTimeout(() => { if (map) map.invalidateSize(); }, t));
+      }
+      if (expandBtn && mapwrap) {
+        expandBtn.addEventListener('click', () => toggleFs());
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && mapwrap.classList.contains('is-fs')) toggleFs(false);
+        });
+      }
+
+      initMap();
+      apply();
+      window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
+    })();
+  </script>
+</Base>
+
+<style>
+  .cat {
+    max-width: 1780px;
+    margin-inline: auto;
+    padding: clamp(32px, 4.5vw, 64px) clamp(20px, 3.4vw, 40px) clamp(60px, 7vw, 100px);
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+  }
+
+  /* ---- Encabezado (se conserva el h1 para SEO/accesibilidad) ---- */
+  .cat-head { margin-bottom: clamp(24px, 3vw, 40px); }
+  .cat-h1 {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    line-height: 1.02;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: var(--color-tinta);
+  }
+  /* ---- Barra de filtros ---- */
+  .cat-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(10px, 1vw, 14px);
+    padding-bottom: clamp(20px, 2.4vw, 28px);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-tinta) 10%, transparent);
+  }
+  .cat-search {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    flex: 1 1 300px;
+    min-width: 240px;
+    max-width: 440px;
+    height: 50px;
+    padding: 0 16px;
+    background: #fff;
+    border: 1px solid color-mix(in srgb, var(--color-tinta) 16%, transparent);
+    border-radius: 2px;
+    transition: border-color .3s ease, box-shadow .3s ease;
+  }
+  .cat-search:focus-within {
+    border-color: var(--color-bronce);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-bronce) 16%, transparent);
+  }
+  .cat-search-ico { color: var(--color-humo); display: inline-flex; }
+  .cat-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+    letter-spacing: .01em;
+    color: var(--color-tinta);
+  }
+
+  /* Toggle Comprar / Alquilar */
+  .cat-op {
+    display: flex;
+    height: 50px;
+    background: #fff;
+    border: 1px solid color-mix(in srgb, var(--color-tinta) 16%, transparent);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .cat-op-btn {
+    padding: 0 22px;
+    border: 0;
+    background: transparent;
+    color: var(--color-humo);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .35s ease, color .35s ease;
+  }
+  .cat-op-btn:hover:not(.is-active) { color: var(--color-bronce); }
+  /* Estado activo del toggle Comprar/Alquilar en el dorado de marca (mismo acento que los
+     pines del mapa, hover de WhatsApp, etc.), con tinta oscura encima para contraste. */
+  .cat-op-btn.is-active { background: var(--color-bronce); color: var(--color-tinta); }
+  .cat-op-btn:active { transform: scale(.98); }
+
+  .cat-selects { display: flex; flex-wrap: wrap; gap: clamp(10px, 1vw, 14px); }
+  .cat-field { display: flex; }
+  .cat-select {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 50px;
+    padding: 0 40px 0 18px;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B6E73' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    border: 1px solid color-mix(in srgb, var(--color-tinta) 16%, transparent);
+    border-radius: 2px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 12.5px;
+    letter-spacing: .05em;
+    color: var(--color-grafito);
+    cursor: pointer;
+    transition: border-color .3s ease, color .3s ease;
+  }
+  .cat-select:hover { border-color: var(--color-bronce); color: var(--color-tinta); }
+  .cat-select:focus-visible { outline: 2px solid var(--color-bronce); outline-offset: 2px; }
+
+  /* ---- Subbarra: resultados + orden ---- */
+  .cat-subbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: clamp(20px, 2.4vw, 30px) 0 clamp(22px, 2.6vw, 34px);
+  }
+  .cat-count {
+    margin: 0;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--color-humo);
+  }
+  .cat-sort { display: flex; align-items: center; gap: 10px; }
+  .cat-sort-lbl {
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--color-humo);
+  }
+  .cat-select--bare {
+    height: auto;
+    padding: 4px 22px 4px 0;
+    background-color: transparent;
+    background-position: right 2px center;
+    border: 0;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--color-tinta);
+  }
+  .cat-select--bare:hover { color: var(--color-bronce); }
+
+  /* ---- Split: rejilla + mapa ---- */
+  .cat-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(26px, 3vw, 48px);
+    align-items: start;
+  }
+  .cat-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(20px, 2vw, 32px);
+  }
+  @media (min-width: 560px) {
+    .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 920px) and (max-width: 1079px) {
+    .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  .cat-empty {
+    margin: clamp(24px, 4vw, 48px) 0 0;
+    padding: clamp(20px, 3vw, 32px);
+    text-align: center;
+    font-size: .95rem;
+    line-height: 1.6;
+    color: var(--color-humo);
+    border: 1px dashed color-mix(in srgb, var(--color-tinta) 18%, transparent);
+    border-radius: 2px;
+  }
+
+  /* Mapa: arriba de la rejilla en móvil; sticky a la derecha en desktop. */
+  .cat-mapwrap {
+    position: relative;
+    height: clamp(320px, 46vh, 440px);
+    order: -1;
+  }
+  .cat-map-inner {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--color-tinta) 10%, transparent);
+    border-radius: 2px;
+    overflow: hidden;
+    background: #E9E6DF;
+  }
+  #gg-map { position: absolute; inset: 0; }
+
+  /* Botón de pantalla completa (esquina sup. izq. del mapa). */
+  .cat-map-expand {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 600;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    background: #fff;
+    border: 0;
+    border-radius: 2px;
+    cursor: pointer;
+    color: #14101C;
+    box-shadow: 0 8px 24px -14px rgba(20, 16, 28, .5);
+    transition: color .2s ease, transform .2s ease;
+  }
+  .cat-map-expand:hover { color: #B98F55; }
+  .cat-map-expand:focus-visible { outline: 2px solid #B98F55; outline-offset: 2px; }
+  .cat-map-ico-close { display: none; }
+  .cat-mapwrap.is-fs .cat-map-ico-open { display: none; }
+  .cat-mapwrap.is-fs .cat-map-ico-close { display: block; }
+
+  /* Modo pantalla completa: el mapa ocupa todo el viewport. */
+  .cat-mapwrap.is-fs {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    height: 100dvh !important;
+    width: 100vw !important;
+    margin: 0;
+    z-index: 1300;
+  }
+  .cat-mapwrap.is-fs .cat-map-inner { border-radius: 0; border: 0; }
+
+  @media (min-width: 1080px) {
+    .cat-split { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+    .cat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Mapa fijo (patrón "listado + mapa"): ocupa toda la altura del viewport bajo el
+       navbar y se queda estático (sticky). Solo scrollea la columna de propiedades a la
+       izquierda; con lista larga el mapa se mantiene anclado casi todo el recorrido.
+       `align-self:start` evita que la celda lo estire y anule el pin. */
+    .cat-mapwrap {
+      order: 0;
+      align-self: start;
+      position: sticky;
+      top: 88px;                       /* justo bajo el navbar sólido sticky */
+      height: calc(100dvh - 108px);    /* alto del viewport menos navbar + respiro */
+    }
+  }
+
+  @media (max-width: 559px) {
+    .cat-filtros { gap: 10px; }
+    .cat-op, .cat-search { flex: 1 1 100%; }
+    .cat-selects { width: 100%; }
+    .cat-field { flex: 1 1 calc(50% - 7px); }
+    .cat-select { width: 100%; }
+  }
+</style>
+
+<!-- Estilos globales para Leaflet (se generan en el DOM dinámicamente → no pueden ir en
+     el <style> con scope de Astro). Tiles a color (leve pulido) + controles sobrios. -->
+<style is:global>
+  .leaflet-container { font-family: 'Montserrat Variable', 'Montserrat', sans-serif; background: #E9E6DF; }
+  /* Mapa a color (OpenStreetMap estándar): realce suave para que los verdes de parques y
+     del Ávila ganen presencia y aporten contraste, sin recargar las vías. */
+  .leaflet-tile-pane { filter: saturate(1.12) contrast(.99) brightness(1.02); }
+  .gg-pin { background: transparent !important; border: 0 !important; }
+  .leaflet-control-zoom a {
+    color: #14101C !important;
+    border-color: rgba(20,16,28,.10) !important;
+    background: #fff !important;
+    font-weight: 400 !important;
+  }
+  .leaflet-bar { box-shadow: 0 8px 24px -14px rgba(20,16,28,.5) !important; border: 0 !important; }
+  .leaflet-control-attribution { font-size: 10px; background: rgba(255,255,255,.7) !important; }
+
+  /* ---- Pines: marcador tipo gota (tinta + núcleo dorado), minimalista y legible sobre
+     el mapa a color. La punta apunta a la coordenada → el wrapper la ancla (translate).
+     Estado activo (hover de tarjeta/pin o popup abierto): invierte a dorado y crece. ---- */
+  .gg-pin-inner { transform: translate(-50%, -100%); }
+  .gg-pin-dot {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: #14101C;
+    border: 2px solid #FCFBF8;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 0 6px 16px -4px rgba(16, 14, 23, .55);
+    transition: transform .16s cubic-bezier(.23, 1, .32, 1), background .16s ease, box-shadow .16s ease;
+  }
+  /* Núcleo dorado, centrado (la rotación de la gota es alrededor del centro). */
+  .gg-pin-dot::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #C9A46A;
+    transform: translate(-50%, -50%);
+  }
+  .gg-pin-inner.is-active { z-index: 1000; }
+  .gg-pin-inner.is-active .gg-pin-dot {
+    transform: rotate(-45deg) scale(1.18);
+    background: #C9A46A;
+    box-shadow: 0 12px 26px -6px rgba(16, 14, 23, .7);
+  }
+  .gg-pin-inner.is-active .gg-pin-dot::after { background: #14101C; }
+  /* Movimiento reducido: conserva el cambio de color, quita el crecimiento. */
+  @media (prefers-reduced-motion: reduce) {
+    .gg-pin-dot { transition: background .16s ease, box-shadow .16s ease; }
+    .gg-pin-inner.is-active .gg-pin-dot { transform: rotate(-45deg); }
+  }
+
+  /* ---- Popup del pin (mini-tarjeta: miniatura + nombre + precio + acciones) ---- */
+  .gg-pop-wrap .leaflet-popup-content-wrapper {
+    padding: 0;
+    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: 0 20px 44px -18px rgba(16, 14, 23, .55);
+  }
+  .gg-pop-wrap .leaflet-popup-content { margin: 0; width: 214px !important; }
+  .gg-pop-wrap .leaflet-popup-tip { box-shadow: 0 20px 44px -18px rgba(16, 14, 23, .55); }
+  .gg-pop { display: block; text-decoration: none; color: #14101C; }
+  .gg-pop-media {
+    display: block;
+    height: 116px;
+    background-size: cover;
+    background-position: center;
+  }
+  .gg-pop-body { display: block; padding: 10px 13px 12px; }
+  .gg-pop-name {
+    display: block;
+    font-family: 'Montserrat Variable', 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.28;
+    color: #14101C;
+  }
+  .gg-pop-price {
+    display: block;
+    margin-top: 3px;
+    font-family: 'Montserrat Variable', 'Montserrat', sans-serif;
+    font-size: 12.5px;
+    color: #6B6E73;
+  }
+  .gg-pop-cta {
+    display: inline-block;
+    margin-top: 9px;
+    font-family: 'Montserrat Variable', 'Montserrat', sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #B98F55;
+  }
+  .gg-pop-dir {
+    display: block;
+    padding: 10px 13px;
+    border-top: 1px solid rgba(20, 16, 28, .08);
+    font-family: 'Montserrat Variable', 'Montserrat', sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    color: #14101C;
+    transition: background .2s ease, color .2s ease;
+  }
+  .gg-pop-dir:hover { background: #F3F0E9; color: #B98F55; }
+
+  /* ---- Tarjeta resaltada desde el mapa (hover de pin / popup abierto) ---- */
+  .cc-card.is-map-active .cc-media {
+    box-shadow: 0 0 0 2px #C9A46A, 0 18px 40px -22px rgba(20, 16, 28, .5);
+  }
+  body.cat-map-lock { overflow: hidden; }
+
+  /* ---- Dropdown propio (creado por JS → estilos globales, no scoped) ----
+     Botón cerrado idéntico al chip/orden anterior; menú alineado, con entrada suave
+     (scale+fade desde arriba, ease-out) y salida más corta. Fuente = Montserrat. */
+  .gg-dd { position: relative; display: inline-flex; font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif; }
+  .gg-dd-native {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0; border: 0;
+    opacity: 0; pointer-events: none;
+    clip: rect(0 0 0 0); clip-path: inset(50%);
+    overflow: hidden;
+  }
+  .gg-dd-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 50px;
+    padding: 0 16px;
+    background: #fff;
+    border: 1px solid color-mix(in srgb, #14101C 16%, transparent);
+    border-radius: 2px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 12.5px;
+    letter-spacing: .05em;
+    color: #3A3540;
+    cursor: pointer;
+    transition: border-color .3s ease, color .3s ease;
+  }
+  .gg-dd-btn:hover { border-color: #C9A46A; color: #14101C; }
+  .gg-dd-btn:focus-visible { outline: 2px solid #C9A46A; outline-offset: 2px; }
+  .gg-dd-chev { display: inline-flex; color: #9A948B; transition: transform .3s ease; }
+  .gg-dd-btn[aria-expanded="true"] .gg-dd-chev { transform: rotate(180deg); }
+
+  /* Variante "Ordenar" (sin caja, alineada a la derecha). */
+  .gg-dd-btn--bare {
+    height: auto;
+    padding: 4px 0;
+    gap: 9px;
+    background: transparent;
+    border: 0;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #14101C;
+  }
+  .gg-dd-btn--bare:hover { color: #C9A46A; }
+  .gg-dd-btn--bare .gg-dd-chev { color: #C9A46A; }
+
+  /* Menú desplegable */
+  .gg-dd-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 60;
+    min-width: 100%;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: #fff;
+    border: 1px solid color-mix(in srgb, #14101C 12%, transparent);
+    border-radius: 2px;
+    box-shadow: 0 18px 44px -22px rgba(20, 16, 28, .45);
+    transform-origin: top;
+    transform: scale(.97) translateY(-4px);
+    opacity: 0;
+    transition: transform .18s cubic-bezier(.23, 1, .32, 1), opacity .16s ease;
+  }
+  .gg-dd--end .gg-dd-menu { left: auto; right: 0; }
+  .gg-dd-menu.is-open { transform: none; opacity: 1; }
+  .gg-dd-menu[hidden] { display: none; }
+
+  .gg-dd-opt {
+    padding: 10px 12px;
+    border-radius: 2px;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    line-height: 1.2;
+    color: #3A3540;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .gg-dd-opt.is-hi,
+  .gg-dd-opt:hover { background: color-mix(in srgb, #C9A46A 15%, transparent); color: #14101C; }
+  .gg-dd-opt[aria-selected="true"] { color: #14101C; font-weight: 600; }
+
+  /* Móvil: los filtros (dentro de .cat-field) ocupan el ancho completo del chip. */
+  @media (max-width: 559px) {
+    .cat-field .gg-dd,
+    .cat-field .gg-dd-btn { width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gg-dd-menu { transition: opacity .12s ease; transform: none; }
+  }
+</style>

@@ -1,0 +1,418 @@
+---
+import Base from '../layouts/Base.astro';
+import HeroNav from '../components/HeroNav.astro';
+import Hero from '../components/Hero.astro';
+import FeaturedPropertyCard from '../components/FeaturedPropertyCard.astro';
+import ContenidoComplementario from '../components/ContenidoComplementario.astro';
+import Testimonios from '../components/Testimonios.astro';
+import { propiedadesDemo } from '../data/propiedades.sample';
+
+const destacados = propiedadesDemo.filter((p) => p.destacado);
+
+// Canales de contacto para la sección "Elige cómo empezar" (misma línea del brochure).
+const wa = 'https://wa.me/584122398253';
+const ig = 'https://instagram.com/grupo_glam';
+
+// Foto por propiedad (ref → base del asset en /public/destacados + alt). La tarjeta la sirve
+// con <picture> responsive (AVIF/WebP/JPEG pre-optimizadas).
+const fotos: Record<string, { img: string; alt: string }> = {
+  'DEMO-01': { img: 'sebucan-edificio', alt: 'Edificio residencial de alta gama en Sebucán' },
+  'DEMO-02': { img: 'la-castellana-jardin', alt: 'Casa con jardín y piscina en La Castellana' },
+  'DEMO-03': { img: 'los-palos-grandes-interior', alt: 'Salón luminoso de apartamento en Los Palos Grandes' },
+  'DEMO-04': { img: 'altamira-terraza', alt: 'Terraza con vista al Ávila en Altamira' },
+};
+
+// Aliados comerciales · logos unificados a un solo tono de tinta (monocromo) para un muro
+// cohesivo y sobrio, servidos localmente desde /public/aliados (no se hotlinkean externos).
+// w/h son las dimensiones intrínsecas de cada PNG (reservan proporción → sin CLS).
+const aliados = [
+  { name: 'Extraenergía', src: '/aliados/extraenergia.png', w: 225, h: 40, href: 'https://extraenergia.com/' },
+  { name: 'Mercado Piso', src: '/aliados/mercadopiso.png', w: 326, h: 90, href: 'https://mercadopiso.com/' },
+  { name: 'Cámara Inmobiliaria Metropolitana', src: '/aliados/cim.png', w: 318, h: 223, href: 'https://cimcaracas.com/' },
+  { name: 'MLS Caracas', src: '/aliados/mlscaracas.png', w: 272, h: 59, href: 'https://mlscaracas.com.ve/' },
+  { name: 'Wasi', src: '/aliados/wasi.png', w: 926, h: 311, href: 'https://wasi.co/' },
+  { name: 'Horizonte Group', src: '/aliados/horizonte.png', w: 3998, h: 680, href: 'https://horizontegroupmgta.com/' },
+  { name: 'T3 Advisors', src: '/aliados/t3.png', w: 413, h: 326, href: 'https://www.t3-advisors.com/es' },
+];
+---
+<Base showHeader={false}>
+  <!-- reveal-root aloja el timeline "--cover" (declarado por el centinela) y lo hace
+       visible a la navbar fija y al velo de oscurecido vía timeline-scope. -->
+  <div class="reveal-root">
+    <!-- Navbar fija por encima de todo; transiciona de color al cubrirse el hero -->
+    <HeroNav />
+
+    <!-- El hero queda fijo detrás; el contenido (.scroll-over) sube por encima al deslizar -->
+    <div class="hero-sticky" data-navtone="dark">
+      <Hero />
+      <!-- Velo que oscurece el hero a medida que lo cubren (scroll-driven, sin JS) -->
+      <div class="hero-darken" aria-hidden="true"></div>
+      <!-- Cortina de entrada (estilo weahomes "Scroll & Enter"): cubre el hero al cargar
+           con el mismo degradado + el logo centrado, y se disuelve al deslizar revelando
+           el vídeo vivo detrás. Solo el logo, sin texto. Decorativa (la navbar va encima). -->
+      <div class="enter-cover" aria-hidden="true"></div>
+    </div>
+
+    <!-- Pista de scroll de la cortina: da distancia para que la entrada se disuelva por
+         completo (y respire un instante) ANTES de que el contenido empiece a subir.
+         El centinela de 1px declara el view-timeline --enter que scrubbea la disolución. -->
+    <div class="enter-runway" aria-hidden="true">
+      <div class="enter-sentinel"></div>
+    </div>
+
+    <div class="scroll-over" data-navtone="light">
+    <!-- Centinela de 1px: su recorrido por el viewport (view-timeline --cover) mide
+         exactamente cuánto ha subido la lámina sobre el hero. -->
+    <div class="reveal-sentinel" aria-hidden="true"></div>
+
+    <!-- Destacados · §9.1 -->
+    <section class="destacados max-w-[1920px] mx-auto px-5 md:px-6 pt-20 md:pt-32 pb-12 md:pb-20">
+      <div class="destacados-head mb-10 md:mb-14">
+        <h2 class="destacados-title">Inmuebles destacados</h2>
+        <a href="/propiedades" class="destacados-cta">Todas las propiedades</a>
+      </div>
+
+      <div class="destacados-grid">
+        {destacados.map((p) => (
+          /* Altamira (DEMO-04) es apaisada (16:9): su recorte en la tarjeta portrait la ampliaba
+             y se veía borrosa. Solo esta usa las fotos reescaladas en alta calidad del hero
+             (/destacados, hasta 2560/3840). El resto sigue con las miniaturas de /destacados/home. */
+          <FeaturedPropertyCard
+            p={p}
+            img={fotos[p.ref]?.img}
+            alt={fotos[p.ref]?.alt}
+            dir={p.ref === 'DEMO-04' ? 'destacados' : 'destacados/home'}
+            hiRes={p.ref === 'DEMO-04'}
+          />
+        ))}
+      </div>
+    </section>
+
+    <!-- Contenido complementario -->
+    <ContenidoComplementario />
+
+    <!-- Aliados comerciales · muro de logos monocromo sobre lino. -->
+    <section class="aliados bg-[var(--color-lino)] py-12 md:py-16 overflow-x-clip">
+      <div class="max-w-[1280px] mx-auto px-5 md:px-6">
+        <ul class="aliados-grid">
+          {aliados.map((a) => (
+            <li class="aliados-item">
+              <a href={a.href} target="_blank" rel="noopener" class="aliados-link" aria-label={a.name}>
+                <img
+                  src={a.src}
+                  width={a.w}
+                  height={a.h}
+                  alt={a.name}
+                  loading="lazy"
+                  decoding="async"
+                  class="aliados-logo"
+                />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <!-- Testimonios · misma lámina de lino que Aliados, prueba social + reputación Google. -->
+    <Testimonios />
+
+    <!-- CTA final · "Elige cómo empezar" (intercambiada desde Nosotros) -->
+    <section id="conversacion" style="background:#F3F0E9;border-top:1px solid rgba(20,16,28,.08)" data-navtone="light">
+      <div style="max-width:1600px;margin:0 auto;padding:clamp(56px,7.5vw,120px) clamp(20px,5vw,54px)">
+        <div style="margin-bottom:clamp(38px,4.5vw,64px)">
+          <!-- Misma tipografía que el título de Testimonios ("Lo que dicen…"): Montserrat, peso
+               300, versales, clamp(1.75–2.5rem). En UNA sola línea (antes se partía en varias). -->
+          <h2 style="margin:0;font-family:'Montserrat Variable','Montserrat',system-ui,sans-serif;font-weight:300;font-size:clamp(1.75rem,3vw,2.5rem);line-height:1.12;letter-spacing:.01em;color:#14101C;text-transform:uppercase;white-space:nowrap">Elige cómo empezar.</h2>
+        </div>
+
+        <div class="gg-conv">
+          <a href={wa} target="_blank" rel="noopener" class="card-dark" style="display:flex;flex-direction:column;justify-content:space-between;gap:clamp(48px,7vw,120px);text-decoration:none;background:#0B0A11;color:#F5F3EE;padding:clamp(30px,3.6vw,52px);border:1px solid #0B0A11;border-radius:2px">
+            <div>
+              <span style="display:block;font-weight:600;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#C9A46A;margin-bottom:18px">Empieza aquí</span>
+              <span style="display:block;font-weight:300;font-size:clamp(1.7rem,3vw,2.4rem);line-height:1.06;letter-spacing:-.01em;color:#F5F3EE">Agendar una consulta privada</span>
+            </div>
+            <span style="font-weight:300;font-size:clamp(1rem,1.2vw,1.16rem);line-height:1.6;color:rgba(245,243,238,.72);max-width:40ch">Una conversación reservada, sin compromiso, para entender tu objetivo patrimonial antes de mostrarte una sola propiedad.</span>
+          </a>
+
+          <div style="display:flex;flex-direction:column;gap:clamp(20px,2.4vw,34px)">
+            <a href="/contacto" class="card-soft" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;text-decoration:none;background:#fff;color:#14101C;padding:clamp(24px,2.6vw,36px);border:1px solid rgba(20,16,28,.14);border-radius:2px">
+              <span style="font-weight:500;font-size:clamp(1.2rem,1.8vw,1.6rem);line-height:1.1;letter-spacing:-.005em;color:#14101C">Solicitar una valoración</span>
+              <span style="font-weight:300;font-size:14px;line-height:1.55;color:#6E6A63;max-width:44ch">Agendamos una valoración patrimonial de tu inmueble, sin compromiso, con la metodología detrás.</span>
+            </a>
+            <a href={ig} target="_blank" rel="noopener" class="card-soft" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;text-decoration:none;background:#fff;color:#14101C;padding:clamp(24px,2.6vw,36px);border:1px solid rgba(20,16,28,.14);border-radius:2px">
+              <span style="font-weight:500;font-size:clamp(1.2rem,1.8vw,1.6rem);line-height:1.1;letter-spacing:-.005em;color:#14101C">Escríbenos</span>
+              <span style="font-weight:300;font-size:14px;line-height:1.55;color:#6E6A63;max-width:44ch">@grupo_glam en Instagram y TikTok. Respondemos con discreción.</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+  </div>
+</Base>
+
+<style>
+  /* ---- Sección "Inmuebles destacados" ----
+     Tipografía Montserrat (la del navbar, definida por el cliente). El fondo claro de la
+     lámina (.scroll-over) se conserva; las tarjetas son fotos verticales oscuras. */
+  .destacados-title {
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    font-weight: 300;
+    font-size: clamp(1.6rem, 3.1vw, 2.6rem);
+    line-height: 1;
+    letter-spacing: .01em;
+    text-transform: uppercase;
+    color: var(--color-tinta);
+  }
+
+  .destacados-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(8px, 0.8vw, 14px);
+  }
+  @media (min-width: 640px) {
+    .destacados-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1024px) {
+    .destacados-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+
+  /* Cabecera de la sección: título a la izquierda, CTA anclado a la esquina superior derecha. */
+  .destacados-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+  }
+  .destacados-head .destacados-cta { margin-left: auto; margin-right: 48px; }
+  .destacados-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    color: var(--color-tinta);
+    text-decoration: none;
+    border: 1px solid rgba(201, 164, 106, .55);
+    border-radius: 2px;
+    padding: 15px 32px;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    transition: background .35s ease, color .35s ease, border-color .35s ease, transform .16s ease;
+  }
+  .destacados-cta:hover {
+    background: #C9A46A;
+    color: #100E17;
+    border-color: #C9A46A;
+  }
+  .destacados-cta:active { transform: scale(.97); }
+  .destacados-cta:focus-visible { outline: 2px solid #C9A46A; outline-offset: 3px; }
+
+  /* ---- Aliados comerciales · muro de logos monocromo (tinta) sobre lino ---- */
+  .aliados-title {
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    font-weight: 300;
+    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+    line-height: 1.1;
+    letter-spacing: .01em;
+    color: var(--color-tinta);
+    margin: 0 0 clamp(22px, 3vw, 40px);
+  }
+  /* Flex centrado: los 7 caben en una fila en desktop; al envolver, cada fila queda
+     centrada (7 es primo → un grid rígido dejaría un logo huérfano).
+     Full-bleed: SOLO esta fila rompe el contenedor de 1280 y usa los laterales de la página
+     hasta el ancho del viewport (el título y el resto no se tocan → proporciones intactas). */
+  .aliados-grid {
+    list-style: none;
+    margin: 0 calc(50% - 50vw);
+    /* Padding lateral menor: los logos se acercan más a los bordes de la página. */
+    padding: 0 clamp(16px, 2.4vw, 44px);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    /* space-between: en vez de agruparse al centro, los logos se reparten ocupando todo
+       el ancho full-bleed (usan los laterales). El gap es el mínimo entre ellos. */
+    justify-content: space-between;
+    gap: clamp(28px, 3vw, 48px) clamp(22px, 2vw, 36px);
+  }
+  .aliados-item { display: flex; justify-content: center; flex: 0 0 auto; }
+  .aliados-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: .68;
+    /* Solo opacity + transform (GPU). Curva ease-out fuerte para un realce con punch. */
+    transition: opacity 250ms ease, transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .aliados-link:hover,
+  .aliados-link:focus-visible { opacity: 1; }
+  /* Realce al pasar el cursor: el logo cobra vida y crece ligeramente. Gated a punteros
+     finos para que un tap táctil no lo deje agrandado. :active da feedback de presión. */
+  @media (hover: hover) and (pointer: fine) {
+    .aliados-link:hover { transform: scale(1.08); }
+    .aliados-link:active { transform: scale(1.03); }
+  }
+  .aliados-link:focus-visible { outline: 2px solid var(--color-bronce); outline-offset: 6px; border-radius: 2px; }
+  /* Movimiento reducido: se conserva el cambio de opacidad, se quita el escalado. */
+  @media (prefers-reduced-motion: reduce) {
+    .aliados-link { transition: opacity 250ms ease; }
+    .aliados-link:hover,
+    .aliados-link:active { transform: none; }
+  }
+  .aliados-logo {
+    display: block;
+    width: auto;
+    height: auto;
+    /* Grandes pero un punto más contenidos: full-bleed + space-between les dan el ancho. */
+    max-height: clamp(44px, 5.4vw, 84px);
+    max-width: clamp(140px, 15vw, 236px);
+    object-fit: contain;
+  }
+
+  /* Efecto "scroll-over" (estilo Sotheby's Realty): al deslizar, el contenido sube y se
+     posa SOBRE el hero, en vez de empujarlo. El hero queda fijo (sticky) detrás y la capa
+     de contenido, opaca y con z-index superior, lo va cubriendo. Puro layout, sin JS. */
+  .reveal-root { timeline-scope: --cover, --enter; }
+
+  .hero-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    /* Contiene la cortina de entrada: evita desbordamientos o residuos de la máscara. */
+    overflow: clip;
+  }
+
+  .scroll-over {
+    position: relative;
+    z-index: 1;
+    background: var(--color-lino);
+    /* Sombra superior sutil, tintada a la tinta de marca: sensación de "lámina" que se posa. */
+    box-shadow: 0 -34px 60px -24px color-mix(in srgb, var(--color-tinta) 60%, transparent);
+  }
+
+  /* Centinela: declara el view-timeline que mide el avance de la cobertura.
+     1px con margen negativo para no alterar el layout. */
+  .reveal-sentinel {
+    view-timeline: --cover block;
+    height: 1px;
+    margin-bottom: -1px;
+  }
+
+  /* Velo de oscurecido sobre el hero, enganchado al MISMO recorrido de cobertura
+     (view-timeline --cover). Sube de 0 a 40% de forma proporcional a cuánto se ha
+     cubierto el hero → degradado suave, no un salto. Opacidad = válido con reduced-motion. */
+  .hero-darken {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    background: var(--color-tinta);
+    opacity: 0;
+  }
+  @keyframes gg-hero-darken {
+    from { opacity: 0; }
+    to   { opacity: 0.40; }
+  }
+  @supports (animation-timeline: view()) {
+    .hero-darken {
+      animation: gg-hero-darken linear both;
+      animation-timeline: --cover;
+      animation-range: cover 0% cover 85%;
+    }
+  }
+
+  /* ---- Cortina de entrada "Scroll & Enter" (replica de weahomes) ----
+     El hero queda fijo detrás. Esta cortina usa el MISMO degradado del hero + el logo
+     diamante centrado; al deslizar se disuelve (velo) mientras el logo crece y se apaga,
+     revelando el vídeo vivo. Puro scroll-timeline (sin JS) sobre transform/opacity →
+     compositado y fluido. Sin texto: solo el logo. */
+  .enter-cover {
+    position: absolute;
+    inset: 0;
+    z-index: 20;                 /* sobre el hero y el velo de oscurecido (6) */
+    display: none;               /* se activa solo con soporte de scroll-timeline (ver @supports) */
+    pointer-events: none;        /* decorativa: nunca intercepta; la navbar (z-50) va por encima */
+    background: radial-gradient(120% 90% at 50% 8%, #241A2E 0%, #14101C 42%, #0B0A11 100%);
+
+    /* Troquel de marca: el panel oscuro se recorta con la silueta del diamante para que el
+       hero (vídeo) se vea SOLO a través de los trazos del logo; el resto queda cubierto.
+       Dos capas de máscara → (rectángulo completo) XOR (logo) = "todo menos el logo".
+       La máscara es VECTORIAL (grupoglam-diamond-mask.svg, trazada del logo con potrace): al
+       crecer con mask-size se re-renderiza desde el vector → líneas rectas nítidas a cualquier
+       tamaño, sin escalonado ni fugas (el ráster de 384px escalonaba las diagonales al ampliar).
+       La capa de cobertura va a 100% 100% para tapar hasta el borde sin depender de `cover`. */
+    --enter-logo-size: clamp(280px, 38vw, 540px);
+    -webkit-mask-image: url('/brand/grupoglam-diamond-mask.svg'), linear-gradient(#000, #000);
+    -webkit-mask-repeat: no-repeat, no-repeat;
+    -webkit-mask-position: center, center;
+    -webkit-mask-size: var(--enter-logo-size) auto, 100% 100%;
+    -webkit-mask-composite: xor;
+    mask-image: url('/brand/grupoglam-diamond-mask.svg'), linear-gradient(#000, #000);
+    mask-repeat: no-repeat, no-repeat;
+    mask-position: center, center;
+    mask-size: var(--enter-logo-size) auto, 100% 100%;
+    mask-composite: exclude;
+  }
+
+  /* Pista transparente detrás del hero fijo: aporta la distancia de scroll de la entrada.
+     Sin soporte de scroll-timeline queda a 0 → no añade scroll muerto. */
+  .enter-runway { position: relative; height: 0; pointer-events: none; }
+  .enter-sentinel {
+    view-timeline: --enter block;
+    height: 1px;
+    margin-bottom: -1px;
+  }
+
+  /* Entrada por ZOOM (estilo weahomes): el panel troquelado se acerca (scale) y la silueta
+     del diamante crece hasta engullir la pantalla, revelando el hero a través de ella. La
+     silueta se mantiene durante todo el recorrido (es la máscara, solo escalada). La opacidad
+     únicamente se apaga en el tramo final para aterrizar limpio sobre el vídeo, sin bandas
+     oscuras residuales. Solo transform/opacity → compositado, fluido. */
+  /* Zoom por mask-size (NO transform): la máscara se re-renderiza nítida desde el origen a
+     cada tamaño en vez de magnificar un bitmap ya rasterizado (que era lo que pixelaba el
+     borde). La silueta crece hasta engullir la pantalla. */
+  @keyframes gg-enter-open {
+    to {
+      -webkit-mask-size: 2200px auto, 100% 100%;
+      mask-size: 2200px auto, 100% 100%;
+    }
+  }
+  /* Solo opacidad (sin visibility): visibility:hidden con fill both no revierte de forma
+     fiable en scroll-timeline y dejaba la cortina sin reaparecer al subir. */
+  @keyframes gg-enter-fade { to { opacity: 0; } }
+
+  @supports (animation-timeline: view()) {
+    .enter-cover {
+      display: block;                       /* activa la cortina troquelada */
+      animation: gg-enter-open linear both, gg-enter-fade linear both;
+      animation-timeline: --enter, --enter;
+      animation-range: cover 0% cover 40%, cover 28% cover 40%;  /* apertura rápida; apagado solo al tramo final */
+    }
+    /* Recorrido de la entrada: cover-zoom (0–40%) → vídeo limpio → reveal del texto (46–64%) →
+       respiro. El contenido (.scroll-over) empieza a subir a partir de esta altura (tras el reveal). */
+    .enter-runway { height: 70svh; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* Sin apertura: se conserva solo el desvanecido (opacidad = comprensión, sin movimiento). */
+    .enter-cover {
+      animation: gg-enter-fade linear both;
+      animation-timeline: --enter;
+      animation-range: cover 0% cover 40%;
+    }
+  }
+
+  /* ---- Sección "Elige cómo empezar" (intercambiada desde Nosotros) ---- */
+  .card-dark { transition: transform .4s cubic-bezier(.2,0,0,1); }
+  .card-dark:hover { transform: translateY(-4px); }
+  .card-soft { transition: border-color .35s ease, transform .4s cubic-bezier(.2,0,0,1); }
+  .card-soft:hover { border-color: #C9A46A; transform: translateY(-3px); }
+  .gg-conv { display: grid; grid-template-columns: 1fr; gap: clamp(20px,2.4vw,34px); align-items: stretch; }
+  @media (min-width: 980px) {
+    .gg-conv { grid-template-columns: minmax(0,1.55fr) minmax(0,1fr); }
+  }
+</style>

@@ -1,0 +1,16 @@
+[
+  { "slug": "altamira",                "nombre": "Altamira",                "municipio": "Chacao" },
+  { "slug": "la-castellana",           "nombre": "La Castellana",           "municipio": "Chacao" },
+  { "slug": "los-palos-grandes",       "nombre": "Los Palos Grandes",       "municipio": "Chacao" },
+  { "slug": "sebucan",                 "nombre": "Sebucán",                 "municipio": "Sucre" },
+  { "slug": "las-mercedes",            "nombre": "Las Mercedes",            "municipio": "Baruta" },
+  { "slug": "chuao",                   "nombre": "Chuao",                   "municipio": "Baruta" },
+  { "slug": "el-bosque",               "nombre": "El Bosque",               "municipio": "Chacao" },
+  { "slug": "los-ruices",              "nombre": "Los Ruices",              "municipio": "Sucre" },
+  { "slug": "palo-verde",              "nombre": "Palo Verde",              "municipio": "Sucre" },
+  { "slug": "la-trinidad",             "nombre": "La Trinidad",             "municipio": "Baruta" },
+  { "slug": "colinas-de-bello-monte",  "nombre": "Colinas de Bello Monte",  "municipio": "Baruta" },
+  { "slug": "sorocaima",               "nombre": "Sorocaima",               "municipio": "Baruta" },
+  { "slug": "la-candelaria",           "nombre": "La Candelaria",           "municipio": "Libertador" },
+  { "slug": "los-dos-caminos",         "nombre": "Los Dos Caminos",         "municipio": "Sucre" }
+]

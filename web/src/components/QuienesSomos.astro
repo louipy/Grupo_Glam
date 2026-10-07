@@ -1,0 +1,348 @@
+---
+// "INVIERTE DESDE EL EXTRANJERO" · sección insignia de la home.
+// Vive dentro de la lámina oscura (.cc-oscura, #100E17) que el cover revela: el fondo oscuro
+// y la animación "cover" son externos (en el wrapper de ContenidoComplementario); aquí solo
+// vive el CONTENIDO. El material sale del e-book "Invertir en Venezuela desde el extranjero"
+// (Oscar Moncada / Grupo Glam), uno de los fuertes de la marca.
+//
+// Composición anti-plantilla (distinta al resto de la home):
+//   · Cabecera editorial (kicker + titular + lead)
+//   · Bento asimétrico: foto alta (Caracas) + guía descargable | 1 pilar ancho + 2 pilares
+//   · Banda de 2 preguntas (los dos reparos reales del inversionista)
+//   · Cierre + diagnóstico
+// Sin iconos: jerarquía puramente tipográfica. Tokens calcados de global.css; Montserrat como UI.
+---
+<section class="inv" aria-labelledby="qs-title">
+  <div class="inv-wrap">
+
+    <!-- Cabecera editorial -->
+    <header class="inv-head reveal">
+      <h2 id="qs-title" class="inv-h">Invierte en Venezuela<br /><em>desde el extranjero.</em></h2>
+      <p class="inv-lead">Si vives fuera del país, inviertes con el mismo respaldo legal y el mismo blindaje que si estuvieras aquí. Primero las reglas, después la decisión.</p>
+    </header>
+
+    <!-- Bento asimétrico -->
+    <div class="inv-bento">
+
+      <!-- Izquierda: foto alta + guía descargable (lead magnet real: el e-book) -->
+      <div class="inv-left">
+        <figure class="inv-figure reveal">
+          <img src="/hero/caracas-poster.jpg" alt="Vista del corredor este de Caracas con el Ávila al fondo" loading="lazy" decoding="async" />
+        </figure>
+
+        <div class="inv-guide reveal">
+          <span class="inv-guide-k">Guía 2026</span>
+          <p>Invertir en Venezuela desde el extranjero: las 4 vías legales, el proceso paso a paso y las preguntas que todo inversionista hace antes de comprar.</p>
+          <a class="inv-btn" href="/guias/guia-invertir-venezuela-desde-el-extranjero-2026.pdf" target="_blank" rel="noopener" download>Descargar la guía <span class="arw" aria-hidden="true">&darr;</span></a>
+        </div>
+      </div>
+
+      <!-- Derecha: 1 pilar ancho (feature) + 2 pilares -->
+      <div class="inv-right">
+        <article class="pill is-feature reveal">
+          <span class="pill-k">Legalidad</span>
+          <h3>Comprar es legal. Y puedes hacerlo sin viajar.</h3>
+          <p>La ley venezolana reconoce tu derecho a la propiedad como extranjero. Si no puedes venir, firmas con un poder consular apostillado y tu representante protocoliza aquí, en tu nombre.</p>
+          <ul class="vias">
+            <li>A título personal</li>
+            <li>Por apoderado</li>
+            <li>Sociedad C.A.</li>
+            <li>Sucursal de tu holding</li>
+          </ul>
+        </article>
+
+        <article class="pill reveal">
+          <span class="pill-k">Rentabilidad</span>
+          <h3>Tu capital trabaja en dólares.</h3>
+          <p>Precios, alquileres y plusvalía se negocian en moneda dura. Las rentas y el producto de una venta se repatrían por canales bancarios regulados.</p>
+        </article>
+
+        <article class="pill reveal">
+          <span class="pill-k">Seguridad</span>
+          <h3>El Filtro Glam audita cada título.</h3>
+          <p>Revisamos 20 años de cadena titulativa, solvencias y gravámenes. No comprometemos un solo dólar hasta un resultado 100% limpio.</p>
+        </article>
+      </div>
+    </div>
+
+    <!-- Preguntas: los dos reparos reales -->
+    <div class="inv-faq">
+      <p class="inv-kicker reveal">Lo que siempre nos preguntan</p>
+      <dl class="inv-faq-grid">
+        <div class="qa reveal">
+          <dt>¿Puedo comprar sin residir en el país?</dt>
+          <dd>Sí. No se exige visa de residente ni domicilio permanente: basta tu pasaporte vigente y el RIF de extranjero ante el SENIAT.</dd>
+        </div>
+        <div class="qa reveal">
+          <dt>¿Es obligatorio viajar a Venezuela?</dt>
+          <dd>No. Otorgas un poder especial ante el consulado o un notario con Apostilla de La Haya, y nosotros gestionamos la legalización y la firma local.</dd>
+        </div>
+      </dl>
+    </div>
+
+    <!-- Cierre + diagnóstico -->
+    <div class="inv-foot reveal">
+      <a class="inv-link" href="/contacto">Agenda tu diagnóstico de factibilidad <span class="arw" aria-hidden="true">&rarr;</span></a>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  /* =========================================================================
+     Tokens: se mapean los del preview a los globales del proyecto. El --oro (acento
+     dorado) no existe en global.css; se define local (mismo patrón que .cc-blindaje).
+     --bronce/--lino se aliasan para poder conservar el CSS del preview casi verbatim.
+     ========================================================================= */
+  .inv {
+    --oro: #C9A46A;
+    --lino: var(--color-lino);
+    --bronce: var(--color-bronce);
+    --ink-1: var(--color-lino);
+    --ink-2: color-mix(in srgb, var(--color-lino) 74%, transparent);
+    --ink-3: color-mix(in srgb, var(--color-lino) 54%, transparent);
+    --hair: color-mix(in srgb, var(--color-lino) 12%, transparent);
+    --hair-strong: color-mix(in srgb, var(--oro) 42%, transparent);
+    --fill: color-mix(in srgb, var(--color-lino) 5%, transparent);
+    --fill-gold: color-mix(in srgb, var(--oro) 9%, transparent);
+    --ease: cubic-bezier(.2, 0, 0, 1);
+
+    /* El fondo oscuro lo pone .cc-oscura (externo): la sección es transparente. */
+    color: var(--ink-1);
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    padding: clamp(64px, 10vh, 120px) 0 clamp(56px, 9vh, 104px);
+  }
+
+  .inv-wrap {
+    max-width: 1280px;
+    margin-inline: auto;
+    /* Mismo gutter base que .cc-blindaje-inner (px-5 → md:px-6). */
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) { .inv-wrap { padding-inline: 1.5rem; } }
+  /* Mismo desplazamiento al gutter que usa la banda "blindaje 360°" en sus elementos
+     editoriales (head/risk/note): el contenido se corre hacia el margen izquierdo en
+     pantallas anchas para alinear su borde con esa sección. Solo mueve posición (gutter),
+     no altera proporciones. */
+  @media (min-width: 1024px) {
+    .inv-head,
+    .inv-bento,
+    .inv-faq,
+    .inv-foot {
+      margin-left: clamp(-140px, calc((1280px - 100vw) / 2 - 14px), 0px);
+    }
+  }
+  .inv-kicker {
+    margin: 0;
+    font-weight: 600;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--oro);
+  }
+
+  /* ---- Cabecera editorial ---- */
+  .inv-head { max-width: none; }
+  .inv-h {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(1.9rem, 4.4vw, 3.2rem);
+    line-height: 1.04;
+    letter-spacing: .004em;
+    text-transform: uppercase;
+    color: var(--ink-1);
+  }
+  .inv-h em { font-style: normal; color: var(--oro); }
+  .inv-lead {
+    margin: clamp(18px, 2vw, 26px) 0 0;
+    /* Más ancho para que quepa en 2 líneas (una línea hacia abajo), balanceadas. */
+    max-width: 80ch;
+    font-weight: 300;
+    font-size: clamp(1.02rem, 1.25vw, 1.22rem);
+    line-height: 1.6;
+    color: var(--ink-2);
+    text-wrap: balance;
+  }
+
+  /* ---- Bento asimétrico ---- */
+  .inv-bento {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: clamp(36px, 5vw, 64px);
+  }
+  @media (min-width: 1040px) {
+    .inv-bento { grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.3fr); align-items: stretch; }
+  }
+
+  /* Celda izquierda: foto alta + bloque de guía descargable */
+  .inv-left { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .inv-figure { position: relative; margin: 0; overflow: hidden; border-radius: 2px; flex: 1 1 auto; }
+  .inv-figure img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    object-fit: cover;
+    aspect-ratio: 4 / 5;
+    filter: saturate(.92) contrast(1.02);
+  }
+  /* Filo de oro interior + leve degradado inferior para asentar la foto en el oscuro. */
+  .inv-figure::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: 2px;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--oro) 26%, transparent);
+    background: linear-gradient(180deg, transparent 55%, rgba(7, 6, 11, .55));
+  }
+  /* Bloque guía (lead magnet real: el e-book) */
+  .inv-guide {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: clamp(20px, 2vw, 26px);
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+    background: var(--fill);
+  }
+  .inv-guide-k { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--oro); font-weight: 600; }
+  .inv-guide p { margin: 0; font-size: clamp(.9rem, .98vw, .97rem); line-height: 1.6; color: var(--ink-2); }
+  .inv-guide .inv-btn { align-self: flex-start; }
+
+  /* Botón primario (bronce sólido, texto tinta) */
+  .inv-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    text-decoration: none;
+    background: var(--bronce);
+    color: #0B0A11;
+    border: 1px solid var(--bronce);
+    border-radius: 2px;
+    padding: 14px 28px;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    transition: background .35s var(--ease), color .35s var(--ease), transform .16s var(--ease), box-shadow .35s var(--ease);
+  }
+  .inv-btn:hover { background: var(--oro); border-color: var(--oro); box-shadow: 0 14px 34px -16px color-mix(in srgb, var(--oro) 80%, transparent); }
+  .inv-btn:active { transform: scale(.98); }
+  .arw { transition: transform .3s var(--ease); }
+  .inv-btn:hover .arw { transform: translateX(5px); }
+  .inv-btn:focus-visible { outline: 2px solid var(--oro); outline-offset: 3px; }
+
+  /* Celda derecha: 1 pilar ancho (feature) + 2 pilares */
+  .inv-right { display: grid; grid-template-columns: 1fr; gap: 14px; min-width: 0; }
+  @media (min-width: 620px) { .inv-right { grid-template-columns: 1fr 1fr; } }
+  .pill {
+    position: relative;
+    padding: clamp(24px, 2.3vw, 34px);
+    border: 1px solid var(--hair);
+    border-radius: 2px;
+    background: var(--fill);
+    transition: border-color .4s var(--ease), background .4s var(--ease), transform .4s var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .pill:hover { border-color: var(--hair-strong); background: color-mix(in srgb, var(--color-lino) 7%, transparent); transform: translateY(-3px); }
+  }
+  /* El pilar feature ocupa la fila superior completa y lleva un tinte de oro. */
+  .pill.is-feature { background: linear-gradient(135deg, var(--fill-gold), var(--fill)); border-color: color-mix(in srgb, var(--oro) 22%, transparent); }
+  @media (min-width: 620px) { .pill.is-feature { grid-column: 1 / -1; } }
+  .pill-k { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--oro); font-weight: 600; }
+  .pill h3 {
+    margin: 14px 0 0;
+    font-weight: 300;
+    letter-spacing: .004em;
+    color: var(--ink-1);
+    font-size: clamp(1.3rem, 1.9vw, 1.75rem);
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+  .pill.is-feature h3 { font-size: clamp(1.5rem, 2.5vw, 2.15rem); max-width: 22ch; }
+  .pill p { margin: 12px 0 0; font-size: clamp(.92rem, 1vw, 1rem); line-height: 1.66; color: var(--ink-2); max-width: 54ch; }
+  .pill.is-feature p { max-width: 62ch; }
+  /* Las 4 vías, dentro del feature: tira de 4 chips sobrios. */
+  .vias { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
+  .vias li {
+    font-size: 11.5px;
+    letter-spacing: .06em;
+    color: var(--ink-1);
+    padding: 7px 13px;
+    border: 1px solid color-mix(in srgb, var(--oro) 32%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--oro) 7%, transparent);
+    white-space: nowrap;
+  }
+
+  /* ---- Banda de preguntas (dos reparos reales) ---- */
+  .inv-faq { margin-top: clamp(40px, 5vw, 72px); padding-top: clamp(28px, 3vw, 40px); border-top: 1px solid var(--hair); }
+  .inv-faq-grid { display: grid; grid-template-columns: 1fr; gap: clamp(24px, 3vw, 44px); margin-top: clamp(22px, 2.4vw, 30px); }
+  @media (min-width: 760px) { .inv-faq-grid { grid-template-columns: 1fr 1fr; } }
+  .qa dt { font-weight: 600; font-size: clamp(1rem, 1.15vw, 1.12rem); line-height: 1.3; color: var(--ink-1); }
+  .qa dd { margin: 10px 0 0; font-weight: 300; font-size: clamp(.92rem, 1vw, 1rem); line-height: 1.66; color: var(--ink-2); max-width: 52ch; }
+
+  /* ---- Cierre + diagnóstico ---- */
+  .inv-foot {
+    margin-top: clamp(40px, 5vw, 72px);
+    padding-top: clamp(26px, 3vw, 38px);
+    border-top: 1px solid var(--hair);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px 40px;
+  }
+  .inv-foot p { margin: 0; max-width: 48ch; font-weight: 300; font-size: clamp(.96rem, 1.05vw, 1.08rem); line-height: 1.6; color: var(--ink-2); }
+  .inv-link {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    text-decoration: none;
+    color: var(--ink-1);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--hair-strong);
+    transition: color .35s var(--ease), border-color .35s var(--ease);
+  }
+  .inv-link:hover { color: var(--oro); border-color: var(--oro); }
+  .inv-link:hover .arw { transform: translateX(5px); }
+  .inv-link:focus-visible { outline: 2px solid var(--oro); outline-offset: 3px; }
+
+  /* ---- Reveal al entrar en viewport (sutil; la animación "cover" es externa) ---- */
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .inv-btn, .inv-link, .pill { transition: none; }
+  }
+</style>
+
+<script>
+  // Reveal sutil al entrar en viewport. La animación "cover" (lámina que sube) es externa.
+  (function () {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const els = Array.prototype.slice.call(document.querySelectorAll('.inv .reveal'));
+    if (reduce || !('IntersectionObserver' in window)) {
+      els.forEach((el) => el.classList.add('in'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+    els.forEach((el) => io.observe(el));
+  })();
+</script>

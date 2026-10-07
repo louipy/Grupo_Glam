@@ -1,0 +1,593 @@
+---
+import { Picture } from 'astro:assets';
+import equipo from '../assets/equipo-glam.jpg';
+import QuienesSomos from './QuienesSomos.astro';
+// CONTENIDO COMPLEMENTARIO · sección bajo los inmuebles destacados.
+// Fondo lino (igual que el resto de la lámina). Dos columnas: foto vertical a la izquierda
+// y espacio de texto a la derecha, alineados a la misma altura. La foto se sirve con
+// <picture> responsive (AVIF/WebP/JPEG pre-optimizadas en /public/complementario).
+// Imagen "torre" (fila Aman): protagonista, más grande → pide la variante 1280 antes.
+const sizes = '(min-width: 1024px) 60vw, (min-width: 768px) 56vw, 92vw';
+// Fila "Publicar ya no es vender" (rediseño oferta de valor): la torre vive en una columna
+// acotada (~440px en escritorio), así que pide una medida más chica que el resto.
+const sizesHook = '(min-width: 900px) 520px, 92vw';
+const srcset = (base: string, ext: string) =>
+  `/complementario/${base}-640.${ext} 640w, /complementario/${base}-1280.${ext} 1280w`;
+
+// Segunda imagen (salón): fondo tenue de la banda "Blindaje 360°".
+const salonSrcset = (ext: string) =>
+  `/complementario/salon-interior-640.${ext} 640w, /complementario/salon-interior-1280.${ext} 1280w, /complementario/salon-interior-1600.${ext} 1600w`;
+---
+<section class="cc-section bg-[var(--color-lino)]">
+  <!-- Lámina clara: se ancla por su base y la extensión oscura la cubre al subir. -->
+  <div class="cc-clara bg-[var(--color-lino)] pt-8 md:pt-12 pb-20 md:pb-32 overflow-x-clip">
+  <div class="max-w-[1280px] mx-auto px-5 md:px-6">
+    <!-- A · Gancho + giro — rediseño "oferta de valor": plantea el problema (gestión pasiva),
+         da el giro (gestión activa) y cierra con la Regla de Oro como acento editorial. -->
+    <div class="cc-hook">
+      <figure class="cc-hook-media">
+        <picture>
+          <source type="image/avif" srcset={srcset('edificio-torre', 'avif')} sizes={sizesHook} />
+          <source type="image/webp" srcset={srcset('edificio-torre', 'webp')} sizes={sizesHook} />
+          <img
+            src="/complementario/edificio-torre-1280.jpg"
+            srcset={srcset('edificio-torre', 'jpg')}
+            sizes={sizesHook}
+            width="1280"
+            height="1706"
+            alt="Torre residencial de alta gama en Caracas"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
+      </figure>
+
+      <div class="cc-hook-text">
+        <h2 class="cc-hook-h">Publicar ya<br />no es <em>vender.</em></h2>
+        <!-- Cuerpo, regla breve y giro indentados a la derecha del título (misma
+             organización que la captura de diseño). -->
+        <div class="cc-hook-sub">
+          <div class="cc-hook-body">
+            <p>En el sector inmobiliario tradicional, las propiedades de alto valor sufren de gestión masiva. Se publican en un portal y se abandonan a la espera de ser adquiridas.</p>
+            <p>Como resultado, se obtiene un exceso de inventario, prospectos fríos y una pérdida de valor patrimonial.</p>
+          </div>
+          <span class="cc-hook-rule" aria-hidden="true"></span>
+          <p class="cc-turn">Nosotros hacemos lo contrario, usando <strong>gestión activa</strong>, segmentación, tecnología y un consultor dedicado trabajando tu inmueble todos los días.</p>
+          <div class="cc-regla">
+            <q>Ningún cliente, y ningún inmueble, se siente jamás en abandono. Tu propiedad es nuestra prioridad número uno.</q>
+            <small>La Regla de Oro Glam</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= BLINDAJE 360° =======================
+       Banda oscura full-bleed: combina el FONDO + TIPOGRAFÍA de la sección "proof"
+       del preview (fondo tintado con foto tenue, acentos en oro/Fraunces) con la
+       INFORMACIÓN de los 4 pilares ("Un blindaje de 360°") y conserva el recuadro
+       "Cero exclusividad forzada". Las estadísticas (+10 años, 55 días, <2h) se omiten. -->
+  <section class="cc-blindaje" data-navtone="dark">
+    <div class="cc-blindaje-bg" aria-hidden="true">
+      <picture>
+        <source type="image/avif" srcset={salonSrcset('avif')} sizes="100vw" />
+        <source type="image/webp" srcset={salonSrcset('webp')} sizes="100vw" />
+        <img src="/complementario/salon-interior-1280.jpg" srcset={salonSrcset('jpg')} sizes="100vw" alt="" loading="lazy" decoding="async" />
+      </picture>
+    </div>
+    <div class="cc-blindaje-inner max-w-[1280px] mx-auto px-5 md:px-6">
+      <header class="cc-blindaje-head">
+        <h2 class="cc-blindaje-title"><span class="is-gold">Recibes</span> un blindaje de 360° alrededor de tu inmueble</h2>
+      </header>
+
+      <!-- Puntos de valor en filas (modelo "Tradicional vs Glam" del preview): cada
+           punto se toca con una bolita bronce y se separa con filetes finos. Sin
+           cuadrícula de tarjetas ni numeración. -->
+      <div class="cc-points">
+        <div class="cc-point">
+          <div class="cc-point-k">Gestión patrimonial</div>
+          <p class="cc-point-desc">Un consultor dedicado a tu activo constantemente, gestionando, blindando y optimizando el entorno de tu patrimonio.</p>
+          <span class="cc-point-tag">Trato prioritario</span>
+        </div>
+        <div class="cc-point">
+          <div class="cc-point-k">Ecosistema tecnológico</div>
+          <p class="cc-point-desc">Usamos plataformas de tecnología como Wasi + Toolyx creando un hub omnicanal 24/7 que centraliza cada contacto para que ninguna oportunidad se enfríe.</p>
+          <span class="cc-point-tag">Respuesta en menos de 2 horas</span>
+        </div>
+        <div class="cc-point">
+          <div class="cc-point-k">Aceleradora comercial</div>
+          <p class="cc-point-desc">Brindamos segmentación algorítmica, creación de contenido audiovisual con dron y fotografía arquitectónica profesional, además de visibilidad en ecosistemas MLS.</p>
+          <span class="cc-point-tag">Comprador ideal</span>
+        </div>
+        <div class="cc-point">
+          <div class="cc-point-k">Seguridad legal</div>
+          <p class="cc-point-desc">Cuentas con el filtro glam en el cual aplicamos due diligence y validamos ante SAREN y SUSCERTE para blindarte antes de salir al mercado.</p>
+          <span class="cc-point-tag">Due diligence previo</span>
+        </div>
+      </div>
+
+      <div class="cc-risk">
+        <span class="cc-risk-k">Cero exclusividad forzada</span>
+        <h3 class="cc-risk-h">Te retenemos con resultados, no con ataduras.</h3>
+        <p>Nuestra propuesta no exige contrato de exclusividad obligatoria. Si en cualquier momento deseas pausar la promoción, basta con un simple correo.</p>
+      </div>
+
+      <p class="cc-blindaje-note">Este mismo estándar aplica a inmuebles residenciales, comerciales e industriales y a la asesoría y gestión en la compra y venta de empresas, donde acompañamos la valoración, la búsqueda de contrapartes y el cierre de la transacción.</p>
+    </div>
+  </section>
+
+  <div class="max-w-[1280px] mx-auto px-5 md:px-6">
+    <!-- Origen y forma de pensar (traída desde la página Nosotros). -->
+    <div class="cc-origen">
+      <div class="cc-origen-text">
+        <h2 class="cc-origen-h">Nacimos de una <span>idea incómoda</span> para el sector.</h2>
+
+        <div class="cc-origen-body">
+          <p>Con más de 10 años de experiencia en el mercado, hemos evolucionado de una agencia tradicional a una plataforma de alto rendimiento. Operamos bajo estándares internacionales para proteger su activo.</p>
+          <p>El cierre exitoso no culmina con un apretón de manos, sino con una protocolización impecable. Aseguramos su patrimonio de principio a fin.</p>
+        </div>
+
+        <div class="cc-origen-points">
+          <div class="cc-origen-point">
+            <div>
+              <span class="cc-origen-lead">Reporte periódico</span>
+              <p class="cc-origen-txt">Con el alcance real del mercadeo, el feedback de cada visita y un Análisis Comparativo de Mercado actualizado.</p>
+            </div>
+          </div>
+          <div class="cc-origen-point">
+            <div>
+              <span class="cc-origen-lead">Calificación rigurosa</span>
+              <p class="cc-origen-txt">Filtro exclusivo de clientes de alto patrimonio.</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="cc-origen-backing"><span>NAR®</span> · Cámara Inmobiliaria Metropolitana</p>
+      </div>
+
+      <figure class="cc-origen-fig">
+        <Picture
+          src={equipo}
+          formats={['avif', 'webp']}
+          widths={[768, 1024, 1440, 1920, 2560]}
+          sizes="(min-width:1280px) 720px, (min-width:980px) 56vw, 92vw"
+          quality={88}
+          alt="Equipo de consultores y fundadores de Grupo Glam Inmobiliaria en Caracas."
+          class="cc-origen-photo"
+          loading="lazy"
+          decoding="async"
+        />
+        <a href="/nosotros" class="cc-origen-cta">Conócenos</a>
+      </figure>
+    </div>
+  </div>
+  </div>
+
+  <!-- Lámina oscura: sube y CUBRE la lámina clara (misma transición que hero → destacados),
+       en lugar de desplazarla. Alberga la muestra de "Quiénes somos". -->
+  <div class="cc-oscura" data-navtone="dark">
+    <QuienesSomos />
+  </div>
+</section>
+
+<script>
+  // Ancla la lámina clara por su BASE: se queda estática cuando su borde inferior llega al
+  // fondo del viewport, y la extensión oscura sube y la cubre (misma sensación que el hero).
+  // Como la lámina es más alta que el viewport, el pin por base se consigue con top negativo.
+  function pinClaraPorBase() {
+    const clara = document.querySelector('.cc-clara');
+    if (!(clara instanceof HTMLElement)) return;
+    const excedente = clara.offsetHeight - window.innerHeight;
+    clara.style.top = (excedente > 0 ? -excedente : 0) + 'px';
+  }
+  pinClaraPorBase();
+  addEventListener('resize', pinClaraPorBase);
+  addEventListener('load', pinClaraPorBase);
+</script>
+
+<style>
+  /* ---- Transición "cover" hacia la extensión oscura ----
+     Réplica de la de hero → inmuebles destacados: la lámina clara se ANCLA por su base
+     (sticky bottom) y la extensión oscura, opaca y con z-index superior, sube y la CUBRE
+     en lugar de desplazarla. Puro layout con posicionamiento, sin JS. */
+  /* Contexto de apilamiento propio: aísla el cover y no afecta a las secciones siguientes. */
+  .cc-section { position: relative; z-index: 0; }
+  .cc-clara {
+    position: sticky;
+    /* El offset real (top negativo = -(alto - viewport)) lo fija el script: así la lámina
+       se ANCLA POR SU BASE al hacer scroll hacia abajo (el hero lo logra con top:0 porque
+       mide 100vh; esta lámina es más alta, por eso el top negativo). */
+    top: 0;
+    z-index: 0;
+  }
+  .cc-oscura {
+    position: relative;
+    z-index: 1;
+    /* Al menos un viewport (piso): al subir cubre la pantalla completa. El contenido de
+       "Quiénes somos" la hace bastante más alta, así que la cobertura se mantiene sin que
+       se cuele la zona blanca de abajo mientras se recorre la sección. */
+    min-height: 100svh;
+    background: #100E17;
+    /* Sombra superior tintada: sensación de "lámina" que se posa (igual que .scroll-over). */
+    box-shadow: 0 -34px 60px -24px color-mix(in srgb, var(--color-tinta) 55%, transparent);
+  }
+
+  /* ---- Origen y forma de pensar — "Nacimos de una idea incómoda" (traída de Nosotros) ----
+     Texto editorial a la izquierda (titular + cuerpo + dos puntos + CTA) y la foto del equipo
+     a la derecha, protagonista. Montserrat en el cuerpo. */
+  .cc-origen {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(34px, 5vw, 72px);
+    align-items: start;
+  }
+  @media (min-width: 980px) {
+    /* La foto pesa más que el texto (columna derecha mayor) para que luzca más grande. */
+    .cc-origen { grid-template-columns: minmax(0, 0.88fr) minmax(360px, 1.18fr); }
+  }
+  .cc-origen-text {
+    min-width: 0;
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    /* Columna en flex para empujar la línea de respaldo al pie (esquina inferior izquierda). */
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+  }
+  .cc-origen-h {
+    margin: 0 0 clamp(24px, 2.8vw, 38px);
+    font-weight: 300;
+    font-size: clamp(1.7rem, 3.4vw, 2.7rem);
+    line-height: 1.12;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+    color: var(--color-tinta);
+    max-width: 20ch;
+  }
+  .cc-origen-h span { font-weight: 600; }
+  .cc-origen-body {
+    max-width: 60ch;
+    display: flex;
+    flex-direction: column;
+    gap: 1.05em;
+  }
+  .cc-origen-body p {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(1rem, 1.2vw, 1.14rem);
+    line-height: 1.78;
+    letter-spacing: .008em;
+    color: #454049;
+    text-wrap: pretty;
+  }
+  /* Línea de respaldo (avales del sector) anclada al pie de la columna, con aire arriba
+     y un pequeño respiro respecto al borde inferior. */
+  .cc-origen-backing {
+    margin: 0 0 clamp(2px, 1vw, 12px);
+    padding-top: clamp(32px, 4.5vw, 64px);
+    margin-top: auto;
+    font-size: 13px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--color-humo);
+  }
+  .cc-origen-backing span { color: var(--color-bronce); }
+  .cc-origen-points {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(22px, 2.4vw, 34px);
+    margin-top: clamp(30px, 3.6vw, 48px);
+  }
+  @media (min-width: 640px) {
+    .cc-origen-points { grid-template-columns: 1fr 1fr; gap: clamp(28px, 3vw, 52px); }
+  }
+  .cc-origen-point {
+    padding-top: clamp(15px, 1.6vw, 20px);
+    border-top: 1px solid color-mix(in srgb, var(--color-bronce) 55%, transparent);
+  }
+  .cc-origen-lead {
+    display: block;
+    font-weight: 600;
+    font-size: clamp(1rem, 1.2vw, 1.16rem);
+    letter-spacing: .005em;
+    color: var(--color-tinta);
+    margin-bottom: 8px;
+  }
+  .cc-origen-txt {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(.96rem, 1.05vw, 1.06rem);
+    line-height: 1.62;
+    letter-spacing: .006em;
+    color: #4A4650;
+    text-wrap: pretty;
+  }
+  /* CTA "Conocemos": botón bronce, misma pauta que los CTA de marca del sitio. */
+  .cc-origen-cta {
+    display: inline-block;
+    margin-top: clamp(32px, 3.8vw, 52px);
+    padding: 16px 32px;
+    background: var(--color-bronce);
+    color: var(--color-tinta);
+    border-radius: 2px;
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: .75rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background .4s ease, color .4s ease;
+  }
+  .cc-origen-cta:hover { background: var(--color-tinta); color: var(--color-lino); }
+
+  .cc-origen-fig { margin: 0; }
+  .cc-origen-photo { display: block; width: 100%; height: auto; border-radius: 2px; }
+
+  /* Sangría hacia el gutter en pantallas anchas (gesto de las filas del preview).
+     "Nacimos de una idea incómoda" comparte la misma sangría que "Publicar ya no es
+     vender" para que su contenido no se vea tan compacto. */
+  @media (min-width: 1024px) {
+    .cc-hook,
+    .cc-origen {
+      margin-left: clamp(-96px, calc((1280px - 100vw) / 2), 0px);
+      margin-right: clamp(-96px, calc((1280px - 100vw) / 2), 0px);
+    }
+  }
+
+  /* =========================================================================
+     A · GANCHO + GIRO — "Publicar ya no es vender" (rediseño oferta de valor)
+     Imagen vertical acotada a la izquierda; a la derecha el arco problema → giro
+     (gestión activa) → Regla de Oro. Tokens y tipografías del proyecto.
+     ========================================================================= */
+  .cc-hook {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(32px, 5vw, 64px);
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .cc-hook { grid-template-columns: minmax(0, 520px) minmax(0, 1fr); }
+  }
+  .cc-hook-media {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+  .cc-hook-media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: 2px;
+  }
+
+  .cc-hook-text {
+    min-width: 0;
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+  }
+  .cc-hook-h {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(2.3rem, 5.6vw, 3.9rem);
+    line-height: 1.04;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+    color: var(--color-tinta);
+  }
+  .cc-hook-h em { font-style: normal; color: var(--color-bronce); }
+
+  /* Sub-bloque bajo el título. La sangría se aplica por elemento (cuerpo, regla y
+     Regla de Oro), pero el giro se alinea con el borde izquierdo del título. */
+  .cc-hook-sub {
+    --hook-indent: clamp(18px, 7%, 72px);
+    margin-top: clamp(28px, 3.6vw, 48px);
+  }
+  .cc-hook-body {
+    display: grid;
+    gap: clamp(10px, 1.2vw, 16px);
+    max-width: 68ch;
+    margin-left: var(--hook-indent);
+  }
+  .cc-hook-body p {
+    margin: 0;
+    font-size: clamp(.96rem, 1.05vw, 1.04rem);
+    line-height: 1.6;
+    color: #454049;
+  }
+  /* Regla que separa el cuerpo del giro (línea fina alargada, con aire). */
+  .cc-hook-rule {
+    display: block;
+    width: clamp(96px, 16vw, 220px);
+    height: 1px;
+    margin: clamp(26px, 3vw, 40px) 0;
+    margin-left: var(--hook-indent);
+    background: color-mix(in srgb, var(--color-bronce) 62%, transparent);
+  }
+  /* El giro: declaración en mayor escala, peso ligero. */
+  .cc-turn {
+    margin: 0;
+    font-size: clamp(1.25rem, 2vw, 1.7rem);
+    line-height: 1.24;
+    letter-spacing: -.005em;
+    color: var(--color-tinta);
+    font-weight: 300;
+    max-width: 30ch;
+  }
+  .cc-turn strong { font-weight: 600; }
+  /* Regla de Oro — único acento editorial en serif (Fraunces). */
+  .cc-regla {
+    margin-top: clamp(26px, 3vw, 40px);
+    margin-left: var(--hook-indent);
+    display: grid;
+    gap: 10px;
+    padding-left: clamp(16px, 2vw, 24px);
+    border-left: 2px solid var(--color-bronce);
+  }
+  .cc-regla q {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(1.15rem, 1.9vw, 1.6rem);
+    line-height: 1.35;
+    letter-spacing: -.01em;
+    color: var(--color-grafito);
+    quotes: "\201C" "\201D";
+  }
+  .cc-regla small {
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--color-bronce);
+  }
+  /* =========================================================================
+     BLINDAJE 360° — banda oscura full-bleed (fondo + tipografía "proof" del preview
+     con la información de los 4 pilares + recuadro "Cero exclusividad forzada").
+     Es hijo directo de .cc-clara (ancho completo de viewport): rompe el max-width
+     de las filas claras para ocupar todo el ancho, con su propio contenedor interno.
+     ========================================================================= */
+  .cc-blindaje {
+    --oro: #C9A46A;                                        /* acento dorado del "proof" */
+    --hair-lino: color-mix(in srgb, var(--color-lino) 14%, transparent);
+    position: relative;
+    overflow: hidden;
+    background: #100E17;                                   /* mismo tinte que .cc-oscura */
+    color: var(--color-lino);
+    margin: clamp(56px, 8vw, 104px) 0;
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+  }
+  /* Fondo: foto muy tenue + degradado oscuro encima (igual que el "proof"). */
+  .cc-blindaje-bg { position: absolute; inset: 0; z-index: 0; }
+  .cc-blindaje-bg img { width: 100%; height: 100%; object-fit: cover; opacity: .2; filter: grayscale(20%); }
+  .cc-blindaje-bg::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(16,14,23,.78), rgba(16,14,23,.93));
+  }
+  .cc-blindaje-inner { position: relative; z-index: 1; padding-block: clamp(56px, 8vw, 104px); }
+
+  /* El header y el recuadro "Cero exclusividad" se desplazan hacia el gutter izquierdo
+     (mismo gesto que las filas aman): quedan alineados con el borde izquierdo del título
+     "Publicar ya no es vender". La rejilla de pilares conserva su posición. */
+  @media (min-width: 1024px) {
+    .cc-blindaje-head,
+    .cc-risk,
+    .cc-blindaje-note { margin-left: clamp(-140px, calc((1280px - 100vw) / 2 - 14px), 0px); }
+  }
+
+  .cc-blindaje-head { margin-bottom: clamp(32px, 4vw, 56px); }
+  .cc-blindaje-title {
+    margin: 0; max-width: 34ch; font-weight: 300; font-size: clamp(1.5rem, 3vw, 2.4rem);
+    line-height: 1.1; letter-spacing: .005em; text-transform: uppercase;
+    color: var(--color-lino); text-wrap: balance;
+  }
+  .cc-blindaje-title .is-gold { color: var(--oro); }
+
+  /* Puntos de valor en filas (modelo "Tradicional vs Glam" del preview): cada fila se
+     separa con un filete fino y el texto se "toca" con una bolita bronce a la izquierda.
+     Sin cuadrícula ni numeración. */
+  .cc-points { display: grid; gap: 0; }
+  /* ≥760px: las 3 columnas (clave · descripción · etiqueta) se definen en el contenedor
+     y cada fila las comparte con subgrid → la descripción arranca SIEMPRE en la misma x
+     y la columna de etiqueta toma el ancho de la etiqueta más larga (sin cortes), aunque
+     cada clave tenga distinta longitud. Elimina el desfase del punto 2. */
+  @media (min-width: 760px) {
+    .cc-points {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      column-gap: clamp(20px, 3vw, 48px);
+    }
+  }
+  /* Las claves (y toda la lista) se corren un poco hacia la izquierda en pantallas anchas,
+     manteniendo la alineación interna. Más suave que el desplazamiento del header. */
+  @media (min-width: 1024px) {
+    .cc-points { margin-left: clamp(-44px, calc((1280px - 100vw) / 2 - 8px), 0px); }
+  }
+  .cc-point {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(6px, 1vw, 10px);
+    padding: clamp(18px, 2.2vw, 26px) 0;
+    border-top: 1px solid var(--hair-lino);
+  }
+  .cc-point:last-child { border-bottom: 1px solid var(--hair-lino); }
+  @media (min-width: 760px) {
+    .cc-point {
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+      gap: 0;
+      align-items: start;
+    }
+  }
+  /* Clave (título del punto): versal pequeña, atenuada. */
+  .cc-point-k {
+    font-size: clamp(.78rem, .9vw, .85rem);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    line-height: 1.3;
+    color: color-mix(in srgb, var(--color-lino) 78%, transparent);
+    padding-top: 2px;
+  }
+  /* Solo las claves se corren un poco a la izquierda (offset visual, sin tocar la grid),
+     abriendo el hueco con su descripción para que las claves largas no choquen con ella. */
+  @media (min-width: 760px) {
+    .cc-point-k { position: relative; left: clamp(-32px, -2vw, -16px); }
+  }
+  /* Descripción: texto claro marcado con la bolita bronce. */
+  .cc-point-desc {
+    margin: 0;
+    position: relative;
+    padding-left: 20px;
+    font-size: clamp(.92rem, 1.02vw, 1rem);
+    line-height: 1.6;
+    color: var(--color-lino);
+  }
+  .cc-point-desc::before {
+    content: "";
+    position: absolute; left: 0; top: .62em;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--oro);
+  }
+  /* Etiqueta: acento editorial en Fraunces/oro, misma tipografía que los textos
+     tipo "+10 años" (.stat-n del "proof" del preview). */
+  .cc-point-tag {
+    align-self: start;
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(1.15rem, 1.7vw, 1.55rem);
+    line-height: 1.05;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--oro);
+    padding-left: 20px;
+  }
+  @media (min-width: 760px) {
+    /* Holgura extra a la izquierda del tag: lo separa de la descripción para que no
+       quede pegado (sin tocar el gap clave→descripción). Aplica a los cuatro puntos. */
+    .cc-point-tag { padding-left: clamp(32px, 4.5vw, 80px); text-align: right; padding-top: 0; }
+  }
+
+  /* Recuadro "Cero exclusividad forzada" (tal cual el "proof", con su tipografía). */
+  .cc-risk {
+    display: grid; gap: 10px; max-width: 70ch;
+    margin-top: clamp(36px, 4.5vw, 60px);
+    padding: clamp(22px, 2.6vw, 32px);
+    background: color-mix(in srgb, var(--color-lino) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--oro) 28%, transparent);
+    border-radius: 3px;
+  }
+  .cc-risk-k { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--oro); font-weight: 600; }
+  .cc-risk-h { margin: 0; font-weight: 300; font-size: clamp(1.3rem, 2.2vw, 1.8rem); line-height: 1.15; color: var(--color-lino); }
+  .cc-risk p { margin: 0; font-size: clamp(.92rem, 1vw, 1rem); line-height: 1.6; color: color-mix(in srgb, var(--color-lino) 74%, transparent); }
+
+  /* Nota al pie del blindaje: alcance del estándar (texto pequeño, atenuado). */
+  .cc-blindaje-note {
+    margin-top: clamp(20px, 2.4vw, 30px);
+    max-width: 70ch;
+    font-size: clamp(.8rem, .9vw, .88rem);
+    line-height: 1.6;
+    letter-spacing: .006em;
+    color: color-mix(in srgb, var(--color-lino) 60%, transparent);
+    text-wrap: pretty;
+  }
+</style>

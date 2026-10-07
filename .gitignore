@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────
+# .gitignore — repo público: solo el sitio web (carpeta web/) y su despliegue.
+# Todo el material interno queda fuera a propósito.
+# ─────────────────────────────────────────────────────────────
+
+# Dependencias y salidas de build (regenerables)
+node_modules/
+dist/
+.astro/
+.wrangler/
+
+# Entorno / secretos — nunca al repo
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# Logs
+*-debug.log*
+npm-debug.log*
+pnpm-debug.log*
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+
+# Material interno — NO se publica (brochures, propuesta, fuentes de diseño,
+# skills de tooling, documentos de estado del proyecto)
+/UTILITY/
+/DESIGN/
+/PROPUESTA/
+/.agents/
+/.claude/
+/BLOCKERS.md
+/STATUS.md
+/GRUPOGLAM_WEB_MANIFEST_v2.md
+/skills-lock.json

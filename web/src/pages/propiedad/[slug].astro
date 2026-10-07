@@ -1,0 +1,1156 @@
+---
+import Base from '../../layouts/Base.astro';
+import HeroNav from '../../components/HeroNav.astro';
+import { propiedadesDemo, type PropiedadDemo } from '../../data/propiedades.sample';
+import { precioES } from '../../lib/formato';
+
+// Página de detalle de propiedad. Reproduce fielmente el diseño DESIGN/Propiedad.dc.html
+// (hero, barra de specs, descripción + tarjeta de contacto, galería, características + mapa,
+// propiedades similares) sobre la cabecera y el pie del sitio (Base → HeroNav + Footer).
+// El diseño es autocontenido con su propia paleta literal (dorado #C9A46A, tinta #14101C,
+// papel #FCFBF8/#F3F0E9); se conservan esos valores tal cual para copiarlo sin desviaciones.
+
+const slugOf = (p: PropiedadDemo) =>
+  `${p.operacion}-${p.tipo}-${p.zonaSlug}-${p.ref.toLowerCase()}`;
+
+export function getStaticPaths() {
+  const slug = (p: PropiedadDemo) =>
+    `${p.operacion}-${p.tipo}-${p.zonaSlug}-${p.ref.toLowerCase()}`;
+  return propiedadesDemo.map((p) => ({ params: { slug: slug(p) }, props: { p } }));
+}
+
+interface Props { p: PropiedadDemo }
+const { p } = Astro.props;
+
+// Fotos reales disponibles (mismas que la home / catálogo). El resto cae al degradado de marca.
+const fotos: Record<string, { img: string; alt: string }> = {
+  'DEMO-01': { img: 'sebucan-edificio', alt: 'Edificio residencial de alta gama en Sebucán' },
+  'DEMO-02': { img: 'la-castellana-jardin', alt: 'Casa con jardín y piscina en La Castellana' },
+  'DEMO-03': { img: 'los-palos-grandes-interior', alt: 'Salón luminoso de apartamento en Los Palos Grandes' },
+  'DEMO-04': { img: 'altamira-terraza', alt: 'Terraza con vista al Ávila en Altamira' },
+};
+const foto = fotos[p.ref];
+
+// Variantes por foto: 640/1280 nativas + 1920/2560 reescaladas en alta calidad (Lanczos +
+// realce) para que las pantallas grandes/retina no tengan que ampliar la imagen por su cuenta
+// (que es lo que restaba nitidez en el hero a pantalla completa). `Full` para usos grandes
+// (hero, foto grande de la galería); `Card` para las tarjetas pequeñas de similares.
+// Fotos que ya tienen máster de alta resolución (Upscayl) con variante -3840 generada.
+// Solo a estas se les añade el candidato 3840w al srcset; el resto corta en 2560 para no
+// pedir un archivo que no existe (evita 404 en pantallas 4K/retina).
+const hiRes = new Set(['la-castellana-jardin', 'sebucan-edificio', 'altamira-terraza']);
+const srcsetFull = (img: string, ext: string) =>
+  `/destacados/${img}-640.${ext} 640w, /destacados/${img}-1280.${ext} 1280w, /destacados/${img}-1920.${ext} 1920w, /destacados/${img}-2560.${ext} 2560w` +
+  (hiRes.has(img) ? `, /destacados/${img}-3840.${ext} 3840w` : '');
+const srcsetCard = (img: string, ext: string) =>
+  `/destacados/${img}-640.${ext} 640w, /destacados/${img}-1280.${ext} 1280w`;
+
+const wa = 'https://wa.me/584122398253';
+const city = 'Caracas';
+
+const tipoLabel: Record<string, string> = {
+  apartamento: 'apartamento', casa: 'casa', edificio: 'edificio',
+  local: 'local comercial', oficina: 'oficina', terreno: 'terreno',
+};
+const tLabel = tipoLabel[p.tipo] ?? 'inmueble';
+
+// Precio (formato del sitio, §7.4) + kicker según operación.
+const price = precioES(p.precio, p.aConsultar);
+const priceKicker = p.aConsultar
+  ? 'Consultar'
+  : p.operacion === 'venta' ? 'Precio de venta' : 'Precio de alquiler';
+
+// Barra de specs (§6.2: null/0 → no se renderiza).
+const specs = [
+  p.habitaciones ? { label: 'Habitaciones', value: String(p.habitaciones) } : null,
+  p.banos ? { label: 'Baños', value: String(p.banos) } : null,
+  p.puestos ? { label: 'Estacionamientos', value: String(p.puestos) } : null,
+  p.area ? { label: 'Superficie', value: `${p.area} m²` } : null,
+].filter(Boolean) as { label: string; value: string }[];
+
+// Descripción derivada de datos reales (no inventa amenidades).
+const partes = [
+  p.habitaciones ? `${p.habitaciones} habitaciones` : null,
+  p.banos ? `${p.banos} baños` : null,
+  p.puestos ? `${p.puestos} puestos de estacionamiento` : null,
+].filter(Boolean) as string[];
+const distrib = partes.length
+  ? `Distribuida en ${partes.join(', ')}${p.area ? ` y ${p.area} m² de superficie` : ''}, `
+  : '';
+const description = [
+  `Ubicada en ${p.zona}, una de las zonas más valoradas de Caracas, esta ${tLabel} combina una ubicación privilegiada con espacios amplios y luminosos, pensados para el confort y la vida contemporánea.`,
+  `${distrib}aprovecha la luz natural en cada ambiente y ofrece una distribución funcional a la altura de las mejores direcciones de la ciudad.`,
+  `Grupo Glam acompaña cada operación con asesoría integral —valoración, documentación y negociación bajo estándares internacionales— para proteger tu patrimonio en cada paso.`,
+];
+
+// Asesor (contenido demo, como el resto de propiedades.sample).
+const agent = {
+  name: 'Valentina Rojas',
+  role: 'Asesora inmobiliaria senior',
+  phone: '+58 412 239 8253',
+  email: 'valentina@grupoglam.com',
+};
+const agentInitials = agent.name.split(' ').map((w) => w[0]).slice(0, 2).join('');
+
+// Galería: la foto principal ocupa el primer slot (grande); el resto son slots pendientes.
+const galleryPhs = [
+  'Sala principal con vista a la ciudad',
+  'Comedor / cocina abierta',
+  'Habitación principal',
+  'Baño principal en mármol',
+  'Terraza / balcón',
+];
+
+// Características (contenido demo representativo, coherente con el diseño).
+const unitFeatures = [
+  'Aire acondicionado', 'Completamente amueblado', 'Balcón / terraza', 'Cocina equipada',
+  'Vestidores', 'Baños en mármol', 'Ventanales piso-techo', 'Depósito privado',
+];
+const buildingFeatures = [
+  'Gimnasio', 'Piscina', 'Salón de eventos', 'Seguridad 24 horas',
+  'Planta eléctrica', 'Estacionamiento techado', 'Estacionamiento de visitantes', 'Lobby panorámico',
+];
+
+const showMap = p.lat != null && p.lng != null;
+
+// Propiedades similares (hasta 4, priorizando la misma operación).
+const similar = propiedadesDemo
+  .filter((x) => x.ref !== p.ref)
+  .sort((a, b) => Number(b.operacion === p.operacion) - Number(a.operacion === p.operacion))
+  .slice(0, 4)
+  .map((x) => ({
+    name: x.calle ?? x.titulo,
+    zone: `${x.zona}, ${city}`,
+    price: precioES(x.precio, x.aConsultar),
+    href: `/propiedad/${slugOf(x)}`,
+    foto: fotos[x.ref],
+    tono: x.tono,
+  }));
+---
+<Base
+  title={`${p.titulo} — ${p.zona}, ${city} | Grupo Glam Inmobiliaria`}
+  description={`${p.titulo} en ${p.zona}, ${city}. ${specs.map((s) => `${s.value} ${s.label.toLowerCase()}`).join(' · ')}. Venta y alquiler de alta gama con Grupo Glam.`}
+  showHeader={false}
+>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <div class="pd pd-reveal">
+    <!-- Navbar transparente sobre el hero (mismo estilo que la home, sin franja oscura).
+         'overlay' = color adaptativo por scroll y SIEMPRE visible (sin la cortina/timeline
+         de entrada de la home). 'minimal' = solo el logo; al cubrirlo la lámina de contenido
+         se transforma en hamburguesa que abre el drawer lateral con los enlaces. -->
+    <HeroNav variant="overlay" minimal />
+
+    <!-- HERO (sticky): se queda fijo mientras la lámina de contenido lo cubre al bajar. -->
+    <div class="pd-hero-sticky" data-navtone="dark">
+    <section class="pd-hero">
+      <div class="pd-hero-media">
+        {foto ? (
+          <picture>
+            <source type="image/avif" srcset={srcsetFull(foto.img, 'avif')} sizes="100vw" />
+            <source type="image/webp" srcset={srcsetFull(foto.img, 'webp')} sizes="100vw" />
+            <img
+              src={`/destacados/${foto.img}-2560.jpg`}
+              srcset={srcsetFull(foto.img, 'jpg')}
+              sizes="100vw"
+              width="1920"
+              height="1140"
+              alt={foto.alt}
+              fetchpriority="high"
+              decoding="async"
+            />
+          </picture>
+        ) : (
+          <div class="pd-hero-ph" style={`background:${p.tono}`}></div>
+        )}
+      </div>
+      <div class="pd-hero-veil-x" aria-hidden="true"></div>
+      <div class="pd-hero-veil-b" aria-hidden="true"></div>
+
+      <div class="pd-hero-inner">
+        <div class="pd-hero-copy">
+          <h1 class="pd-hero-title">{p.titulo}</h1>
+          <div class="pd-hero-loc">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 1.6c-2.5 0-4.5 2-4.5 4.5C3.5 9.4 8 14.4 8 14.4s4.5-5 4.5-8.3C12.5 3.6 10.5 1.6 8 1.6Z" stroke="currentColor" stroke-width="1.2"></path><circle cx="8" cy="6.1" r="1.7" stroke="currentColor" stroke-width="1.2"></circle></svg>
+            <span>{p.zona}, {city}</span>
+          </div>
+          <div class="pd-hero-cta">
+            <a href="#galeria" class="pd-hero-btn">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.6" y="1.6" width="5" height="5" stroke="currentColor" stroke-width="1.2"></rect><rect x="9.4" y="1.6" width="5" height="5" stroke="currentColor" stroke-width="1.2"></rect><rect x="1.6" y="9.4" width="5" height="5" stroke="currentColor" stroke-width="1.2"></rect><rect x="9.4" y="9.4" width="5" height="5" stroke="currentColor" stroke-width="1.2"></rect></svg>Galería
+            </a>
+          </div>
+        </div>
+
+        <div class="pd-hero-price">
+          <span class="pd-hero-price-k">{priceKicker}</span>
+          <span class="pd-hero-price-v">{price}</span>
+        </div>
+      </div>
+    </section>
+      <!-- Velo que oscurece la foto a medida que la cubren (scroll-driven, sin JS). -->
+      <div class="pd-hero-darken" aria-hidden="true"></div>
+    </div>
+
+    <!-- Lámina de contenido: sube y CUBRE el hero fijo (mismo efecto que la home). -->
+    <div class="pd-scroll-over" data-navtone="light">
+    <!-- Centinela de 1px: su recorrido mide cuánto se ha cubierto el hero (view-timeline --cover). -->
+    <div class="pd-reveal-sentinel" aria-hidden="true"></div>
+
+    <!-- SPEC BAR -->
+    {specs.length > 0 && (
+      <div class="pd-specbar">
+        <div class="pd-specbar-inner">
+          {specs.map((s) => (
+            <div class="pd-spec">
+              <span class="pd-spec-v">{s.value}</span>
+              <span class="pd-spec-l">{s.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- DESCRIPCIÓN (párrafo de la propiedad) + tarjeta del asesor a la derecha:
+         el recuadro del asesor es ahora el punto de contacto (WhatsApp / email). -->
+    <section class="pd-desc-sec">
+      <div class="pd-desc-grid">
+        <div class="pd-desc-body">
+          <span class="pd-eyebrow">La propiedad</span>
+          {description.map((para) => (
+            <p class="pd-desc-p">{para}</p>
+          ))}
+        </div>
+
+        <aside class="pd-aside">
+          <div class="pd-agent">
+            <div class="pd-agent-ph" aria-hidden="true">{agentInitials}</div>
+            <div>
+              <span class="pd-agent-k">Tu asesor</span>
+              <span class="pd-agent-name">{agent.name}</span>
+              <span class="pd-agent-role">{agent.role}</span>
+            </div>
+          </div>
+          <div class="pd-agent-contact">
+            <a href={wa} target="_blank" rel="noopener" class="pd-agent-cell">
+              <span class="pd-agent-cell-k">Celular / WhatsApp</span>
+              <span class="pd-agent-cell-v">{agent.phone}</span>
+            </a>
+            <a href={`mailto:${agent.email}`} class="pd-agent-cell pd-agent-cell--last">
+              <span class="pd-agent-cell-k">Email</span>
+              <span class="pd-agent-cell-v pd-agent-cell-v--ell">{agent.email}</span>
+            </a>
+          </div>
+
+          <form class="pd-form" onsubmit="return false">
+            <span class="pd-form-title">Solicita más información</span>
+            <label class="pd-field"><input type="text" placeholder="Nombre completo" /></label>
+            <label class="pd-field"><input type="email" placeholder="Correo electrónico" /></label>
+            <label class="pd-field"><input type="tel" placeholder="Teléfono" /></label>
+            <label class="pd-field pd-field--area"><textarea rows="3" placeholder="Tu mensaje (opcional)"></textarea></label>
+            <button type="submit" class="pd-form-submit">Enviar solicitud</button>
+            <a href={wa} target="_blank" rel="noopener" class="pd-form-wa">Escribir por WhatsApp</a>
+          </form>
+        </aside>
+      </div>
+    </section>
+
+    <!-- CARACTERÍSTICAS (propiedad + edificio, sin el mapa) -->
+    <section class="pd-feat-sec">
+      <div class="pd-feat-grid">
+        <div class="pd-feat-cols">
+          <div>
+            <h3 class="pd-feat-h">Características de la propiedad</h3>
+            <div class="pd-feat-list">
+              {unitFeatures.map((f) => (
+                <div class="pd-feat-item">
+                  <span class="pd-feat-dot"></span>
+                  <span class="pd-feat-txt">{f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 class="pd-feat-h">Características del edificio</h3>
+            <div class="pd-feat-list">
+              {buildingFeatures.map((f) => (
+                <div class="pd-feat-item">
+                  <span class="pd-feat-dot"></span>
+                  <span class="pd-feat-txt">{f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UBICACIÓN / MAPA (sección propia a todo el ancho) -->
+    {showMap && (
+      <section class="pd-loc-sec">
+        <span class="pd-map-k">Ubicado en</span>
+        <h3 class="pd-map-h">{p.zona},<br />{city}</h3>
+        <div class="pd-map-frame">
+          <div id="gg-map"></div>
+        </div>
+      </section>
+    )}
+
+    <!-- GALERÍA (abajo, como en la referencia) -->
+    <section id="galeria" class="pd-gal-sec">
+      <div class="pd-gal-head">
+        <h2 class="pd-h2">GALERÍA</h2>
+        <span class="pd-gal-count">{galleryPhs.length} imágenes</span>
+      </div>
+      <div class="pd-gal">
+        {galleryPhs.map((ph, idx) => (
+          <div class="pd-gal-cell">
+            {idx === 0 && foto ? (
+              <picture>
+                <source type="image/avif" srcset={srcsetFull(foto.img, 'avif')} sizes="(min-width:980px) 50vw, 100vw" />
+                <source type="image/webp" srcset={srcsetFull(foto.img, 'webp')} sizes="(min-width:980px) 50vw, 100vw" />
+                <img
+                  class="pd-gal-img"
+                  src={`/destacados/${foto.img}-1280.jpg`}
+                  srcset={srcsetFull(foto.img, 'jpg')}
+                  sizes="(min-width:980px) 50vw, 100vw"
+                  width="1280"
+                  height="960"
+                  alt={foto.alt}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
+            ) : (
+              <div class="pd-gal-ph pd-gal-img" style={`background:${p.tono}`}>
+                <span class="pd-pending">Imagen pendiente</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- SIMILAR -->
+    {similar.length > 0 && (
+      <section class="pd-sim-sec">
+        <div class="pd-sim-head">
+          <h2 class="pd-h2">Propiedades similares</h2>
+          <a href="/propiedades" class="pd-sim-back">Volver al catálogo<span class="pd-sim-back-ico"><svg width="16" height="10" viewBox="0 0 18 12" fill="none"><path d="M1 6h15M11 1l5 5-5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></a>
+        </div>
+        <div class="pd-sim-grid">
+          {similar.map((s) => (
+            <a class="pd-sim-card" href={s.href}>
+              <div class="pd-sim-media">
+                {s.foto ? (
+                  <picture>
+                    <source type="image/avif" srcset={srcsetCard(s.foto.img, 'avif')} sizes="(min-width:1080px) 24vw, (min-width:640px) 46vw, 92vw" />
+                    <source type="image/webp" srcset={srcsetCard(s.foto.img, 'webp')} sizes="(min-width:1080px) 24vw, (min-width:640px) 46vw, 92vw" />
+                    <img
+                      class="pd-sim-img"
+                      src={`/destacados/${s.foto.img}-1280.jpg`}
+                      srcset={srcsetCard(s.foto.img, 'jpg')}
+                      sizes="(min-width:1080px) 24vw, (min-width:640px) 46vw, 92vw"
+                      width="1280"
+                      height="960"
+                      alt={s.foto.alt}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
+                ) : (
+                  <div class="pd-sim-ph pd-sim-img" style={`background:${s.tono}`}></div>
+                )}
+              </div>
+              <div class="pd-sim-info">
+                <h3 class="pd-sim-name"><span class="pd-sim-name-txt">{s.name}</span></h3>
+                <p class="pd-sim-zone">{s.zone}</p>
+                <p class="pd-sim-price">{s.price}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+    </div>
+  </div>
+
+  {showMap && (
+    <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script is:inline define:vars={{ lat: p.lat, lng: p.lng }}>
+      (function () {
+        function init() {
+          var L = window.L;
+          var el = document.getElementById('gg-map');
+          if (!L || !el) return;
+          // Sin controles de zoom: el usuario hace zoom con la rueda al tener el cursor encima.
+          var map = L.map(el, { scrollWheelZoom: true, zoomControl: false, attributionControl: false });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxZoom: 19 }).addTo(map);
+          // Marcador tipo gota (tinta + núcleo dorado), igual que el catálogo. La punta apunta a la coordenada.
+          var icon = L.divIcon({ className: 'gg-pin', html: '<div class="gg-pin-inner"><span class="gg-pin-dot"></span></div>', iconSize: [1, 1] });
+          L.marker([lat, lng], { icon: icon }).addTo(map);
+          L.circle([lat, lng], { radius: 340, color: '#C9A46A', weight: 1, fillColor: '#C9A46A', fillOpacity: 0.10 }).addTo(map);
+          map.setView([lat, lng], 15);
+          [120, 400, 900].forEach(function (t) { setTimeout(function () { map.invalidateSize(); }, t); });
+        }
+        if (window.L) init(); else window.addEventListener('load', init);
+      })();
+    </script>
+  )}
+</Base>
+
+<style>
+  /* La página usa la paleta literal del diseño (no los tokens @theme del sitio) para
+     reproducirlo con exactitud: dorado #C9A46A / #B98F55, tinta #14101C / #100E17,
+     papel #FCFBF8 / #F3F0E9 / #F6F3EC. Tipografía Montserrat (la del sitio). */
+  .pd {
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    color: #14101C;
+    background: #FCFBF8;
+    /* Altura de la barra de specs. El hero ocupa el resto de la pantalla → los specs quedan
+       justo al pie del viewport y la foto abarca casi toda la pantalla. (El hero se ajusta
+       en la misma medida, así el TAMAÑO TOTAL de la página no cambia.) */
+    --pd-spec-h: clamp(104px, 12vh, 132px);
+  }
+
+  /* ---- Efecto scroll-over: la foto del hero queda fija y el contenido la cubre al bajar ----
+     Réplica del de la home: el hero se ANCLA (sticky) y la lámina de contenido, opaca y con
+     z-index superior, sube y lo CUBRE en lugar de desplazarlo. El núcleo es puro layout (sin
+     JS, universal); el oscurecido progresivo usa scroll-timeline donde esté disponible. */
+  .pd-reveal { timeline-scope: --cover; }
+  .pd-hero-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    /* `hidden` (no `clip`): contiene el ken-burns igual, pero evita un bug de repintado de
+       Chromium con `overflow: clip` en capas compuestas, que dejaba un cuadrado de "píxeles
+       rotos" (tile GPU obsoleto) a la derecha durante el scroll. */
+    overflow: hidden;
+    background: #0B0A11;  /* base oscura: si el parallax deja un hilo al fondo, se ve tinta, no blanco */
+  }
+  .pd-scroll-over {
+    position: relative;
+    z-index: 1;
+    background: #FCFBF8;
+    /* Sombra superior tenue y tintada: sensación de lámina que se posa sobre la foto. */
+    box-shadow: 0 -34px 60px -24px color-mix(in srgb, #14101C 60%, transparent);
+  }
+  .pd-reveal-sentinel {
+    view-timeline: --cover block;
+    height: 1px;
+    margin-bottom: -1px;
+  }
+  .pd-hero-darken {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    background: #0B0A11;
+    opacity: 0;
+  }
+  /* Oscurecido MUY tenue al cubrirse: solo suaviza la transición cuando la lámina se posa,
+     sin ensombrecer la foto. El hero NO se mueve (nada de parallax que dejaba un hilo abajo)
+     y el texto conserva su color (no se desvanece). */
+  @keyframes pd-hero-darken { from { opacity: 0; } to { opacity: .22; } }
+  @supports (animation-timeline: view()) {
+    .pd-hero-darken {
+      animation: pd-hero-darken linear both;
+      animation-timeline: --cover;
+      animation-range: cover 55% cover 100%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pd-hero-darken { animation: none; }
+  }
+
+  /* ---- HERO ---- */
+  .pd-hero {
+    position: relative;
+    /* Base (móvil): foto grande. Desktop: casi pantalla completa (ver media query). */
+    height: 76svh;
+    min-height: 480px;
+    overflow: hidden;
+    background: #14101C;
+    color: #F6F3EC;
+  }
+  /* Desktop: la foto ocupa la pantalla completa MENOS la barra de specs, que queda al pie. */
+  @media (min-width: 768px) {
+    .pd-hero { height: calc(100svh - var(--pd-spec-h)); min-height: 560px; }
+  }
+  /* Zoom sostenido y NÍTIDO: la capa se queda al tamaño del hero (100%), sin sobreescalar,
+     para no forzar una textura enorme (eso era lo que pixelaba en pantallas grandes/retina).
+     El zoom es leve y SIN paneo → nunca deja borde ni obliga a ampliar mucho la foto. */
+  .pd-hero-media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    transform-origin: center;
+    will-change: transform;
+    /* Capa compuesta estable: evita que el compositor muestre un tile a medio rasterizar
+       (los "píxeles rotos") al recomponer durante el scroll/ken-burns. */
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    animation: pd-ken 34s ease-in-out infinite alternate;
+  }
+  .pd-hero-media picture, .pd-hero-media img, .pd-hero-ph {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  @keyframes pd-ken {
+    from { transform: scale(1); }
+    to   { transform: scale(1.015); }
+  }
+  /* Velos aligerados: solo lo justo para legibilidad del texto (la nitidez y color de la
+     foto quedan a la vista, sin exceso de sombra). La legibilidad del título se refuerza con
+     text-shadow, no oscureciendo toda la imagen. */
+  .pd-hero-veil-x {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(90deg, rgba(11,10,17,.58) 0%, rgba(11,10,17,.30) 34%, rgba(11,10,17,.06) 62%, rgba(11,10,17,0) 100%);
+  }
+  .pd-hero-veil-b {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 52%; z-index: 1; pointer-events: none;
+    background: linear-gradient(0deg, rgba(11,10,17,.54) 0%, rgba(11,10,17,.14) 60%, rgba(11,10,17,0) 100%);
+  }
+  .pd-hero-inner {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: clamp(28px, 4vw, 56px) clamp(20px, 5vw, 54px);
+  }
+  .pd-hero-copy {
+    max-width: 760px;
+    animation: pd-rise .95s cubic-bezier(.2,0,0,1) .1s both;
+  }
+  .pd-hero-title {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(1.7rem, 4.2vw, 3.1rem);
+    line-height: 1.06;
+    letter-spacing: -.01em;
+    color: #F6F3EC;
+    text-wrap: balance;
+    text-shadow: 0 2px 22px rgba(11,10,17,.45);
+  }
+  .pd-hero-loc {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: clamp(12px, 1.4vw, 18px);
+    color: rgba(246,243,236,.82);
+    text-shadow: 0 1px 14px rgba(11,10,17,.4);
+  }
+  .pd-hero-loc span {
+    font-weight: 400;
+    font-size: clamp(.95rem, 1.4vw, 1.12rem);
+    letter-spacing: .02em;
+  }
+  .pd-hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: clamp(22px, 2.6vw, 32px);
+  }
+  .pd-hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #100E17;
+    text-decoration: none;
+    background: #F6F3EC;
+    border-radius: 2px;
+    padding: 14px 22px;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    transition: background .3s ease;
+  }
+  .pd-hero-btn:hover { background: #C9A46A; }
+  .pd-hero-btn:focus-visible { outline: 2px solid #C9A46A; outline-offset: 3px; }
+  .pd-hero-price {
+    position: absolute;
+    right: clamp(20px, 5vw, 54px);
+    bottom: clamp(28px, 4vw, 56px);
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    animation: pd-rise .95s cubic-bezier(.2,0,0,1) .2s both;
+    text-shadow: 0 2px 20px rgba(11,10,17,.6);
+  }
+  .pd-hero-price-k {
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: rgba(246,243,236,.82);
+  }
+  .pd-hero-price-v {
+    margin-top: 6px;
+    font-weight: 400;
+    font-size: clamp(2.1rem, 4.2vw, 3.3rem);
+    letter-spacing: .005em;
+    line-height: 1;
+    color: #F6F3EC;
+  }
+  @keyframes pd-rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ---- SPEC BAR ---- */
+  .pd-specbar {
+    background: #F3F0E9;
+    border-bottom: 1px solid rgba(20,16,28,.07);
+  }
+  /* Igual que la fila de logos de "Aliados comerciales": a todo el ancho (full-bleed),
+     aprovechando los laterales. Las cifras se reparten con space-between y el mismo padding
+     lateral clamp(16px, 2.4vw, 44px). No se altera el tamaño de la web ni del texto: solo se
+     distribuyen horizontalmente usando el espacio de los lados. */
+  .pd-specbar-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(18px, 2.4vw, 44px);
+    padding: 0 clamp(16px, 2.4vw, 44px);
+  }
+  @media (min-width: 768px) {
+    /* Altura fija = la foto de arriba llega exactamente hasta el borde de esta barra. */
+    .pd-specbar { height: var(--pd-spec-h); }
+    .pd-specbar-inner { height: 100%; flex-wrap: nowrap; }
+  }
+  /* Número + etiqueta EN LÍNEA ("6 HABITACIONES"), alineados a la baseline: el número manda
+     (tamaño/peso) y la etiqueta lo acompaña en versalitas. Sin divisiones y sin crecer → se
+     reparten con space-between usando los laterales. */
+  .pd-spec {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: baseline;
+    gap: clamp(8px, 0.7vw, 12px);
+    padding: clamp(14px, 1.6vw, 20px) 0;
+  }
+  .pd-spec-v {
+    font-weight: 400;
+    font-size: clamp(2rem, 2.9vw, 2.9rem);
+    letter-spacing: .01em;
+    line-height: 1;
+    color: #14101C;
+    font-variant-numeric: tabular-nums;
+  }
+  .pd-spec-l {
+    font-weight: 600;
+    font-size: clamp(12.5px, 1.05vw, 15px);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #9A948B;
+  }
+
+  /* ---- DESCRIPTION ---- */
+  .pd-desc-sec {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: clamp(44px, 5.5vw, 84px) clamp(20px, 5vw, 54px);
+  }
+  /* Párrafo a la izquierda + tarjeta del asesor a la derecha (el nuevo punto de contacto). */
+  .pd-desc-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(28px, 4vw, 56px);
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .pd-desc-grid { grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); }
+  }
+  /* Medida de lectura cómoda (≈74 caracteres) dentro de su columna. */
+  .pd-desc-body { max-width: 74ch; }
+  .pd-eyebrow {
+    display: block;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: #B98F55;
+    margin-bottom: clamp(16px, 1.8vw, 24px);
+  }
+  .pd-desc-p {
+    margin: 0 0 1.15em;
+    font-weight: 300;
+    font-size: clamp(1rem, 1.15vw, 1.14rem);
+    line-height: 1.78;
+    letter-spacing: .008em;
+    color: #4A4650;
+    text-wrap: pretty;
+  }
+
+  /* Aside de contacto (sticky) */
+  .pd-aside {
+    position: sticky;
+    top: 104px;
+    border: 1px solid rgba(20,16,28,.1);
+    border-radius: 2px;
+    background: #fff;
+    overflow: hidden;
+  }
+  .pd-agent {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: clamp(20px, 1.8vw, 26px);
+  }
+  .pd-agent-ph {
+    flex: 0 0 auto;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(120% 120% at 30% 25%, #E6D3B0 0%, #C9A46A 55%, #B98F55 100%);
+    border: 1px solid rgba(20,16,28,.08);
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: .04em;
+    color: #100E17;
+  }
+  .pd-agent-k {
+    display: block;
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: #9A948B;
+  }
+  .pd-agent-name {
+    display: block;
+    margin-top: 4px;
+    font-weight: 500;
+    font-size: 1.3rem;
+    letter-spacing: .01em;
+    color: #14101C;
+  }
+  .pd-agent-role {
+    display: block;
+    margin-top: 2px;
+    font-weight: 400;
+    font-size: 12.5px;
+    letter-spacing: .03em;
+    color: #6E6A63;
+  }
+  .pd-agent-contact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid rgba(20,16,28,.08);
+  }
+  .pd-agent-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 16px clamp(18px, 1.6vw, 24px);
+    text-decoration: none;
+    border-right: 1px solid rgba(20,16,28,.08);
+    transition: background .3s ease;
+  }
+  .pd-agent-cell--last { border-right: 0; }
+  .pd-agent-cell:hover { background: #FBF8F1; }
+  .pd-agent-cell-k {
+    font-weight: 600;
+    font-size: 9.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #9A948B;
+  }
+  .pd-agent-cell-v {
+    font-weight: 500;
+    font-size: 14px;
+    color: #14101C;
+  }
+  .pd-agent-cell-v--ell { overflow: hidden; text-overflow: ellipsis; }
+
+  .pd-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: clamp(20px, 1.8vw, 26px);
+    border-top: 1px solid rgba(20,16,28,.08);
+    background: #FBFAF6;
+  }
+  .pd-form-title {
+    font-weight: 500;
+    font-size: 1.05rem;
+    letter-spacing: .01em;
+    color: #14101C;
+    margin-bottom: 2px;
+  }
+  .pd-field {
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(20,16,28,.16);
+    border-radius: 2px;
+    background: #fff;
+    padding: 0 14px;
+    height: 48px;
+    transition: border-color .3s ease, box-shadow .3s ease;
+  }
+  .pd-field--area { align-items: stretch; height: auto; padding: 12px 14px; }
+  .pd-field:focus-within {
+    border-color: #C9A46A;
+    box-shadow: 0 0 0 3px rgba(201,164,106,.14);
+  }
+  .pd-field input, .pd-field textarea {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13.5px;
+    letter-spacing: .02em;
+    color: #14101C;
+  }
+  .pd-field textarea { resize: vertical; min-height: 66px; }
+  .pd-form-submit {
+    margin-top: 2px;
+    width: 100%;
+    background: #100E17;
+    color: #F6F3EC;
+    border: 0;
+    border-radius: 2px;
+    padding: 15px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .3s ease, color .3s ease;
+  }
+  .pd-form-submit:hover { background: #C9A46A; color: #100E17; }
+  .pd-form-submit:focus-visible { outline: 2px solid #C9A46A; outline-offset: 2px; }
+  .pd-form-wa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    color: #14101C;
+    text-decoration: none;
+    border: 1px solid rgba(20,16,28,.18);
+    border-radius: 2px;
+    padding: 14px;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    transition: border-color .3s ease, color .3s ease;
+  }
+  .pd-form-wa:hover { border-color: #C9A46A; color: #B98F55; }
+  .pd-form-wa:focus-visible { outline: 2px solid #C9A46A; outline-offset: 2px; }
+
+  /* ---- GALLERY ---- */
+  .pd-gal-sec {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 clamp(20px, 5vw, 54px) clamp(44px, 5.5vw, 84px);
+  }
+  .pd-gal-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: clamp(22px, 2.6vw, 34px);
+  }
+  .pd-h2 {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(1.5rem, 3vw, 2.3rem);
+    letter-spacing: .01em;
+    color: #14101C;
+  }
+  .pd-gal-count {
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #9A948B;
+  }
+  .pd-gal {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: clamp(160px, 40vw, 240px);
+    gap: clamp(10px, 1vw, 16px);
+  }
+  @media (min-width: 560px) {
+    .pd-gal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pd-gal-cell:first-child { grid-column: 1 / -1; }
+  }
+  @media (min-width: 980px) {
+    .pd-gal {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-auto-rows: clamp(150px, 15vw, 220px);
+    }
+    .pd-gal-cell:first-child { grid-column: 1 / 3; grid-row: 1 / 3; }
+  }
+  .pd-gal-cell {
+    position: relative;
+    background: #EEEAE1;
+    overflow: hidden;
+  }
+  .pd-gal-cell picture { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+  .pd-gal-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 1s cubic-bezier(.2,0,0,1);
+  }
+  .pd-gal-ph { display: grid; place-items: start center; }
+  .pd-pending {
+    margin-top: 16px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(246,243,236,.32);
+  }
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .pd-gal-cell:hover .pd-gal-img { transform: scale(1.05); }
+  }
+
+  /* ---- FEATURES + MAP ---- */
+  .pd-feat-sec {
+    background: #F3F0E9;
+    border-top: 1px solid rgba(20,16,28,.07);
+    border-bottom: 1px solid rgba(20,16,28,.07);
+  }
+  .pd-feat-grid {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: clamp(44px, 5.5vw, 84px) clamp(20px, 5vw, 54px);
+  }
+  /* Los dos bloques de características, lado a lado en desktop (el mapa ya no vive aquí). */
+  .pd-feat-cols {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(30px, 3.4vw, 44px);
+  }
+  @media (min-width: 768px) {
+    .pd-feat-cols { grid-template-columns: 1fr 1fr; gap: clamp(40px, 5vw, 80px); }
+  }
+  .pd-feat-h {
+    margin: 0 0 clamp(16px, 1.8vw, 24px);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: #B98F55;
+  }
+  .pd-feat-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px 24px;
+  }
+  .pd-feat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 11px;
+    border-bottom: 1px solid rgba(20,16,28,.09);
+  }
+  .pd-feat-dot {
+    width: 5px;
+    height: 5px;
+    background: #C9A46A;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .pd-feat-txt {
+    font-weight: 400;
+    font-size: 15px;
+    letter-spacing: .01em;
+    color: #3A3540;
+  }
+  /* ---- UBICACIÓN / MAPA (sección propia a todo el ancho) ---- */
+  .pd-loc-sec {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: clamp(44px, 5.5vw, 84px) clamp(20px, 5vw, 54px);
+  }
+  .pd-map-k {
+    display: block;
+    font-weight: 300;
+    font-size: clamp(1rem, 1.3vw, 1.2rem);
+    letter-spacing: .02em;
+    color: #6E6A63;
+  }
+  .pd-map-h {
+    margin: 6px 0 clamp(18px, 2vw, 26px);
+    font-weight: 300;
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    line-height: 1.05;
+    letter-spacing: -.01em;
+    color: #14101C;
+  }
+  .pd-map-frame {
+    position: relative;
+    height: clamp(360px, 50vh, 560px);
+    border: 1px solid rgba(20,16,28,.1);
+    border-radius: 2px;
+    overflow: hidden;
+    background: #E9E6DF;
+  }
+  #gg-map { position: absolute; inset: 0; }
+
+  /* ---- SIMILAR ---- */
+  .pd-sim-sec {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: clamp(44px, 5.5vw, 84px) clamp(20px, 5vw, 54px);
+  }
+  .pd-sim-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: clamp(24px, 2.8vw, 38px);
+  }
+  .pd-sim-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: #14101C;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    transition: color .3s ease;
+  }
+  .pd-sim-back:hover { color: #B98F55; }
+  .pd-sim-back-ico { color: #C9A46A; display: inline-flex; }
+  .pd-sim-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(18px, 2vw, 30px);
+  }
+  @media (min-width: 640px) {
+    .pd-sim-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1080px) {
+    .pd-sim-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+  .pd-sim-card {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    will-change: transform;
+    transition: transform .55s cubic-bezier(.2,0,0,1), box-shadow .55s ease;
+  }
+  .pd-sim-card:focus-visible { outline: 2px solid #C9A46A; outline-offset: 4px; }
+  .pd-sim-media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #EEEAE1;
+  }
+  .pd-sim-media picture { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+  .pd-sim-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .95s cubic-bezier(.2,0,0,1);
+  }
+  .pd-sim-info { padding-top: clamp(12px, 1vw, 16px); }
+  .pd-sim-name {
+    display: inline-block;
+    margin: 0;
+    font-weight: 500;
+    font-size: clamp(1.02rem, 1.2vw, 1.18rem);
+    line-height: 1.16;
+    letter-spacing: .005em;
+    color: #1A1720;
+  }
+  .pd-sim-name-txt {
+    display: inline;
+    box-shadow: inset 0 -1px 0 rgba(201,164,106,0);
+    transition: box-shadow .4s ease;
+  }
+  .pd-sim-zone {
+    margin: 6px 0 0;
+    font-weight: 400;
+    font-size: 12.5px;
+    letter-spacing: .03em;
+    color: #9A948B;
+  }
+  .pd-sim-price {
+    margin: 9px 0 0;
+    font-weight: 400;
+    font-size: clamp(.98rem, 1.05vw, 1.08rem);
+    letter-spacing: .005em;
+    color: #6E6A63;
+  }
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .pd-sim-card:hover { transform: translateY(-6px); box-shadow: 0 26px 50px -28px rgba(20,16,28,.42); }
+    .pd-sim-card:hover .pd-sim-img { transform: scale(1.055); }
+    .pd-sim-card:hover .pd-sim-name-txt { box-shadow: inset 0 -1px 0 rgba(201,164,106,.9); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pd-hero-media { animation: none; }
+    .pd-hero-copy, .pd-hero-price { animation: none; }
+  }
+</style>
+
+<!-- Estilos globales de Leaflet (el DOM del mapa lo genera JS → no puede ir en <style> scoped).
+     Tiles a color (realce suave de verdes) + pin de gota, igual que el catálogo. -->
+<style is:global>
+  .pd-leaflet .leaflet-container,
+  .leaflet-container { font-family: 'Montserrat Variable', 'Montserrat', sans-serif; background: #E9E6DF; }
+  /* Mapa a color: realce suave para que los verdes de parques y del Ávila ganen presencia. */
+  .leaflet-tile-pane { filter: saturate(1.12) contrast(.99) brightness(1.02); }
+
+  /* ---- Pin: marcador tipo gota (tinta + núcleo dorado), minimalista y legible. La punta
+     apunta a la coordenada → el wrapper la ancla (translate). ---- */
+  .gg-pin { background: transparent !important; border: 0 !important; }
+  .gg-pin-inner { transform: translate(-50%, -100%); }
+  .gg-pin-dot {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 24px;
+    background: #14101C;
+    border: 2px solid #FCFBF8;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 0 6px 16px -4px rgba(16, 14, 23, .55);
+  }
+  .gg-pin-dot::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #C9A46A;
+    transform: translate(-50%, -50%);
+  }
+</style>
