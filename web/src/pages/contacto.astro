@@ -418,7 +418,9 @@ const srcset = (img: string, ext: string) =>
      permanece visible de principio a fin (y en reversa al cerrar). */
   .gg-modal-inner {
     position: relative;
-    width: min(720px, 100%);
+    /* Ancho basado en viewport (no en %): .gg-modal es un flex-item sin ancho propio, así que
+       un 100% se mediría contra su contenido mínimo y la ventana colapsaba a una tira angosta. */
+    width: min(720px, 92vw);
     max-height: min(88vh, 860px);
     display: flex;
     flex-direction: column;
@@ -431,7 +433,9 @@ const srcset = (img: string, ext: string) =>
   /* En ancho: dos columnas — imagen (más estrecha) + formulario (más ancho). */
   @media (min-width: 760px) {
     .gg-modal-inner {
-      width: min(960px, 100%);
+      /* Ancho generoso basado en viewport para que la ventana no se vea angosta: las dos
+         columnas (foto + formulario) reparten un lienzo amplio en proporción 38/62. */
+      width: min(1120px, 92vw);
       flex-direction: row;
     }
   }
