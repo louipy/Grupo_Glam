@@ -1,7 +1,8 @@
 ---
 import { Picture } from 'astro:assets';
 import equipo from '../assets/equipo-glam.jpg';
-import QuienesSomos from './QuienesSomos.astro';
+import OtrosServicios from './OtrosServicios.astro';
+import ContactoDirecto from './ContactoDirecto.astro';
 // CONTENIDO COMPLEMENTARIO · sección bajo los inmuebles destacados.
 // Fondo lino (igual que el resto de la lámina). Dos columnas: foto vertical a la izquierda
 // y espacio de texto a la derecha, alineados a la misma altura. La foto se sirve con
@@ -20,7 +21,7 @@ const salonSrcset = (ext: string) =>
 ---
 <section class="cc-section bg-[var(--color-lino)]">
   <!-- Lámina clara: se ancla por su base y la extensión oscura la cubre al subir. -->
-  <div class="cc-clara bg-[var(--color-lino)] pt-8 md:pt-12 pb-20 md:pb-32 overflow-x-clip">
+  <div class="cc-clara bg-[var(--color-lino)] pt-8 md:pt-12 overflow-x-clip">
   <div class="max-w-[1280px] mx-auto px-5 md:px-6">
     <!-- A · Gancho + giro — rediseño "oferta de valor": plantea el problema (gestión pasiva),
          da el giro (gestión activa) y cierra con la Regla de Oro como acento editorial. -->
@@ -106,73 +107,93 @@ const salonSrcset = (ext: string) =>
         </div>
       </div>
 
+      <!-- Reversión de objeción + CTA de venta en paralelo: el propietario quita su
+           miedo ("cero exclusividad") y tiene la acción al lado, a la derecha, a la
+           altura de "Te retenemos con resultados…". Pico de intención del vendedor. -->
       <div class="cc-risk">
-        <span class="cc-risk-k">Cero exclusividad forzada</span>
-        <h3 class="cc-risk-h">Te retenemos con resultados, no con ataduras.</h3>
-        <p>Nuestra propuesta no exige contrato de exclusividad obligatoria. Si en cualquier momento deseas pausar la promoción, basta con un simple correo.</p>
+        <div class="cc-risk-text">
+          <span class="cc-risk-k">Cero exclusividad forzada</span>
+          <h3 class="cc-risk-h">Te retenemos con resultados, no con ataduras.</h3>
+          <p>Nuestra propuesta no exige contrato de exclusividad obligatoria. Si en cualquier momento deseas pausar la promoción, basta con un simple correo.</p>
+        </div>
+        <a href="/contacto" class="cc-blindaje-cta">Vende con nosotros</a>
       </div>
-
-      <p class="cc-blindaje-note">Este mismo estándar aplica a inmuebles residenciales, comerciales e industriales y a la asesoría y gestión en la compra y venta de empresas, donde acompañamos la valoración, la búsqueda de contrapartes y el cierre de la transacción.</p>
     </div>
   </section>
 
-  <div class="max-w-[1280px] mx-auto px-5 md:px-6">
-    <!-- Origen y forma de pensar (traída desde la página Nosotros). -->
-    <div class="cc-origen">
-      <div class="cc-origen-text">
-        <h2 class="cc-origen-h">Nacimos de una <span>idea incómoda</span> para el sector.</h2>
-
-        <div class="cc-origen-body">
-          <p>Con más de 10 años de experiencia en el mercado, hemos evolucionado de una agencia tradicional a una plataforma de alto rendimiento. Operamos bajo estándares internacionales para proteger su activo.</p>
-          <p>El cierre exitoso no culmina con un apretón de manos, sino con una protocolización impecable. Aseguramos su patrimonio de principio a fin.</p>
-        </div>
-
-        <div class="cc-origen-points">
-          <div class="cc-origen-point">
-            <div>
-              <span class="cc-origen-lead">Reporte periódico</span>
-              <p class="cc-origen-txt">Con el alcance real del mercadeo, el feedback de cada visita y un Análisis Comparativo de Mercado actualizado.</p>
-            </div>
-          </div>
-          <div class="cc-origen-point">
-            <div>
-              <span class="cc-origen-lead">Calificación rigurosa</span>
-              <p class="cc-origen-txt">Filtro exclusivo de clientes de alto patrimonio.</p>
-            </div>
-          </div>
-        </div>
-
-        <p class="cc-origen-backing"><span>NAR®</span> · Cámara Inmobiliaria Metropolitana</p>
-      </div>
-
-      <figure class="cc-origen-fig">
-        <Picture
-          src={equipo}
-          formats={['avif', 'webp']}
-          widths={[768, 1024, 1440, 1920, 2560]}
-          sizes="(min-width:1280px) 720px, (min-width:980px) 56vw, 92vw"
-          quality={88}
-          alt="Equipo de consultores y fundadores de Grupo Glam Inmobiliaria en Caracas."
-          class="cc-origen-photo"
-          loading="lazy"
-          decoding="async"
-        />
-        <a href="/nosotros" class="cc-origen-cta">Conócenos</a>
-      </figure>
-    </div>
-  </div>
+  <!-- OTROS SERVICIOS · abrebocas en la zona clara, JUSTO debajo del blindaje 360°. Es el
+       ÚLTIMO contenido de la lámina clara: como la lámina se ancla por su base, la banda
+       oscura que sigue sube y lo CUBRE al escrollear (ilusión "hero" del resto de la web). -->
+  <OtrosServicios />
   </div>
 
-  <!-- Lámina oscura: sube y CUBRE la lámina clara (misma transición que hero → destacados),
-       en lugar de desplazarla. Alberga la muestra de "Quiénes somos". -->
+  <!-- Colchón de scroll transparente: mantiene el split "Otros servicios" fijo y COMPLETO un
+       tramo más antes de que la banda oscura empiece a cubrir. Desacopla el final del scroll de
+       la sección del inicio de la animación de abajo (evita que la transición salga "agresiva"). -->
+  <div class="cc-cover-buffer" aria-hidden="true"></div>
+
+  <!-- Banda oscura con la animación "cover": sube y CUBRE "Otros servicios" al escrollear
+       (misma transición que hero → destacados). Ahora aloja el CTA de contacto directo: tras
+       compradores, vendedores y los servicios abrebocas, el paso de conversión. -->
   <div class="cc-oscura" data-navtone="dark">
-    <QuienesSomos />
+    <ContactoDirecto />
   </div>
 </section>
 
+<!-- "Nacimos de una idea incómoda" · reubicada entre "Invierte desde el extranjero"
+     (lámina oscura) y "Aliados comerciales" (en index.astro). Va FUERA de .cc-section
+     para no entrar en la coreografía sticky del "cover": dentro quedaba pintada por
+     debajo de la lámina clara fija y no se veía. Hereda lino y tono de .scroll-over. -->
+<div class="cc-origen-reub overflow-x-clip">
+    <div class="max-w-[1280px] mx-auto px-5 md:px-6">
+      <div class="cc-origen">
+        <div class="cc-origen-text">
+          <h2 class="cc-origen-h">Nacimos de una <span>idea incómoda</span> para el sector.</h2>
+
+          <div class="cc-origen-body">
+            <p>Con más de 10 años de experiencia en el mercado, hemos evolucionado de una agencia tradicional a una plataforma de alto rendimiento. Operamos bajo estándares internacionales para proteger su activo.</p>
+            <p>El cierre exitoso no culmina con un apretón de manos, sino con una protocolización impecable. Aseguramos su patrimonio de principio a fin.</p>
+          </div>
+
+          <div class="cc-origen-points">
+            <div class="cc-origen-point">
+              <div>
+                <span class="cc-origen-lead">Reporte periódico</span>
+                <p class="cc-origen-txt">Con el alcance real del mercadeo, el feedback de cada visita y un Análisis Comparativo de Mercado actualizado.</p>
+              </div>
+            </div>
+            <div class="cc-origen-point">
+              <div>
+                <span class="cc-origen-lead">Calificación rigurosa</span>
+                <p class="cc-origen-txt">Filtro exclusivo de clientes de alto patrimonio.</p>
+              </div>
+            </div>
+          </div>
+
+          <p class="cc-origen-backing"><span>NAR®</span> · Cámara Inmobiliaria Metropolitana</p>
+        </div>
+
+        <figure class="cc-origen-fig">
+          <Picture
+            src={equipo}
+            formats={['avif', 'webp']}
+            widths={[768, 1024, 1440, 1920, 2560]}
+            sizes="(min-width:1280px) 720px, (min-width:980px) 56vw, 92vw"
+            quality={88}
+            alt="Equipo de consultores y fundadores de Grupo Glam Inmobiliaria en Caracas."
+            class="cc-origen-photo"
+            loading="lazy"
+            decoding="async"
+          />
+          <a href="/nosotros" class="cc-origen-cta">Conócenos</a>
+        </figure>
+      </div>
+    </div>
+  </div>
+
 <script>
   // Ancla la lámina clara por su BASE: se queda estática cuando su borde inferior llega al
-  // fondo del viewport, y la extensión oscura sube y la cubre (misma sensación que el hero).
+  // fondo del viewport, y la banda oscura sube y la cubre (misma sensación que el hero).
   // Como la lámina es más alta que el viewport, el pin por base se consigue con top negativo.
   function pinClaraPorBase() {
     const clara = document.querySelector('.cc-clara');
@@ -186,27 +207,34 @@ const salonSrcset = (ext: string) =>
 </script>
 
 <style>
-  /* ---- Transición "cover" hacia la extensión oscura ----
-     Réplica de la de hero → inmuebles destacados: la lámina clara se ANCLA por su base
-     (sticky bottom) y la extensión oscura, opaca y con z-index superior, sube y la CUBRE
-     en lugar de desplazarla. Puro layout con posicionamiento, sin JS. */
-  /* Contexto de apilamiento propio: aísla el cover y no afecta a las secciones siguientes. */
+  /* ---- Transición "cover" hacia la banda oscura ----
+     La lámina clara se ANCLA por su base (sticky; el top negativo real lo fija el script) y
+     la banda oscura, opaca y con z-index superior, sube y la CUBRE en lugar de desplazarla
+     (misma transición que hero → inmuebles destacados). Puro layout + JS mínimo. */
   .cc-section { position: relative; z-index: 0; }
   .cc-clara {
     position: sticky;
-    /* El offset real (top negativo = -(alto - viewport)) lo fija el script: así la lámina
-       se ANCLA POR SU BASE al hacer scroll hacia abajo (el hero lo logra con top:0 porque
-       mide 100vh; esta lámina es más alta, por eso el top negativo). */
     top: 0;
     z-index: 0;
+  }
+  /* Colchón transparente entre el split y la banda oscura: da un tramo de scroll en el que el
+     split (sticky) permanece fijo y completo ANTES de que la banda oscura (z-index mayor)
+     empiece a cubrirlo. z-index 0 (como .cc-clara) + transparente → no tapa, deja ver el split.
+     Ajusta la altura para más/menos "respiro" antes del cover. */
+  .cc-cover-buffer {
+    position: relative;
+    z-index: 0;
+    height: 40svh;
+    pointer-events: none;
   }
   .cc-oscura {
     position: relative;
     z-index: 1;
-    /* Al menos un viewport (piso): al subir cubre la pantalla completa. El contenido de
-       "Quiénes somos" la hace bastante más alta, así que la cobertura se mantiene sin que
-       se cuele la zona blanca de abajo mientras se recorre la sección. */
+    /* Al menos un viewport: al subir cubre la pantalla completa. Aloja el CTA de contacto
+       directo, centrado; si el formulario es más alto que el viewport, la banda crece. */
     min-height: 100svh;
+    display: grid;
+    align-items: center;
     background: #100E17;
     /* Sombra superior tintada: sensación de "lámina" que se posa (igual que .scroll-over). */
     box-shadow: 0 -34px 60px -24px color-mix(in srgb, var(--color-tinta) 55%, transparent);
@@ -224,6 +252,10 @@ const salonSrcset = (ext: string) =>
   @media (min-width: 980px) {
     /* La foto pesa más que el texto (columna derecha mayor) para que luzca más grande. */
     .cc-origen { grid-template-columns: minmax(0, 0.88fr) minmax(360px, 1.18fr); }
+    /* Animación tipo "El Filtro Glam" (Nosotros): la foto de la derecha queda fija
+       (sticky) mientras el texto de la izquierda se desplaza a su lado. Solo ≥980px
+       (dos columnas); align-self:start deja la foto a su altura natural para que ancle. */
+    .cc-origen-fig { position: sticky; top: clamp(96px, 9vw, 118px); align-self: start; }
   }
   .cc-origen-text {
     min-width: 0;
@@ -302,12 +334,13 @@ const salonSrcset = (ext: string) =>
     color: #4A4650;
     text-wrap: pretty;
   }
-  /* CTA "Conocemos": botón bronce, misma pauta que los CTA de marca del sitio. */
+  /* CTA "Conócenos": oro de marca (#C9A46A), el mismo brillo que el resto de los CTA
+     dorados del sitio (antes usaba --color-bronce, que se veía más apagado). */
   .cc-origen-cta {
     display: inline-block;
     margin-top: clamp(32px, 3.8vw, 52px);
     padding: 16px 32px;
-    background: var(--color-bronce);
+    background: #C9A46A;
     color: var(--color-tinta);
     border-radius: 2px;
     font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
@@ -322,6 +355,9 @@ const salonSrcset = (ext: string) =>
 
   .cc-origen-fig { margin: 0; }
   .cc-origen-photo { display: block; width: 100%; height: auto; border-radius: 2px; }
+
+  /* "Nacimos…" reubicada: respiro vertical propio (antes se lo daba la lámina clara). */
+  .cc-origen-reub { padding-block: clamp(56px, 8vw, 104px); }
 
   /* Sangría hacia el gutter en pantallas anchas (gesto de las filas del preview).
      "Nacimos de una idea incómoda" comparte la misma sangría que "Publicar ya no es
@@ -454,7 +490,10 @@ const salonSrcset = (ext: string) =>
     overflow: hidden;
     background: #100E17;                                   /* mismo tinte que .cc-oscura */
     color: var(--color-lino);
-    margin: clamp(56px, 8vw, 104px) 0;
+    /* Sin margen inferior: el split "Otros servicios" (sección oscura a 100svh) queda a ras
+       debajo, sin franja de lino entre medias. El margen superior (separación del "proof") se
+       conserva. */
+    margin: clamp(56px, 8vw, 104px) 0 0;
     font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
   }
   /* Fondo: foto muy tenue + degradado oscuro encima (igual que el "proof"). */
@@ -471,8 +510,7 @@ const salonSrcset = (ext: string) =>
      "Publicar ya no es vender". La rejilla de pilares conserva su posición. */
   @media (min-width: 1024px) {
     .cc-blindaje-head,
-    .cc-risk,
-    .cc-blindaje-note { margin-left: clamp(-140px, calc((1280px - 100vw) / 2 - 14px), 0px); }
+    .cc-risk { margin-left: clamp(-140px, calc((1280px - 100vw) / 2 - 14px), 0px); }
   }
 
   .cc-blindaje-head { margin-bottom: clamp(32px, 4vw, 56px); }
@@ -569,25 +607,67 @@ const salonSrcset = (ext: string) =>
 
   /* Recuadro "Cero exclusividad forzada" (tal cual el "proof", con su tipografía). */
   .cc-risk {
-    display: grid; gap: 10px; max-width: 70ch;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(20px, 2.4vw, 28px);
     margin-top: clamp(36px, 4.5vw, 60px);
     padding: clamp(22px, 2.6vw, 32px);
     background: color-mix(in srgb, var(--color-lino) 6%, transparent);
     border: 1px solid color-mix(in srgb, var(--oro) 28%, transparent);
     border-radius: 3px;
   }
+  /* ≥760px: texto a la izquierda y el CTA en paralelo a la derecha, centrado con el
+     bloque (a la altura de "Te retenemos con resultados…"). */
+  @media (min-width: 760px) {
+    .cc-risk {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: clamp(28px, 4vw, 56px);
+    }
+  }
+  .cc-risk-text { display: grid; gap: 10px; max-width: 60ch; }
   .cc-risk-k { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--oro); font-weight: 600; }
   .cc-risk-h { margin: 0; font-weight: 300; font-size: clamp(1.3rem, 2.2vw, 1.8rem); line-height: 1.15; color: var(--color-lino); }
   .cc-risk p { margin: 0; font-size: clamp(.92rem, 1vw, 1rem); line-height: 1.6; color: color-mix(in srgb, var(--color-lino) 74%, transparent); }
 
-  /* Nota al pie del blindaje: alcance del estándar (texto pequeño, atenuado). */
-  .cc-blindaje-note {
-    margin-top: clamp(20px, 2.4vw, 30px);
-    max-width: 70ch;
-    font-size: clamp(.8rem, .9vw, .88rem);
-    line-height: 1.6;
-    letter-spacing: .006em;
-    color: color-mix(in srgb, var(--color-lino) 60%, transparent);
-    text-wrap: pretty;
+  /* CTA "Vende con nosotros": primario de banda oscura (bronce → oro en hover), el
+     mismo lenguaje que .inv-btn de la lámina de "Invierte desde el extranjero". Va en
+     paralelo, a la derecha del recuadro "cero exclusividad". */
+  .cc-blindaje-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    text-decoration: none;
+    background: var(--color-bronce);
+    color: var(--color-tinta);
+    border: 1px solid var(--color-bronce);
+    border-radius: 2px;
+    padding: 16px 36px;
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    transition:
+      background .35s cubic-bezier(.23, 1, .32, 1),
+      border-color .35s cubic-bezier(.23, 1, .32, 1),
+      box-shadow .35s cubic-bezier(.23, 1, .32, 1),
+      transform .16s cubic-bezier(.23, 1, .32, 1);
   }
+  @media (hover: hover) and (pointer: fine) {
+    .cc-blindaje-cta:hover {
+      background: var(--oro);
+      border-color: var(--oro);
+      box-shadow: 0 14px 34px -16px color-mix(in srgb, var(--oro) 80%, transparent);
+    }
+  }
+  .cc-blindaje-cta:active { transform: scale(.97); }
+  .cc-blindaje-cta:focus-visible { outline: 2px solid var(--oro); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    .cc-blindaje-cta { transition: background .35s ease, border-color .35s ease; }
+    .cc-blindaje-cta:active { transform: none; }
+  }
+
 </style>

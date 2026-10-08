@@ -39,6 +39,7 @@ const TINTA = '#100E17';
 <Base
   title="Propiedades — Grupo Glam Inmobiliaria"
   description="Catálogo de inmuebles de alta gama en las mejores urbanizaciones de Caracas. Venta y alquiler con asesoría integral."
+  headerScrollReveal={true}
 >
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -86,10 +87,10 @@ const TINTA = '#100E17';
         <div class="cat-field">
           <select id="cat-precio" class="cat-select" aria-label="Rango de precio">
             <option value="">Precio</option>
-            <option value="-1000000">Hasta US$ 1M</option>
-            <option value="1000000-2000000">US$ 1M – 2M</option>
-            <option value="2000000-3500000">US$ 2M – 3,5M</option>
-            <option value="3500000-">Más de US$ 3,5M</option>
+            <option value="-750000">Hasta US$ 750 mil</option>
+            <option value="750000-1500000">US$ 750 mil – 1,5M</option>
+            <option value="1500000-3000000">US$ 1,5M – 3M</option>
+            <option value="3000000-">Más de US$ 3M</option>
           </select>
         </div>
       </div>
@@ -421,16 +422,22 @@ const TINTA = '#100E17';
 
   /* ---- Encabezado (se conserva el h1 para SEO/accesibilidad) ---- */
   .cat-head { margin-bottom: clamp(24px, 3vw, 40px); }
+  /* Mismo registro tipográfico que el título "Inmuebles destacados" de la home
+     (.destacados-title): Playfair Display (serif display), peso 300, versales. */
   .cat-h1 {
     margin: 0;
+    font-family: 'Playfair Display Variable', 'Playfair Display', Georgia, serif;
     font-weight: 300;
     font-size: clamp(2rem, 4vw, 3.25rem);
     line-height: 1.02;
-    letter-spacing: .02em;
+    letter-spacing: .01em;
     text-transform: uppercase;
     color: var(--color-tinta);
   }
-  /* ---- Barra de filtros ---- */
+  /* ---- Barra de filtros (rediseño a todo el ancho) ----
+     Una sola línea en escritorio que recorre el ancho del catálogo: la búsqueda crece y
+     ocupa el espacio sobrante (dominante, estilo portal premium) y, a su derecha, el toggle
+     Comprar/Alquilar y los selectores se anclan juntos. Al estrechar, envuelve con orden. */
   .cat-filtros {
     display: flex;
     flex-wrap: wrap;
@@ -442,12 +449,12 @@ const TINTA = '#100E17';
   .cat-search {
     display: flex;
     align-items: center;
-    gap: 11px;
-    flex: 1 1 300px;
-    min-width: 240px;
-    max-width: 440px;
+    gap: 12px;
+    /* Crece para llenar todo el ancho disponible (antes capada a 440px → dejaba hueco). */
+    flex: 1 1 360px;
+    min-width: 260px;
     height: 50px;
-    padding: 0 16px;
+    padding: 0 18px;
     background: #fff;
     border: 1px solid color-mix(in srgb, var(--color-tinta) 16%, transparent);
     border-radius: 2px;
@@ -534,8 +541,8 @@ const TINTA = '#100E17';
   .cat-count {
     margin: 0;
     font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .2em;
+    font-size: 15px;
+    letter-spacing: .12em;
     text-transform: uppercase;
     color: var(--color-humo);
   }

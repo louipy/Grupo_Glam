@@ -3,6 +3,9 @@
 @import "@fontsource-variable/inter-tight";
 @import "@fontsource-variable/jetbrains-mono";
 @import "@fontsource-variable/montserrat";
+/* Experimento: Playfair Display (serif) para titulares puntuales de la home,
+   igual que hiltonhyland.com. Solo aplicada a unos títulos concretos. */
+@import "@fontsource-variable/playfair-display";
 
 @theme {
   --color-tinta:   #0B0C0E;  

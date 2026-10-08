@@ -10,11 +10,18 @@ interface Props {
   // La home usa el hero a pantalla completa con su propia navbar integrada,
   // así que ahí ocultamos el header estándar para no duplicar la navegación.
   showHeader?: boolean;
+  // Páginas ocultas / WIP: añade robots noindex,nofollow para que no se indexen.
+  noindex?: boolean;
+  // Navbar sólido que, al scrollear, revela la hamburguesa del drawer (gesto de la home).
+  // Lo usa el catálogo de Propiedades. El resto de páginas conserva el sólido estático.
+  headerScrollReveal?: boolean;
 }
 const {
   title = 'Grupo Glam Inmobiliaria — Bienes raíces de alta gama en Caracas',
   description = 'Catálogo curado de inmuebles de alta gama en las mejores urbanizaciones de Caracas. Venta y alquiler con asesoría integral.',
   showHeader = true,
+  noindex = false,
+  headerScrollReveal = false,
 } = Astro.props;
 ---
 
@@ -25,13 +32,14 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#0B0A11" />
   </head>
   <body class="min-h-screen flex flex-col">
-    {showHeader && <HeroNav variant="solid" />}
+    {showHeader && <HeroNav variant="solid" scrollReveal={headerScrollReveal} />}
     <main class="flex-1 gg-main">
       <slot />
     </main>

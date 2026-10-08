@@ -1,0 +1,749 @@
+---
+import { contactForms } from '../data/contactoForms';
+
+// CONTACTO DIRECTO · CTA que habita la banda oscura (.cc-oscura) que sube y cubre "Otros
+// servicios". Es el paso de conversión del relato: tras compradores (hero), vendedores
+// (blindaje) y los dos servicios abrebocas, aquí se recuerda que la prioridad es hablar
+// DIRECTO con el equipo. Muestra los MISMOS formularios de /contacto pero de forma DISTINTA y
+// dinámica: un panel con pestañas e indicador deslizante que intercambia el formulario en vivo,
+// con los campos a la mano (sin redirigir). El CONTENIDO de los formularios es compartido
+// (src/data/contactoForms.ts): editar allí sincroniza este CTA con la página /contacto.
+// Lenguaje de marca: tinta/lino/bronce, Montserrat, hairlines, radio 2px. Sin backend: el
+// envío muestra el estado "gracias".
+
+const wa = 'https://wa.me/584122398253';
+
+// Fondo tenue del panel: torre residencial (misma familia de assets del contenido complementario).
+const bgSrcset = (ext: string) =>
+  `/complementario/edificio-torre-640.${ext} 640w, /complementario/edificio-torre-1280.${ext} 1280w`;
+---
+<div class="cd">
+  <div class="cd-wrap max-w-[1280px] mx-auto px-5 md:px-6">
+    <div class="cd-grid">
+      <!-- Mensaje: la prioridad es hablar directo con el equipo -->
+      <header class="cd-intro">
+        <h2 class="cd-title"><span class="cd-ln">Contacta al equipo</span><span class="cd-ln">para <span class="cd-gold">comenzar</span></span></h2>
+        <p class="cd-lead">Elige por dónde empezar, llena los datos y nos contactaremos lo antes posible.</p>
+        <p class="cd-alt-label">O puedes:</p>
+        <div class="cd-alt">
+          <a class="cd-wa" href={wa} target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.3-1.38a9.86 9.86 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.12-2.9-6.99A9.82 9.82 0 0 0 12.04 2Zm0 1.8c2.16 0 4.19.84 5.72 2.37a8.03 8.03 0 0 1 2.37 5.73c0 4.46-3.63 8.1-8.1 8.1-1.45 0-2.87-.39-4.11-1.12l-.3-.17-3.15.82.84-3.07-.2-.31a8.05 8.05 0 0 1-1.24-4.3c0-4.46 3.63-8.09 8.1-8.09Zm4.68 11.43c-.26-.13-1.5-.74-1.74-.83-.23-.08-.4-.13-.57.13-.17.26-.65.82-.8 1-.14.17-.29.19-.55.06-.26-.13-1.08-.4-2.05-1.26-.76-.68-1.27-1.51-1.42-1.77-.15-.26-.02-.4.11-.53.11-.11.26-.29.39-.44.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.06-.13-.57-1.38-.78-1.89-.21-.5-.42-.43-.57-.44h-.49c-.17 0-.44.06-.67.32-.23.26-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.6.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.5-.61 1.71-1.2.21-.59.21-1.1.15-1.2-.06-.11-.23-.17-.49-.3Z"/></svg>
+            Escribirnos por WhatsApp
+          </a>
+        </div>
+      </header>
+
+      <!-- Panel dinámico: pestañas + formulario intercambiable en vivo -->
+      <div class="cd-panel">
+        <div class="cd-panel-bg" aria-hidden="true">
+          <picture>
+            <source type="image/avif" srcset={bgSrcset('avif')} sizes="(min-width: 980px) 52vw, 92vw" />
+            <source type="image/webp" srcset={bgSrcset('webp')} sizes="(min-width: 980px) 52vw, 92vw" />
+            <img src="/complementario/edificio-torre-1280.jpg" srcset={bgSrcset('jpg')} sizes="(min-width: 980px) 52vw, 92vw" alt="" loading="lazy" decoding="async" />
+          </picture>
+        </div>
+        <div class="cd-tabs" role="tablist" aria-label="Tipo de solicitud">
+          <span class="cd-tab-ink" aria-hidden="true"></span>
+          {contactForms.map((it, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`cd-tab-${it.key}`}
+              class:list={['cd-tab', i === 0 && 'is-active']}
+              aria-selected={i === 0 ? 'true' : 'false'}
+              aria-controls={`cd-panel-${it.key}`}
+              tabindex={i === 0 ? '0' : '-1'}
+              data-tab={it.key}
+            >{it.tab}</button>
+          ))}
+        </div>
+
+        <div class="cd-stack">
+          {contactForms.map((it, i) => (
+            <section
+              class:list={['cd-pane', i !== 0 && 'is-hidden']}
+              id={`cd-panel-${it.key}`}
+              role="tabpanel"
+              aria-labelledby={`cd-tab-${it.key}`}
+              aria-hidden={i !== 0 ? 'true' : 'false'}
+              data-pane={it.key}
+            >
+              <p class="cd-pane-title">{it.title}</p>
+
+              <form class="cd-form" novalidate data-form={it.key}>
+                {it.groups.map((g) => (
+                  <>
+                    {g.legend && <p class="cd-group-legend">{g.legend}</p>}
+                    {g.fields.map((f) => (
+                      <div class:list={['cd-field', f.full && 'cd-field--full', f.kind === 'toggle' && 'cd-field--seg']}>
+                        {f.kind === 'toggle' && f.options ? (
+                          <fieldset class="cd-seg">
+                            <legend class="cd-label">{f.label}</legend>
+                            <div class="cd-seg-track" role="radiogroup" aria-label={f.label}>
+                              {f.options.map((opt, oi) => (
+                                <button
+                                  type="button"
+                                  class:list={['cd-seg-btn', oi === 0 && 'is-on']}
+                                  role="radio"
+                                  aria-checked={oi === 0 ? 'true' : 'false'}
+                                  data-seg-val={opt}
+                                >{opt}</button>
+                              ))}
+                            </div>
+                            <input type="hidden" name={f.name} value={f.options[0]} />
+                          </fieldset>
+                        ) : (
+                          <>
+                            <label class="cd-label" id={`${it.key}-${f.name}-label`} for={`${it.key}-${f.name}`}>
+                              {f.label}
+                              {f.kind !== 'textarea' && f.required && <span class="cd-req" aria-hidden="true"> *</span>}
+                              {f.optional && <span class="cd-opt"> (opcional)</span>}
+                            </label>
+
+                            {f.kind === 'select' && f.options ? (
+                              <div class="cd-combo" data-combo data-required={f.required ? '' : undefined}>
+                                <button
+                                  type="button"
+                                  class="cd-combo-btn"
+                                  id={`${it.key}-${f.name}`}
+                                  role="combobox"
+                                  aria-haspopup="listbox"
+                                  aria-expanded="false"
+                                  aria-labelledby={`${it.key}-${f.name}-label`}
+                                >
+                                  <span class="cd-combo-val is-empty" data-placeholder={f.placeholder}>{f.placeholder}</span>
+                                  <span class="cd-combo-chev" aria-hidden="true">
+                                    <svg width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M1 1l4.5 4.5L10 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                  </span>
+                                </button>
+                                <ul class="cd-combo-list" role="listbox" aria-label={f.label} hidden>
+                                  {f.options.map((opt) => (
+                                    <li class="cd-combo-opt" role="option" aria-selected="false" data-val={opt}>{opt}</li>
+                                  ))}
+                                </ul>
+                                <input type="hidden" name={f.name} value="" data-combo-input />
+                              </div>
+                            ) : f.kind === 'textarea' ? (
+                              <textarea id={`${it.key}-${f.name}`} name={f.name} rows="2"></textarea>
+                            ) : (
+                              <input
+                                id={`${it.key}-${f.name}`}
+                                name={f.name}
+                                type={f.kind as 'text' | 'email' | 'tel'}
+                                required={f.required}
+                                placeholder={f.placeholder}
+                                inputmode={f.inputmode}
+                                autocomplete={f.autocomplete}
+                              />
+                            )}
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </>
+                ))}
+
+                <div class="cd-foot cd-field--full">
+                  <button type="submit" class="cd-submit">Enviar solicitud</button>
+                  <p class="cd-note">Tus datos se usan solo para gestionar tu solicitud.</p>
+                </div>
+              </form>
+
+              <!-- Estado "gracias" -->
+              <div class="cd-done" data-done={it.key} hidden>
+                <span class="cd-tick" aria-hidden="true"></span>
+                <h3 class="cd-done-h" tabindex="-1">{it.done.h}</h3>
+                <p class="cd-done-p">{it.done.p1}</p>
+                <div class="cd-done-actions">
+                  <a href={wa} target="_blank" rel="noopener" class="cd-submit cd-submit--link">Abrir WhatsApp</a>
+                  <button type="button" class="cd-reset" data-reset={it.key}>Enviar otra</button>
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cd {
+    --oro: #C9A46A;
+    --ease: cubic-bezier(0.23, 1, 0.32, 1);
+    width: 100%;
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    color: var(--color-lino);
+  }
+  .cd-wrap {
+    /* Holgura arriba para librar la navbar fija cuando la banda cubre la pantalla. */
+    padding-top: clamp(96px, 13vh, 150px);
+    padding-bottom: clamp(56px, 9vh, 110px);
+  }
+
+  /* Split: mensaje (izq) + panel dinámico (der). En móvil se apila. */
+  .cd-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(34px, 5vw, 72px);
+    /* El mensaje se alinea con la parte superior del panel (no centrado). */
+    align-items: start;
+  }
+  @media (min-width: 980px) {
+    .cd-grid { grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr); gap: clamp(48px, 5vw, 88px); }
+    /* El mensaje usa el gutter IZQUIERDO para ganar ancho (el título cabe en 2 líneas) SIN
+       mover el formulario de la derecha, que conserva su posición y tamaño. */
+    .cd-intro { margin-left: clamp(-150px, calc((1280px - 100vw) / 2 - 16px), -16px); }
+  }
+
+  /* --- Mensaje --- */
+  .cd-title {
+    margin: 0;
+    font-family: 'Playfair Display Variable', 'Playfair Display', Georgia, serif;
+    font-weight: 300;
+    font-size: clamp(2rem, 3.4vw, 3rem);
+    line-height: 1.04;
+    letter-spacing: .005em;
+    text-transform: uppercase;
+    color: var(--color-lino);
+    max-width: none;
+  }
+  /* Cada parte en su propia línea y sin partirse → exactamente 2 líneas. */
+  .cd-title .cd-ln { display: block; white-space: nowrap; }
+  .cd-title .cd-gold { color: var(--oro); }
+  .cd-lead {
+    margin: clamp(16px, 1.8vw, 22px) 0 0;
+    font-weight: 300;
+    font-size: clamp(.98rem, 1.1vw, 1.1rem);
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--color-lino) 74%, transparent);
+    max-width: 42ch;
+  }
+  .cd-alt-label {
+    margin: clamp(24px, 3vw, 36px) 0 0;
+    font-weight: 300;
+    font-size: clamp(.98rem, 1.1vw, 1.1rem);
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--color-lino) 74%, transparent);
+  }
+  .cd-alt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 28px;
+    margin-top: clamp(12px, 1.4vw, 16px);
+  }
+  .cd-wa {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-lino);
+    text-decoration: none;
+    border: 1px solid color-mix(in srgb, var(--oro) 55%, transparent);
+    border-radius: 2px;
+    padding: 12px 22px;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    transition: background .35s ease, color .35s ease, border-color .35s ease, transform .16s ease;
+  }
+  .cd-wa:hover { background: var(--oro); color: #100E17; border-color: var(--oro); }
+  .cd-wa:active { transform: scale(.97); }
+
+  /* --- Panel dinámico --- */
+  .cd-panel {
+    position: relative;
+    isolation: isolate;
+    background: color-mix(in srgb, var(--color-lino) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-lino) 12%, transparent);
+    border-radius: 2px;
+    padding: clamp(20px, 2.4vw, 32px);
+  }
+  /* Fondo tenue (técnica de .cc-blindaje-bg): foto atenuada + degradado oscuro encima para
+     legibilidad. El fondo se recorta a sí mismo (el panel queda overflow:visible para que el
+     desplegable personalizado pueda salir de sus bordes). */
+  .cd-panel-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; border-radius: 2px; }
+  .cd-panel-bg img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .26; filter: grayscale(18%); }
+  .cd-panel-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+      color-mix(in srgb, #100E17 74%, transparent),
+      color-mix(in srgb, #100E17 90%, transparent));
+  }
+  /* Contenido del panel por encima del fondo. */
+  .cd-tabs, .cd-stack { position: relative; z-index: 1; }
+
+  /* Pestañas con indicador deslizante (lo posiciona el script). */
+  .cd-tabs {
+    position: relative;
+    display: flex;
+    gap: clamp(6px, 1.4vw, 20px);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-lino) 14%, transparent);
+    /* En pantallas estrechas las 4 pestañas se deslizan horizontalmente en vez de romper línea. */
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cd-tabs::-webkit-scrollbar { display: none; }
+  .cd-tab-ink {
+    position: absolute;
+    left: 0; bottom: -1px;
+    height: 2px;
+    width: 0;
+    background: var(--oro);
+    transform: translateX(0);
+    transition: transform .4s var(--ease), width .4s var(--ease);
+    pointer-events: none;
+  }
+  .cd-tab {
+    appearance: none;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    background: transparent;
+    border: 0;
+    padding: 0 2px 14px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-lino) 56%, transparent);
+    cursor: pointer;
+    transition: color .3s ease;
+  }
+  .cd-tab:hover { color: color-mix(in srgb, var(--color-lino) 85%, transparent); }
+  .cd-tab.is-active { color: var(--color-lino); }
+  .cd-tab:focus-visible { outline: 2px solid var(--oro); outline-offset: 3px; border-radius: 2px; }
+
+  /* Todos los paneles comparten la MISMA celda (se solapan): la altura del stack es la del
+     formulario más ALTO y NO cambia al alternar pestañas → la sección tiene tamaño fijo. El
+     panel inactivo se oculta con visibility/opacity (no display:none, que colapsaría la altura). */
+  .cd-stack { margin-top: clamp(20px, 2.4vw, 28px); display: grid; }
+  .cd-pane { grid-area: 1 / 1; }
+  .cd-pane.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .cd-pane-title {
+    margin: 0 0 clamp(16px, 2vw, 22px);
+    font-weight: 300;
+    font-size: clamp(1.05rem, 1.4vw, 1.3rem);
+    line-height: 1.3;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-lino) 90%, transparent);
+    max-width: 32ch;
+  }
+
+  /* Form: rejilla de 2 columnas; algunos campos ocupan toda la fila. */
+  .cd-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(16px, 1.8vw, 22px) clamp(16px, 2vw, 26px);
+  }
+  .cd-field { display: flex; flex-direction: column; min-width: 0; }
+  .cd-field--full { grid-column: 1 / -1; }
+  @media (max-width: 560px) {
+    .cd-form { grid-template-columns: 1fr; }
+    .cd-field { grid-column: 1 / -1; }
+  }
+
+  /* Encabezado de grupo (formularios con varios grupos, p. ej. referidos). */
+  .cd-group-legend {
+    grid-column: 1 / -1;
+    margin: clamp(30px, 4vw, 46px) 0 clamp(8px, 1.2vw, 14px);
+    padding-top: clamp(24px, 3vw, 34px);
+    border-top: 1px solid color-mix(in srgb, var(--color-lino) 16%, transparent);
+    font-weight: 600;
+    font-size: clamp(14px, 1.3vw, 16px);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--oro);
+  }
+  .cd-form > .cd-group-legend:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+  .cd-label {
+    display: block;
+    margin: 0 0 7px;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .02em;
+    color: color-mix(in srgb, var(--color-lino) 82%, transparent);
+  }
+  .cd-req { color: var(--oro); }
+  .cd-opt { font-weight: 400; color: color-mix(in srgb, var(--color-lino) 45%, transparent); }
+
+  .cd-field input,
+  .cd-field textarea,
+  .cd-select select {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-lino) 26%, transparent);
+    padding: 9px 2px;
+    font-family: inherit;
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--color-lino);
+    outline: none;
+    transition: border-color .3s ease;
+  }
+  .cd-field textarea { resize: vertical; min-height: 60px; }
+  .cd-field input:focus,
+  .cd-field textarea:focus,
+  .cd-select select:focus { border-bottom-color: var(--oro); }
+  .cd-field input::placeholder,
+  .cd-field textarea::placeholder { color: color-mix(in srgb, var(--color-lino) 38%, transparent); }
+
+  /* Autocompletar de Windows/Chrome: por defecto pinta el campo de blanco (rompe el fondo
+     oscuro). Mantenemos texto claro y evitamos el relleno blanco retrasando indefinidamente el
+     pintado del fondo (truco estándar de transition larga). */
+  .cd-field input:-webkit-autofill,
+  .cd-field input:-webkit-autofill:hover,
+  .cd-field input:-webkit-autofill:focus,
+  .cd-field textarea:-webkit-autofill,
+  .cd-select select:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-lino);
+    caret-color: var(--color-lino);
+    transition: background-color 100000s ease-in-out 0s;
+  }
+
+  /* Desplegable del select en tono de marca (en Windows el <option> sí acepta color/fondo): el
+     menú deja de ser blanco con selección azul del SO y encaja con la sección oscura. */
+  .cd-select select option {
+    background-color: #17131F;
+    color: var(--color-lino);
+  }
+  .cd-select select option:checked,
+  .cd-select select option:hover {
+    background-color: #241D30;
+    color: var(--oro);
+  }
+
+  /* Desplegable personalizado (reemplaza el <select> nativo → sin el resaltado azul del SO). */
+  .cd-combo { position: relative; }
+  .cd-combo-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-lino) 26%, transparent);
+    padding: 9px 2px;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--color-lino);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .3s ease;
+  }
+  .cd-combo-btn:focus-visible { outline: none; border-bottom-color: var(--oro); }
+  .cd-combo-btn[aria-expanded="true"] { border-bottom-color: var(--oro); }
+  .cd-combo.is-invalid .cd-combo-btn { border-bottom-color: #C98A6A; }
+  .cd-combo-val.is-empty { color: color-mix(in srgb, var(--color-lino) 38%, transparent); }
+  .cd-combo-chev { flex: 0 0 auto; display: inline-flex; color: var(--oro); transition: transform .25s var(--ease); }
+  .cd-combo-btn[aria-expanded="true"] .cd-combo-chev { transform: rotate(180deg); }
+
+  .cd-combo-list {
+    position: absolute;
+    left: 0; right: 0;
+    top: calc(100% + 6px);
+    z-index: 20;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: #17131F;
+    border: 1px solid color-mix(in srgb, var(--color-lino) 16%, transparent);
+    border-radius: 2px;
+    box-shadow: 0 26px 54px -26px rgba(0, 0, 0, .66);
+    max-height: 244px;
+    overflow-y: auto;
+  }
+  .cd-combo-list[hidden] { display: none; }
+  .cd-combo-opt {
+    padding: 10px 12px;
+    font-size: 14.5px;
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--color-lino) 82%, transparent);
+    border-radius: 2px;
+    cursor: pointer;
+    outline: none;
+    transition: background .18s ease, color .18s ease;
+  }
+  .cd-combo-opt:hover,
+  .cd-combo-opt:focus { background: color-mix(in srgb, var(--color-lino) 9%, transparent); color: var(--color-lino); }
+  .cd-combo-opt[aria-selected="true"] { color: var(--oro); }
+
+  .cd-seg { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .cd-seg legend { padding: 0; }
+  .cd-seg-track { display: flex; align-items: center; margin-top: 2px; }
+  .cd-seg-btn {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 0;
+    padding: 8px 0;
+    margin-right: 30px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 15px;
+    color: color-mix(in srgb, var(--color-lino) 55%, transparent);
+    cursor: pointer;
+    transition: color .25s ease, transform .16s var(--ease);
+  }
+  .cd-seg-btn:active { transform: scale(.96); }
+  /* Seleccionado: solo color/peso (sin la línea dorada bajo el botón). */
+  .cd-seg-btn.is-on { color: var(--oro); font-weight: 600; }
+  .cd-seg-btn:focus-visible { outline: 2px solid var(--oro); outline-offset: 3px; }
+
+  .cd-foot { margin-top: clamp(4px, 1vw, 10px); }
+  .cd-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--oro);
+    color: #100E17;
+    border: 0;
+    border-radius: 2px;
+    padding: 14px 32px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .3s ease, transform .16s var(--ease);
+  }
+  .cd-submit:hover { background: #DCC08C; }
+  .cd-submit:active { transform: scale(.97); }
+  .cd-note {
+    margin: 14px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--color-lino) 52%, transparent);
+    max-width: 52ch;
+  }
+
+  /* Estado "gracias" */
+  .cd-done[hidden] { display: none; }
+  .cd-tick { display: block; width: 44px; height: 2px; background: var(--oro); margin-bottom: clamp(16px, 2vw, 22px); }
+  .cd-done-h {
+    margin: 0 0 12px;
+    font-weight: 300;
+    font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+    line-height: 1.12;
+    color: var(--color-lino);
+    outline: none;
+  }
+  .cd-done-p {
+    margin: 0 0 clamp(18px, 2.2vw, 26px);
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--color-lino) 74%, transparent);
+    max-width: 44ch;
+  }
+  .cd-done-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 24px; }
+  .cd-reset {
+    background: transparent;
+    border: 0;
+    padding: 6px 0;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--oro);
+    cursor: pointer;
+    box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--oro) 45%, transparent);
+    transition: color .25s ease;
+  }
+  .cd-reset:hover { color: var(--color-lino); }
+
+  /* Motion: el panel entrante hace un fundido-ascenso corto (state transition). */
+  @keyframes cd-pane-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .cd-pane:not(.is-hidden) { animation: cd-pane-in .42s var(--ease) both; }
+  .cd-done:not([hidden]) { animation: cd-pane-in .32s var(--ease) both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cd-tab-ink { transition: none; }
+    .cd-pane:not([hidden]), .cd-done:not([hidden]) { animation: none; }
+    .cd-seg-btn, .cd-wa { transition: none; }
+  }
+</style>
+
+<script>
+  // CTA de contacto directo: pestañas que intercambian el formulario en vivo + segmented toggle
+  // + envío a estado "gracias" + reset. Solo transform/opacity; sin librerías.
+  (function () {
+    const root = document.querySelector<HTMLElement>('.cd');
+    if (!root) return;
+
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('.cd-tab'));
+    const ink = root.querySelector<HTMLElement>('.cd-tab-ink');
+    const panes = new Map<string, HTMLElement>();
+    root.querySelectorAll<HTMLElement>('.cd-pane').forEach((p) => {
+      if (p.dataset.pane) panes.set(p.dataset.pane, p);
+    });
+
+    const moveInk = (tab: HTMLButtonElement) => {
+      if (!ink) return;
+      ink.style.width = tab.offsetWidth + 'px';
+      ink.style.transform = `translateX(${tab.offsetLeft}px)`;
+    };
+
+    const activate = (key: string) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.tab === key;
+        t.classList.toggle('is-active', on);
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on) moveInk(t);
+      });
+      panes.forEach((pane, k) => {
+        const hide = k !== key;
+        pane.classList.toggle('is-hidden', hide);
+        pane.setAttribute('aria-hidden', String(hide));
+      });
+    };
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => { if (tab.dataset.tab) activate(tab.dataset.tab); });
+      // Navegación por teclado entre pestañas (flechas / inicio / fin).
+      tab.addEventListener('keydown', (e) => {
+        let next = -1;
+        if (e.key === 'ArrowRight') next = (i + 1) % tabs.length;
+        else if (e.key === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = tabs.length - 1;
+        if (next < 0) return;
+        e.preventDefault();
+        const t = tabs[next];
+        t.focus();
+        if (t.dataset.tab) activate(t.dataset.tab);
+      });
+    });
+
+    // Posición inicial del indicador (y recálculo al redimensionar).
+    const initInk = () => { const act = tabs.find((t) => t.classList.contains('is-active')); if (act) moveInk(act); };
+    if ('requestAnimationFrame' in window) requestAnimationFrame(initInk); else initInk();
+    addEventListener('resize', initInk);
+    addEventListener('load', initInk);
+
+    // Desplegables personalizados (reemplazan el <select> nativo → sin resaltado azul del SO).
+    root.querySelectorAll<HTMLElement>('.cd-combo').forEach((combo) => {
+      const btn = combo.querySelector<HTMLButtonElement>('.cd-combo-btn');
+      const list = combo.querySelector<HTMLElement>('.cd-combo-list');
+      const val = combo.querySelector<HTMLElement>('.cd-combo-val');
+      const input = combo.querySelector<HTMLInputElement>('[data-combo-input]');
+      if (!btn || !list || !val || !input) return;
+      const opts = Array.from(list.querySelectorAll<HTMLElement>('.cd-combo-opt'));
+      opts.forEach((o) => (o.tabIndex = -1));
+
+      const setOpen = (open: boolean) => {
+        list.hidden = !open;
+        btn.setAttribute('aria-expanded', String(open));
+        if (open) {
+          const sel = opts.find((o) => o.getAttribute('aria-selected') === 'true') || opts[0];
+          sel?.focus();
+        }
+      };
+      const choose = (opt: HTMLElement) => {
+        opts.forEach((o) => o.setAttribute('aria-selected', String(o === opt)));
+        val.textContent = opt.dataset.val || '';
+        val.classList.remove('is-empty');
+        input.value = opt.dataset.val || '';
+        combo.classList.remove('is-invalid');
+        setOpen(false);
+        btn.focus();
+      };
+
+      btn.addEventListener('click', () => setOpen(list.hidden));
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(true); }
+      });
+      opts.forEach((o, i) => {
+        o.addEventListener('click', () => choose(o));
+        o.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown') { e.preventDefault(); opts[(i + 1) % opts.length].focus(); }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); opts[(i - 1 + opts.length) % opts.length].focus(); }
+          else if (e.key === 'Home') { e.preventDefault(); opts[0].focus(); }
+          else if (e.key === 'End') { e.preventDefault(); opts[opts.length - 1].focus(); }
+          else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(o); }
+          else if (e.key === 'Escape') { e.preventDefault(); setOpen(false); btn.focus(); }
+          else if (e.key === 'Tab') { setOpen(false); }
+        });
+      });
+      document.addEventListener('click', (e) => {
+        if (!list.hidden && !combo.contains(e.target as Node)) setOpen(false);
+      });
+    });
+
+    // Lógica por formulario: segmented toggle, envío → gracias, reset.
+    root.querySelectorAll<HTMLElement>('.cd-pane').forEach((pane) => {
+      const form = pane.querySelector<HTMLFormElement>('.cd-form');
+      const done = pane.querySelector<HTMLElement>('.cd-done');
+
+      pane.querySelectorAll<HTMLElement>('.cd-seg').forEach((seg) => {
+        const btns = Array.from(seg.querySelectorAll<HTMLButtonElement>('.cd-seg-btn'));
+        const hidden = seg.querySelector<HTMLInputElement>('input[type="hidden"]');
+        btns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            btns.forEach((b) => {
+              const on = b === btn;
+              b.classList.toggle('is-on', on);
+              b.setAttribute('aria-checked', String(on));
+            });
+            if (hidden) hidden.value = btn.dataset.segVal ?? hidden.value;
+          });
+        });
+      });
+
+      form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!form.reportValidity()) return;
+        // Validación de los desplegables personalizados (el input oculto no lo valida el navegador).
+        let ok = true;
+        form.querySelectorAll<HTMLElement>('.cd-combo[data-required]').forEach((combo) => {
+          const input = combo.querySelector<HTMLInputElement>('[data-combo-input]');
+          const bad = !input || !input.value;
+          combo.classList.toggle('is-invalid', bad);
+          if (bad) ok = false;
+        });
+        if (!ok) { form.querySelector<HTMLElement>('.cd-combo.is-invalid .cd-combo-btn')?.focus(); return; }
+        form.hidden = true;
+        if (done) {
+          done.hidden = false;
+          (done.querySelector<HTMLElement>('.cd-done-h'))?.focus();
+        }
+      });
+
+      pane.querySelector<HTMLButtonElement>('.cd-reset')?.addEventListener('click', () => {
+        form?.reset();
+        if (done) done.hidden = true;
+        if (form) form.hidden = false;
+        // Reinicia los combos personalizados (form.reset no limpia la UI custom).
+        pane.querySelectorAll<HTMLElement>('.cd-combo').forEach((combo) => {
+          const input = combo.querySelector<HTMLInputElement>('[data-combo-input]');
+          const val = combo.querySelector<HTMLElement>('.cd-combo-val');
+          if (input) input.value = '';
+          if (val) { val.textContent = val.dataset.placeholder ?? ''; val.classList.add('is-empty'); }
+          combo.classList.remove('is-invalid');
+          combo.querySelectorAll('[aria-selected="true"]').forEach((o) => o.setAttribute('aria-selected', 'false'));
+        });
+        pane.querySelectorAll<HTMLElement>('.cd-seg').forEach((seg) => {
+          const btns = Array.from(seg.querySelectorAll<HTMLButtonElement>('.cd-seg-btn'));
+          const hidden = seg.querySelector<HTMLInputElement>('input[type="hidden"]');
+          btns.forEach((b, i) => {
+            b.classList.toggle('is-on', i === 0);
+            b.setAttribute('aria-checked', String(i === 0));
+          });
+          if (hidden && btns[0]) hidden.value = btns[0].dataset.segVal ?? hidden.value;
+        });
+      });
+    });
+  })();
+</script>

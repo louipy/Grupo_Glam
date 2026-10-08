@@ -74,15 +74,16 @@ const aliados = [
 
       <div class="destacados-grid">
         {destacados.map((p) => (
-          /* Altamira (DEMO-04) es apaisada (16:9): su recorte en la tarjeta portrait la ampliaba
-             y se veía borrosa. Solo esta usa las fotos reescaladas en alta calidad del hero
-             (/destacados, hasta 2560/3840). El resto sigue con las miniaturas de /destacados/home. */
+          /* Las 4 tarjetas usan las variantes de alta resolución de /destacados (máster Upscayl
+             bajado a 3840px = ancho 4K) con hiRes → srcset hasta 3840. Antes solo Altamira las
+             usaba y el resto tiraba de las miniaturas de /destacados/home (tope 1280), que se
+             veían menos nítidas. Ahora las 4 se sirven lo más HD posible. */
           <FeaturedPropertyCard
             p={p}
             img={fotos[p.ref]?.img}
             alt={fotos[p.ref]?.alt}
-            dir={p.ref === 'DEMO-04' ? 'destacados' : 'destacados/home'}
-            hiRes={p.ref === 'DEMO-04'}
+            dir="destacados"
+            hiRes={true}
           />
         ))}
       </div>
@@ -92,8 +93,8 @@ const aliados = [
     <ContenidoComplementario />
 
     <!-- Aliados comerciales · muro de logos monocromo sobre lino. -->
-    <section class="aliados bg-[var(--color-lino)] py-12 md:py-16 overflow-x-clip">
-      <div class="max-w-[1280px] mx-auto px-5 md:px-6">
+    <section class="aliados bg-[var(--color-lino)] pb-12 md:pb-16 overflow-x-clip">
+      <div class="aliados-wrap max-w-[1280px] mx-auto px-5 md:px-6">
         <ul class="aliados-grid">
           {aliados.map((a) => (
             <li class="aliados-item">
@@ -118,31 +119,35 @@ const aliados = [
     <Testimonios />
 
     <!-- CTA final · "Elige cómo empezar" (intercambiada desde Nosotros) -->
-    <section id="conversacion" style="background:#F3F0E9;border-top:1px solid rgba(20,16,28,.08)" data-navtone="light">
-      <div style="max-width:1600px;margin:0 auto;padding:clamp(56px,7.5vw,120px) clamp(20px,5vw,54px)">
-        <div style="margin-bottom:clamp(38px,4.5vw,64px)">
-          <!-- Misma tipografía que el título de Testimonios ("Lo que dicen…"): Montserrat, peso
-               300, versales, clamp(1.75–2.5rem). En UNA sola línea (antes se partía en varias). -->
-          <h2 style="margin:0;font-family:'Montserrat Variable','Montserrat',system-ui,sans-serif;font-weight:300;font-size:clamp(1.75rem,3vw,2.5rem);line-height:1.12;letter-spacing:.01em;color:#14101C;text-transform:uppercase;white-space:nowrap">Elige cómo empezar.</h2>
+    <section id="conversacion" class="conv" data-navtone="light">
+      <div class="conv-wrap">
+        <div class="conv-head">
+          <h2 class="conv-title">Elige cómo empezar.</h2>
         </div>
 
         <div class="gg-conv">
-          <a href={wa} target="_blank" rel="noopener" class="card-dark" style="display:flex;flex-direction:column;justify-content:space-between;gap:clamp(48px,7vw,120px);text-decoration:none;background:#0B0A11;color:#F5F3EE;padding:clamp(30px,3.6vw,52px);border:1px solid #0B0A11;border-radius:2px">
-            <div>
-              <span style="display:block;font-weight:600;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#C9A46A;margin-bottom:18px">Empieza aquí</span>
-              <span style="display:block;font-weight:300;font-size:clamp(1.7rem,3vw,2.4rem);line-height:1.06;letter-spacing:-.01em;color:#F5F3EE">Agendar una consulta privada</span>
+          <!-- Tarjeta primaria: morado de marca (igual que las demás bandas oscuras). El título
+               usa la tipografía de los títulos de formulario ("Compra o alquila tu próximo
+               patrimonio"): Montserrat 300 en versales. Abre WhatsApp (afford. al pie). -->
+          <a href={wa} target="_blank" rel="noopener" class="card-dark">
+            <div class="card-dark-head">
+              <h3 class="conv-card-h">Pulsa para agendar una consulta</h3>
+              <p class="card-dark-sub">Una conversación reservada, sin compromiso, para entender tu objetivo patrimonial y poder guiarte con efectividad.</p>
             </div>
-            <span style="font-weight:300;font-size:clamp(1rem,1.2vw,1.16rem);line-height:1.6;color:rgba(245,243,238,.72);max-width:40ch">Una conversación reservada, sin compromiso, para entender tu objetivo patrimonial antes de mostrarte una sola propiedad.</span>
+            <span class="card-cue">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.3-1.38a9.86 9.86 0 0 0 4.74 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.12-2.9-6.99A9.82 9.82 0 0 0 12.04 2Zm0 1.8c2.16 0 4.19.84 5.72 2.37a8.03 8.03 0 0 1 2.37 5.73c0 4.46-3.63 8.1-8.1 8.1-1.45 0-2.87-.39-4.11-1.12l-.3-.17-3.15.82.84-3.07-.2-.31a8.05 8.05 0 0 1-1.24-4.3c0-4.46 3.63-8.09 8.1-8.09Zm4.68 11.43c-.26-.13-1.5-.74-1.74-.83-.23-.08-.4-.13-.57.13-.17.26-.65.82-.8 1-.14.17-.29.19-.55.06-.26-.13-1.08-.4-2.05-1.26-.76-.68-1.27-1.51-1.42-1.77-.15-.26-.02-.4.11-.53.11-.11.26-.29.39-.44.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.06-.13-.57-1.38-.78-1.89-.21-.5-.42-.43-.57-.44h-.49c-.17 0-.44.06-.67.32-.23.26-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.6.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.5-.61 1.71-1.2.21-.59.21-1.1.15-1.2-.06-.11-.23-.17-.49-.3Z"/></svg>
+              Abrir WhatsApp
+            </span>
           </a>
 
-          <div style="display:flex;flex-direction:column;gap:clamp(20px,2.4vw,34px)">
-            <a href="/contacto" class="card-soft" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;text-decoration:none;background:#fff;color:#14101C;padding:clamp(24px,2.6vw,36px);border:1px solid rgba(20,16,28,.14);border-radius:2px">
-              <span style="font-weight:500;font-size:clamp(1.2rem,1.8vw,1.6rem);line-height:1.1;letter-spacing:-.005em;color:#14101C">Solicitar una valoración</span>
-              <span style="font-weight:300;font-size:14px;line-height:1.55;color:#6E6A63;max-width:44ch">Agendamos una valoración patrimonial de tu inmueble, sin compromiso, con la metodología detrás.</span>
+          <div class="conv-soft-col">
+            <a href="/contacto" class="card-soft">
+              <h3 class="conv-card-h conv-card-h--soft">Solicita una valoración</h3>
+              <p class="card-soft-sub">Agendamos una valoración patrimonial de tu inmueble, sin compromiso, con la metodología detrás.</p>
             </a>
-            <a href={ig} target="_blank" rel="noopener" class="card-soft" style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;text-decoration:none;background:#fff;color:#14101C;padding:clamp(24px,2.6vw,36px);border:1px solid rgba(20,16,28,.14);border-radius:2px">
-              <span style="font-weight:500;font-size:clamp(1.2rem,1.8vw,1.6rem);line-height:1.1;letter-spacing:-.005em;color:#14101C">Escríbenos</span>
-              <span style="font-weight:300;font-size:14px;line-height:1.55;color:#6E6A63;max-width:44ch">@grupo_glam en Instagram y TikTok. Respondemos con discreción.</span>
+            <a href={ig} target="_blank" rel="noopener" class="card-soft">
+              <h3 class="conv-card-h conv-card-h--soft">Visita nuestras redes sociales</h3>
+              <p class="card-soft-sub">@grupo_glam en Instagram y TikTok.</p>
             </a>
           </div>
         </div>
@@ -157,13 +162,16 @@ const aliados = [
      Tipografía Montserrat (la del navbar, definida por el cliente). El fondo claro de la
      lámina (.scroll-over) se conserva; las tarjetas son fotos verticales oscuras. */
   .destacados-title {
-    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    font-family: 'Playfair Display Variable', 'Playfair Display', Georgia, serif;
     font-weight: 300;
     font-size: clamp(1.6rem, 3.1vw, 2.6rem);
     line-height: 1;
     letter-spacing: .01em;
     text-transform: uppercase;
     color: var(--color-tinta);
+    /* Nudge: baja un poco el título en el eje Y (solo el texto; no toca el CTA). */
+    position: relative;
+    top: 8px;
   }
 
   .destacados-grid {
@@ -213,6 +221,13 @@ const aliados = [
   .destacados-cta:focus-visible { outline: 2px solid #C9A46A; outline-offset: 3px; }
 
   /* ---- Aliados comerciales · muro de logos monocromo (tinta) sobre lino ---- */
+  /* Hairline dorada superior: calcada de la inferior (el border-top de Testimonios en
+     .tst-wrap). Mismo filete bronce 22% y mismo ancho de 1280 centrado → por eso va en el
+     contenedor interno, no en la sección a sangre (ahí salía a todo el viewport). */
+  .aliados-wrap {
+    border-top: 1px solid color-mix(in srgb, var(--color-bronce) 22%, transparent);
+    padding-top: clamp(48px, 6vw, 64px);
+  }
   .aliados-title {
     font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
     font-weight: 300;
@@ -336,7 +351,7 @@ const aliados = [
     z-index: 20;                 /* sobre el hero y el velo de oscurecido (6) */
     display: none;               /* se activa solo con soporte de scroll-timeline (ver @supports) */
     pointer-events: none;        /* decorativa: nunca intercepta; la navbar (z-50) va por encima */
-    background: radial-gradient(120% 90% at 50% 8%, #241A2E 0%, #14101C 42%, #0B0A11 100%);
+    background: radial-gradient(120% 90% at 50% 8%, #2A2037 0%, #1C1527 42%, #141019 100%);
 
     /* Troquel de marca: el panel oscuro se recorta con la silueta del diamante para que el
        hero (vídeo) se vea SOLO a través de los trazos del logo; el resto queda cubierto.
@@ -406,13 +421,173 @@ const aliados = [
     }
   }
 
-  /* ---- Sección "Elige cómo empezar" (intercambiada desde Nosotros) ---- */
-  .card-dark { transition: transform .4s cubic-bezier(.2,0,0,1); }
-  .card-dark:hover { transform: translateY(-4px); }
-  .card-soft { transition: border-color .35s ease, transform .4s cubic-bezier(.2,0,0,1); }
-  .card-soft:hover { border-color: #C9A46A; transform: translateY(-3px); }
-  .gg-conv { display: grid; grid-template-columns: 1fr; gap: clamp(20px,2.4vw,34px); align-items: stretch; }
+  /* ======================= Sección "Elige cómo empezar" ======================= */
+  .conv {
+    background: #F3F0E9;
+    border-top: 1px solid rgba(20, 16, 28, .08);
+  }
+  .conv-wrap {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: clamp(56px, 7.5vw, 120px) clamp(20px, 5vw, 54px);
+  }
+  .conv-head { margin-bottom: clamp(38px, 4.5vw, 64px); }
+  .conv-title {
+    margin: 0;
+    font-family: 'Playfair Display Variable', 'Playfair Display', Georgia, serif;
+    font-weight: 300;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    line-height: 1.12;
+    letter-spacing: .01em;
+    color: #14101C;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .gg-conv {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(20px, 2.4vw, 34px);
+    align-items: stretch;
+  }
   @media (min-width: 980px) {
-    .gg-conv { grid-template-columns: minmax(0,1.55fr) minmax(0,1fr); }
+    .gg-conv { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+  }
+
+  /* Tipografía compartida de los títulos de las tarjetas: EXACTAMENTE la de los títulos de
+     tarjeta de Contáctanos (.gg-card-title) → Fraunces (display), peso 400, caja natural. */
+  .conv-card-h {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(1.6rem, 2.6vw, 2.3rem);
+    line-height: 1.08;
+    letter-spacing: -.01em;
+    color: #F5F3EE;
+    text-wrap: balance;
+  }
+  .conv-card-h--soft {
+    font-size: clamp(1.3rem, 1.9vw, 1.65rem);
+    color: #14101C;
+  }
+
+  /* --- Tarjeta primaria (oscura · morado de marca) --- */
+  .card-dark {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: clamp(40px, 6vw, 96px);
+    text-decoration: none;
+    background: #100E17;                            /* morado de las demás bandas oscuras */
+    color: #F5F3EE;
+    padding: clamp(32px, 3.8vw, 56px);
+    border: 1px solid rgba(201, 164, 106, .26);     /* hairline bronce */
+    border-radius: 3px;
+    transition:
+      transform .4s cubic-bezier(.2, 0, 0, 1),
+      border-color .4s ease,
+      box-shadow .4s ease;
+  }
+  /* Resplandor diagonal muy sutil desde la esquina superior: profundidad, no decoración plana. */
+  .card-dark::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(120% 85% at 88% 0%, rgba(201, 164, 106, .14), transparent 55%);
+  }
+  .card-dark-head { display: block; }
+  .card-dark-sub {
+    margin: clamp(16px, 1.6vw, 22px) 0 0;
+    font-weight: 300;
+    font-size: clamp(1rem, 1.2vw, 1.16rem);
+    line-height: 1.6;
+    color: rgba(245, 243, 238, .72);
+    max-width: 42ch;
+  }
+  /* Afford. de acción: deja claro que la tarjeta abre WhatsApp (se rellena en hover). */
+  .card-cue {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 22px;
+    border: 1px solid rgba(201, 164, 106, .5);
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: #C9A46A;
+    transition: background .35s ease, color .35s ease, border-color .35s ease;
+  }
+
+  /* --- Tarjetas secundarias (claras) --- */
+  .conv-soft-col {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(20px, 2.4vw, 34px);
+  }
+  .card-soft {
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    text-decoration: none;
+    background: #fff;
+    color: #14101C;
+    padding: clamp(24px, 2.6vw, 36px) clamp(26px, 2.8vw, 40px);
+    border: 1px solid rgba(20, 16, 28, .14);
+    border-radius: 3px;
+    transition:
+      border-color .35s ease,
+      transform .4s cubic-bezier(.2, 0, 0, 1),
+      box-shadow .4s ease;
+  }
+  /* Acento bronce a la izquierda que crece en hover: señal de que la tarjeta es accionable. */
+  .card-soft::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: #C9A46A;
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform .4s cubic-bezier(.23, 1, .32, 1);
+  }
+  .card-soft-sub {
+    margin: 0;
+    font-weight: 300;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #6E6A63;
+    max-width: 44ch;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .card-dark:hover {
+      transform: translateY(-4px);
+      border-color: rgba(201, 164, 106, .5);
+      box-shadow: 0 30px 60px -32px rgba(11, 10, 17, .8);
+    }
+    .card-dark:hover .card-cue { background: #C9A46A; color: #100E17; border-color: #C9A46A; }
+    .card-soft:hover {
+      border-color: #C9A46A;
+      transform: translateY(-3px);
+      box-shadow: 0 24px 44px -30px rgba(20, 16, 28, .5);
+    }
+    .card-soft:hover::before { transform: scaleY(1); }
+  }
+  .card-dark:focus-visible,
+  .card-soft:focus-visible { outline: 2px solid #C9A46A; outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    .card-dark, .card-soft, .card-soft::before, .card-cue { transition: none; }
+    .card-dark:hover, .card-soft:hover { transform: none; }
   }
 </style>

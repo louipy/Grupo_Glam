@@ -24,7 +24,7 @@ export const propiedadesDemo: PropiedadDemo[] = [
     ref: 'DEMO-01', operacion: 'venta', tipo: 'apartamento',
     zona: 'Sebucán', zonaSlug: 'sebucan',
     precio: 870000, aConsultar: false,
-    area: 450, habitaciones: 5, banos: 6.5, puestos: 3,
+    area: 450, habitaciones: 5, banos: 4, puestos: 3,
     titulo: 'Apartamento de alta gama en Sebucán',
     destacado: true,
     tono: 'linear-gradient(135deg,#2E4034 0%,#17191D 100%)',
@@ -43,7 +43,7 @@ export const propiedadesDemo: PropiedadDemo[] = [
   {
     ref: 'DEMO-03', operacion: 'alquiler', tipo: 'apartamento',
     zona: 'Los Palos Grandes', zonaSlug: 'los-palos-grandes',
-    precio: null, aConsultar: true,
+    precio: 250000, aConsultar: false,
     area: 210, habitaciones: 3, banos: 3, puestos: 2,
     titulo: 'Apartamento luminoso en Los Palos Grandes',
     destacado: true,

@@ -1,0 +1,261 @@
+---
+// OTROS SERVICIOS · experimento SPLIT 50/50. Dos tiles fotográficos a sangre, cada uno al 50%
+// del ancho y a toda la altura (100svh), como el ÚLTIMO contenido de la lámina clara (.cc-clara):
+// la banda oscura que sigue (.cc-oscura) sube y lo CUBRE al escrollear (animación "cover").
+// Sin título de sección ni lead: solo el gancho por tile (kicker + titular + cuerpo + CTA) que
+// enlaza a su página dedicada. Sombreado trabajado: foto a opacidad plena + degradado anclado
+// SOLO al tercio inferior + text-shadow sutil → la foto no se opaca y la letra mantiene contraste.
+// Lenguaje de marca: lino/tinta/bronce, Montserrat, hairline bronce entre mitades, radio 2px.
+// Reveal .reveal/.in reutilizando el patrón del resto de la home (script local abajo).
+
+const servicios = [
+  {
+    kicker: 'Programa de referidos',
+    title: 'Gana hasta 20% por cada cliente que refieras.',
+    body: 'Recomienda a quien quiera comprar, vender o alquilar. Si cierra con nosotros, tú ganas comisión.',
+    cta: 'Conocer el programa',
+    href: '/referidos',
+    // Hogar aspiracional (jardín + piscina): recomendar a alguien su propiedad ideal.
+    img: 'la-castellana-jardin',
+    alt: 'Casa con jardín y piscina en La Castellana, Caracas',
+    responsive: true,
+  },
+  {
+    kicker: 'Inversión internacional',
+    title: 'Invierte en Venezuela desde el extranjero.',
+    body: 'El mismo respaldo legal y blindaje, sin viajar. Tu capital trabaja en dólares.',
+    cta: 'Ver cómo invertir',
+    href: '/invertir-desde-el-extranjero',
+    // Skyline de Caracas (solo JPG: el póster del hero no tiene variantes avif/webp).
+    img: 'caracas-poster',
+    alt: 'Vista del corredor este de Caracas con el Ávila al fondo',
+    responsive: false,
+  },
+];
+
+// Set responsive de ALTA resolución (/destacados, hasta 3840) para las fotos servidas a 50vw:
+// a sangre cada mitad necesita más píxel que las miniaturas de /destacados/home (tope 1280).
+const widths = [640, 1280, 1920, 2560, 3840];
+const splitSrcset = (base: string, ext: string) =>
+  widths.map((w) => `/destacados/${base}-${w}.${ext} ${w}w`).join(', ');
+const splitSizes = '(min-width: 768px) 50vw, 100vw';
+---
+<section class="svc" data-navtone="dark" aria-label="Otros servicios">
+  <div class="svc-grid">
+    {servicios.map((s) => (
+      <a class="svc-card reveal" href={s.href} aria-label={`${s.kicker}: ${s.title}`}>
+        <div class="svc-media" aria-hidden="true">
+          {s.responsive ? (
+            <picture>
+              <source type="image/avif" srcset={splitSrcset(s.img, 'avif')} sizes={splitSizes} />
+              <source type="image/webp" srcset={splitSrcset(s.img, 'webp')} sizes={splitSizes} />
+              <img
+                src={`/destacados/${s.img}-1920.jpg`}
+                srcset={splitSrcset(s.img, 'jpg')}
+                sizes={splitSizes}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
+          ) : (
+            <img src={`/hero/${s.img}.jpg`} alt="" loading="lazy" decoding="async" />
+          )}
+        </div>
+
+        <div class="svc-body">
+          <span class="svc-k">{s.kicker}</span>
+          <h3 class="svc-h">{s.title}</h3>
+          <p class="svc-p">{s.body}</p>
+          <span class="svc-cta">{s.cta} <span class="arw" aria-hidden="true">&rarr;</span></span>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  /* Tokens: --oro (acento dorado) no existe en global.css; se define local, igual que en
+     .cc-blindaje / .inv. --ease: misma curva ease-out fuerte del resto de la home. */
+  .svc {
+    --oro: #C9A46A;
+    --ease: cubic-bezier(0.23, 1, 0.32, 1);
+    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+    background: #100E17;
+    overflow-x: clip;
+  }
+
+  /* Rejilla: DOS mitades en paralelo a toda la altura, sin separación (las fotos se tocan).
+     En móvil se apilan (una columna). */
+  .svc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    height: 100svh;
+  }
+  @media (max-width: 767px) {
+    .svc-grid { grid-template-columns: 1fr; height: auto; }
+  }
+
+  /* Tile: foto a sangre con contenido al pie. Todo el tile es el enlace. */
+  .svc-card {
+    position: relative;
+    display: block;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 100%;
+    text-decoration: none;
+    background: #0B0A11;
+  }
+  @media (max-width: 767px) { .svc-card { min-height: 62svh; } }
+
+  .svc-media { position: absolute; inset: 0; z-index: 0; }
+  .svc-media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    /* Opacidad plena: la foto no se atenúa (calidad y color intactos). */
+    opacity: 1;
+    transform: scale(1.001);               /* evita hairline de subpíxel al reposar */
+    transition: transform .7s var(--ease);
+  }
+  /* Scrim SUPERIOR: contraste para el navbar sobre la parte alta (brillante) de las fotos.
+     ── z-index:1 es CRÍTICO ── la <img> lleva transform (scale), lo que la promueve a contexto
+     de apilamiento y hacía que este pseudo (::before, hermano ANTERIOR en el DOM) se pintara
+     DETRÁS de la imagen → el sombreado de arriba no se veía (el de abajo, ::after, sí, por ser
+     hermano posterior). Con z-index:1 ambos scrims quedan por encima de la foto. */
+  .svc-media::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, #0B0A11 76%, transparent) 0%,
+      color-mix(in srgb, #0B0A11 44%, transparent) 9%,
+      color-mix(in srgb, #0B0A11 16%, transparent) 18%,
+      transparent 26%
+    );
+  }
+  /* Scroll-driven: la intensidad del scrim superior DEPENDE del scroll — arranca tenue y se
+     afianza a medida que el tile sube y ocupa la pantalla bajo el navbar (primera variable
+     acoplada a la línea de tiempo de la sección). Fallback sin soporte / reduced-motion: scrim
+     estático completo. */
+  @supports (animation-timeline: view()) {
+    .svc-media::before {
+      animation: svc-scrim-enter linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 18%;
+    }
+  }
+  @keyframes svc-scrim-enter { from { opacity: .4; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .svc-media::before { animation: none; opacity: 1; }
+  }
+  /* Sombreado INFERIOR (zona del texto). z-index:1 por el mismo motivo de apilamiento. */
+  .svc-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      to top,
+      color-mix(in srgb, #0B0A11 84%, transparent) 0%,
+      color-mix(in srgb, #0B0A11 52%, transparent) 22%,
+      color-mix(in srgb, #0B0A11 16%, transparent) 46%,
+      transparent 68%
+    );
+  }
+
+  .svc-body {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: clamp(9px, 1vw, 13px);
+    padding: clamp(26px, 3.4vw, 52px);
+  }
+  .svc-k {
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--oro);
+    text-shadow: 0 1px 10px rgba(0, 0, 0, .35);
+  }
+  .svc-h {
+    margin: 0;
+    font-family: 'Playfair Display Variable', 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+    line-height: 1.12;
+    letter-spacing: -.005em;
+    color: var(--color-lino);
+    max-width: 18ch;
+    text-wrap: balance;
+    text-shadow: 0 1px 22px rgba(0, 0, 0, .42);
+  }
+  .svc-p {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(.95rem, 1vw, 1.06rem);
+    line-height: 1.55;
+    color: color-mix(in srgb, var(--color-lino) 86%, transparent);
+    max-width: 42ch;
+    text-shadow: 0 1px 18px rgba(0, 0, 0, .45);
+  }
+  .svc-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: clamp(5px, .6vw, 9px);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .04em;
+    color: var(--color-lino);
+    text-shadow: 0 1px 14px rgba(0, 0, 0, .4);
+  }
+  .svc-cta .arw { transition: transform .3s var(--ease); }
+
+  /* Hover (solo puntero fino): zoom leve de la foto y la flecha avanza. Solo transform. */
+  @media (hover: hover) and (pointer: fine) {
+    .svc-card:hover .svc-media :global(img) { transform: scale(1.045); }
+    .svc-card:hover .svc-cta .arw { transform: translateX(5px); }
+  }
+  .svc-card:focus-visible { outline: 2px solid var(--oro); outline-offset: -4px; }
+
+  /* Reveal al entrar en viewport (mismo patrón .reveal/.in que el resto de la home). */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+  .svc-card.reveal:nth-child(2) { transition-delay: 90ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .svc-media :global(img),
+    .svc-cta .arw { transition: none; }
+  }
+</style>
+
+<script>
+  // Reveal sutil al entrar en viewport (una sola vez). Mismo patrón que QuienesSomos/Testimonios.
+  (function () {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const els = Array.prototype.slice.call(document.querySelectorAll('.svc .reveal'));
+    if (reduce || !('IntersectionObserver' in window)) {
+      els.forEach((el) => el.classList.add('in'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+    els.forEach((el) => io.observe(el));
+  })();
+</script>

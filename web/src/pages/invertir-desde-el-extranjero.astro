@@ -1,0 +1,26 @@
+---
+import Base from '../layouts/Base.astro';
+import QuienesSomos from '../components/QuienesSomos.astro';
+// ─────────────────────────────────────────────────────────────────────────────
+// PÁGINA OCULTA / WIP — resguardo del diseño "Invierte en Venezuela desde el extranjero".
+// Este bloque vivía en la home (dentro de .cc-oscura). Se extrajo de ahí y se guarda aquí
+// para construir la PÁGINA DEDICADA más adelante.
+//   · No está enlazada en el menú (acceso solo por URL directa) → "oculta".
+//   · Lleva noindex,nofollow para que no la indexen los buscadores.
+//   · QuienesSomos.astro es transparente y espera fondo oscuro: se lo da .inv-oscura.
+// ─────────────────────────────────────────────────────────────────────────────
+---
+<Base
+  title="Invierte en Venezuela desde el extranjero — Grupo Glam"
+  description="Invierte en Venezuela desde el extranjero con respaldo legal y blindaje patrimonial: las vías legales, el proceso y la guía 2026."
+  noindex={true}
+>
+  <!-- Mismo fondo oscuro que daba .cc-oscura en la home, para que el diseño se vea igual. -->
+  <div class="inv-oscura" data-navtone="dark">
+    <QuienesSomos />
+  </div>
+</Base>
+
+<style>
+  .inv-oscura { background: #100E17; }
+</style>

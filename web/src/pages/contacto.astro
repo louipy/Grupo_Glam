@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { contactForms } from '../data/contactoForms';
 
 // CONTÁCTANOS — rediseño. Tres tarjetas de intención (misma proporción que los destacados de la
 // home) que, al pulsarlas, se expanden con una animación FLIP hasta el centro de la pantalla y
@@ -12,87 +13,20 @@ import Base from '../layouts/Base.astro';
 // NAP verificado · §12.2. Dato real, no placeholder. (WhatsApp para el estado "gracias" del modal.)
 const wa = 'https://wa.me/584122398253';
 
-// Opciones compartidas por los selects
-const tiposInmueble = ['Apartamento', 'Casa / Quinta', 'Townhouse', 'Penthouse', 'Oficina', 'Local comercial', 'Terreno'];
-
-type Field =
-  | { name: string; label: string; type: 'text' | 'email' | 'tel'; required?: boolean; optional?: boolean; placeholder?: string; inputmode?: 'numeric' | 'tel' | 'text' | 'email' | 'url' | 'search' | 'decimal' | 'none'; autocomplete?: string }
-  | { name: string; label: string; type: 'select'; required?: boolean; placeholder: string; options: string[] }
-  | { name: string; label: string; type: 'textarea'; optional?: boolean }
-  | { name: string; label: string; type: 'toggle'; options: string[] };
-
-const commonHead: Field[] = [
-  { name: 'nombre', label: 'Nombre', type: 'text', required: true, autocomplete: 'name' },
-  { name: 'email', label: 'Email', type: 'email', required: true, autocomplete: 'email' },
-  { name: 'whatsapp', label: 'WhatsApp', type: 'tel', optional: true, autocomplete: 'tel', inputmode: 'tel' },
-];
-
-type Intent = {
-  key: string;
-  title: string;      // título largo de la tarjeta
-  sub: string;        // apoyo breve en la tarjeta
-  img: string;        // base del asset en /public/destacados
-  pos: string;        // encuadre del cover
-  fields: Field[];
-  done: { h: string; p1: string; p2: string };
+// Presentación por tarjeta (imagen + encuadre). El CONTENIDO de los formularios (campos,
+// opciones, textos) es COMPARTIDO con el CTA de la home vía src/data/contactoForms.ts:
+// editar allí sincroniza ambos lugares. Aquí solo vive la foto de cada tarjeta.
+const cardArt: Record<string, { img: string; pos: string }> = {
+  comprar: { img: 'los-palos-grandes-interior', pos: 'center' },
+  vender: { img: 'la-castellana-jardin', pos: 'center' },
+  invertir: { img: 'altamira-terraza', pos: 'center' },
+  referidos: { img: 'sebucan-edificio', pos: 'center' },
 };
-
-// Orden de las tarjetas: comprar · vender · invertir (izq → der).
-const intents: Intent[] = [
-  {
-    key: 'comprar',
-    title: 'Compra o alquila tu próximo patrimonio',
-    sub: 'Encontramos el inmueble indicado con un asesor dedicado a tu búsqueda.',
-    img: 'los-palos-grandes-interior',
-    pos: 'center',
-    fields: [
-      ...commonHead,
-      { name: 'operacion', label: '¿Comprar o alquilar?', type: 'toggle', options: ['Comprar', 'Alquilar'] },
-      { name: 'tipo', label: 'Tipo de inmueble', type: 'select', required: true, placeholder: 'Selecciona un tipo', options: tiposInmueble },
-      { name: 'zona', label: 'Zona de interés', type: 'text', required: true, placeholder: 'Ej. Las Mercedes, La Castellana…' },
-      { name: 'presupuesto', label: 'Presupuesto', type: 'select', required: true, placeholder: 'Selecciona un rango', options: ['Hasta US$ 150.000', 'US$ 150.000 a 350.000', 'US$ 350.000 a 700.000', 'US$ 700.000 o más', 'Alquiler mensual'] },
-      { name: 'mensaje', label: 'Mensaje', type: 'textarea', optional: true },
-    ],
-    done: { h: 'Gracias. Hemos recibido tu solicitud.', p1: 'Te respondemos en menos de 2 horas con un consultor dedicado a tu búsqueda.', p2: 'Si prefieres, seguimos la conversación directo por WhatsApp.' },
-  },
-  {
-    key: 'vender',
-    title: 'Vende o alquila tu propiedad',
-    sub: 'Valoramos tu inmueble y lo colocamos ante compradores calificados.',
-    img: 'la-castellana-jardin',
-    pos: 'center',
-    fields: [
-      ...commonHead,
-      { name: 'operacion', label: '¿Vender o alquilar?', type: 'toggle', options: ['Vender', 'Alquilar'] },
-      { name: 'tipo', label: 'Tipo de inmueble', type: 'select', required: true, placeholder: 'Selecciona un tipo', options: tiposInmueble },
-      { name: 'ubicacion', label: 'Ubicación / urbanización', type: 'text', required: true },
-      { name: 'area', label: 'Área aprox. (m²)', type: 'text', required: true, inputmode: 'numeric' },
-      { name: 'detalles', label: 'Detalles', type: 'textarea', optional: true },
-    ],
-    done: { h: 'Gracias. Hemos recibido tu propiedad.', p1: 'Te respondemos en menos de 2 horas para coordinar la valoración y el due diligence.', p2: 'Si prefieres, seguimos la conversación directo por WhatsApp.' },
-  },
-  {
-    key: 'invertir',
-    title: 'Invierte en Venezuela desde el extranjero',
-    sub: 'Estructuramos tu inversión patrimonial desde donde te encuentres.',
-    img: 'altamira-terraza',
-    pos: 'center',
-    fields: [
-      ...commonHead,
-      { name: 'pais', label: 'País de residencia', type: 'text', required: true, autocomplete: 'country-name' },
-      { name: 'rango', label: 'Rango de inversión', type: 'select', required: true, placeholder: 'Selecciona un rango', options: ['US$ 100.000 a 250.000', 'US$ 250.000 a 500.000', 'US$ 500.000 a 1.000.000', 'US$ 1.000.000 o más'] },
-      { name: 'interes', label: 'Interés', type: 'select', required: true, placeholder: 'Selecciona un interés', options: ['Residencial', 'Comercial', 'Industrial', 'Compra de empresas'] },
-      { name: 'horizonte', label: 'Horizonte de inversión', type: 'select', required: true, placeholder: 'Selecciona un horizonte', options: ['Inmediato (0 a 3 meses)', 'Corto plazo (3 a 12 meses)', 'Mediano plazo (1 a 3 años)', 'Largo plazo (3+ años)'] },
-      { name: 'mensaje', label: 'Mensaje', type: 'textarea', optional: true },
-    ],
-    done: { h: 'Gracias. Hemos recibido tu solicitud.', p1: 'Te respondemos en menos de 2 horas con el consultor indicado para inversión.', p2: 'Si prefieres, seguimos la conversación directo por WhatsApp.' },
-  },
-];
 
 // <picture> responsive reutilizando los assets pre-optimizados en /public/destacados (AVIF/WebP/JPEG).
 // El cover de una foto apaisada en una tarjeta portrait amplía una franja vertical, así que se pide
 // un ancho acorde a esa ampliación (~1100px, casi constante) en vez del ancho de columna.
-const cardWidths = [640, 1280, 1920, 2560];
+const cardWidths = [640, 1280, 1920, 2560, 3840];
 const cardSizes = '(min-width: 900px) 1100px, 92vw';
 const srcset = (img: string, ext: string) =>
   cardWidths.map((w) => `/destacados/${img}-${w}.${ext} ${w}w`).join(', ');
@@ -113,13 +47,15 @@ const srcset = (img: string, ext: string) =>
 
     <!-- Tres tarjetas de intención (proporción de los destacados) -->
     <div class="gg-cards" role="group" aria-label="Selecciona el tipo de solicitud">
-      {intents.map((it) => (
+      {contactForms.map((it) => {
+        const art = cardArt[it.key];
+        return (
         <button type="button" class="gg-card" data-card={it.key} aria-haspopup="dialog">
-          <span class="gg-card-media" style={`--pos:${it.pos}`} aria-hidden="true">
+          <span class="gg-card-media" style={`--pos:${art.pos}`} aria-hidden="true">
             <picture>
-              <source type="image/avif" srcset={srcset(it.img, 'avif')} sizes={cardSizes} />
-              <source type="image/webp" srcset={srcset(it.img, 'webp')} sizes={cardSizes} />
-              <img src={`/destacados/${it.img}-1280.jpg`} srcset={srcset(it.img, 'jpg')} sizes={cardSizes} width="1280" height="1828" alt="" loading="lazy" decoding="async" />
+              <source type="image/avif" srcset={srcset(art.img, 'avif')} sizes={cardSizes} />
+              <source type="image/webp" srcset={srcset(art.img, 'webp')} sizes={cardSizes} />
+              <img src={`/destacados/${art.img}-1280.jpg`} srcset={srcset(art.img, 'jpg')} sizes={cardSizes} width="1280" height="1828" alt="" loading="lazy" decoding="async" />
             </picture>
           </span>
           <span class="gg-card-scrim" aria-hidden="true"></span>
@@ -132,13 +68,16 @@ const srcset = (img: string, ext: string) =>
             </span>
           </span>
         </button>
-      ))}
+        );
+      })}
     </div>
   </section>
 
   <!-- Overlay del morph-modal. El script lo mueve a <body> para quedar por encima de la navbar. -->
   <div class="gg-overlay" id="gg-overlay" hidden>
-    {intents.map((it) => (
+    {contactForms.map((it) => {
+      const art = cardArt[it.key];
+      return (
       <div
         class="gg-modal"
         data-modal={it.key}
@@ -148,18 +87,18 @@ const srcset = (img: string, ext: string) =>
         hidden
       >
         <div class="gg-modal-inner">
-        <div class="gg-modal-veil" style={`--pos:${it.pos}`} aria-hidden="true">
+        <div class="gg-modal-veil" style={`--pos:${art.pos}`} aria-hidden="true">
           <picture>
-            <source type="image/avif" srcset={srcset(it.img, 'avif')} sizes="(min-width: 640px) 720px, 92vw" />
-            <source type="image/webp" srcset={srcset(it.img, 'webp')} sizes="(min-width: 640px) 720px, 92vw" />
-            <img src={`/destacados/${it.img}-1280.jpg`} srcset={srcset(it.img, 'jpg')} sizes="(min-width: 640px) 720px, 92vw" width="1280" height="1828" alt="" loading="lazy" decoding="async" />
+            <source type="image/avif" srcset={srcset(art.img, 'avif')} sizes="(min-width: 760px) 1200px, 92vw" />
+            <source type="image/webp" srcset={srcset(art.img, 'webp')} sizes="(min-width: 760px) 1200px, 92vw" />
+            <img src={`/destacados/${art.img}-1280.jpg`} srcset={srcset(art.img, 'jpg')} sizes="(min-width: 760px) 1200px, 92vw" width="1280" height="1828" alt="" loading="lazy" decoding="async" />
           </picture>
         </div>
-        <div class="gg-modal-media" style={`--pos:${it.pos}`} aria-hidden="true">
+        <div class="gg-modal-media" style={`--pos:${art.pos}`} aria-hidden="true">
           <picture>
-            <source type="image/avif" srcset={srcset(it.img, 'avif')} sizes="(min-width: 640px) 600px, 92vw" />
-            <source type="image/webp" srcset={srcset(it.img, 'webp')} sizes="(min-width: 640px) 600px, 92vw" />
-            <img src={`/destacados/${it.img}-1280.jpg`} srcset={srcset(it.img, 'jpg')} sizes="(min-width: 640px) 600px, 92vw" width="1280" height="1828" alt="" loading="lazy" decoding="async" />
+            <source type="image/avif" srcset={srcset(art.img, 'avif')} sizes="(min-width: 760px) 1200px, 92vw" />
+            <source type="image/webp" srcset={srcset(art.img, 'webp')} sizes="(min-width: 760px) 1200px, 92vw" />
+            <img src={`/destacados/${art.img}-1280.jpg`} srcset={srcset(art.img, 'jpg')} sizes="(min-width: 760px) 1200px, 92vw" width="1280" height="1828" alt="" loading="lazy" decoding="async" />
           </picture>
           <span class="gg-modal-scrim"></span>
           <h2 class="gg-modal-title" id={`m-${it.key}-title`} tabindex="-1">{it.title}</h2>
@@ -172,59 +111,64 @@ const srcset = (img: string, ext: string) =>
         <div class="gg-modal-body">
           <!-- Formulario -->
           <form class="gg-form" novalidate data-form={it.key}>
-            {it.fields.map((f) => (
-              <div class="gg-field" class:list={[f.type === 'toggle' && 'gg-field--seg']}>
-                {f.type === 'toggle' ? (
-                  <fieldset class="gg-seg">
-                    <legend class="gg-label">{f.label}</legend>
-                    <div class="gg-seg-track" role="radiogroup" aria-label={f.label}>
-                      {f.options.map((opt, i) => (
-                        <button
-                          type="button"
-                          class="gg-seg-btn"
-                          class:list={[i === 0 && 'is-on']}
-                          role="radio"
-                          aria-checked={i === 0 ? 'true' : 'false'}
-                          data-seg-val={opt}
-                        >{opt}</button>
-                      ))}
-                    </div>
-                    <input type="hidden" name={f.name} value={f.options[0]} />
-                  </fieldset>
-                ) : (
-                  <>
-                    <label class="gg-label" for={`${it.key}-${f.name}`}>
-                      {f.label}
-                      {f.type !== 'textarea' && f.required && <span class="gg-req" aria-hidden="true"> *</span>}
-                      {'optional' in f && f.optional && <span class="gg-opt"> (opcional)</span>}
-                    </label>
-
-                    {f.type === 'select' ? (
-                      <div class="gg-select">
-                        <select id={`${it.key}-${f.name}`} name={f.name} required={f.required}>
-                          <option value="">{f.placeholder}</option>
-                          {f.options.map((opt) => <option value={opt}>{opt}</option>)}
-                        </select>
-                        <span class="gg-select-chev" aria-hidden="true">
-                          <svg width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M1 1l4.5 4.5L10 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        </span>
-                      </div>
-                    ) : f.type === 'textarea' ? (
-                      <textarea id={`${it.key}-${f.name}`} name={f.name} rows="3"></textarea>
+            {it.groups.map((g) => (
+              <>
+                {g.legend && <p class="gg-group-legend">{g.legend}</p>}
+                {g.fields.map((f) => (
+                  <div class="gg-field" class:list={[f.kind === 'toggle' && 'gg-field--seg']}>
+                    {f.kind === 'toggle' ? (
+                      <fieldset class="gg-seg">
+                        <legend class="gg-label">{f.label}</legend>
+                        <div class="gg-seg-track" role="radiogroup" aria-label={f.label}>
+                          {f.options?.map((opt, i) => (
+                            <button
+                              type="button"
+                              class="gg-seg-btn"
+                              class:list={[i === 0 && 'is-on']}
+                              role="radio"
+                              aria-checked={i === 0 ? 'true' : 'false'}
+                              data-seg-val={opt}
+                            >{opt}</button>
+                          ))}
+                        </div>
+                        <input type="hidden" name={f.name} value={f.options?.[0]} />
+                      </fieldset>
                     ) : (
-                      <input
-                        id={`${it.key}-${f.name}`}
-                        name={f.name}
-                        type={f.type}
-                        required={f.required}
-                        placeholder={'placeholder' in f ? f.placeholder : undefined}
-                        inputmode={'inputmode' in f ? f.inputmode : undefined}
-                        autocomplete={'autocomplete' in f ? f.autocomplete : undefined}
-                      />
+                      <>
+                        <label class="gg-label" for={`${it.key}-${f.name}`}>
+                          {f.label}
+                          {f.kind !== 'textarea' && f.required && <span class="gg-req" aria-hidden="true"> *</span>}
+                          {f.optional && <span class="gg-opt"> (opcional)</span>}
+                        </label>
+
+                        {f.kind === 'select' ? (
+                          <div class="gg-select">
+                            <select id={`${it.key}-${f.name}`} name={f.name} required={f.required}>
+                              <option value="">{f.placeholder}</option>
+                              {f.options?.map((opt) => <option value={opt}>{opt}</option>)}
+                            </select>
+                            <span class="gg-select-chev" aria-hidden="true">
+                              <svg width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M1 1l4.5 4.5L10 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                          </div>
+                        ) : f.kind === 'textarea' ? (
+                          <textarea id={`${it.key}-${f.name}`} name={f.name} rows="3"></textarea>
+                        ) : (
+                          <input
+                            id={`${it.key}-${f.name}`}
+                            name={f.name}
+                            type={f.kind}
+                            required={f.required}
+                            placeholder={f.placeholder}
+                            inputmode={f.inputmode}
+                            autocomplete={f.autocomplete}
+                          />
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-              </div>
+                  </div>
+                ))}
+              </>
             ))}
 
             <div class="gg-form-foot">
@@ -248,7 +192,8 @@ const srcset = (img: string, ext: string) =>
         </div>
         </div>
       </div>
-    ))}
+      );
+    })}
   </div>
 </Base>
 
@@ -292,8 +237,11 @@ const srcset = (img: string, ext: string) =>
     grid-template-columns: 1fr;
     gap: clamp(14px, 1.4vw, 22px);
   }
-  @media (min-width: 900px) {
-    .gg-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (min-width: 640px) {
+    .gg-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 1024px) {
+    .gg-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
 
   .gg-card {
@@ -318,6 +266,7 @@ const srcset = (img: string, ext: string) =>
   .gg-card:nth-child(1) { animation-delay: .30s; }
   .gg-card:nth-child(2) { animation-delay: .38s; }
   .gg-card:nth-child(3) { animation-delay: .46s; }
+  .gg-card:nth-child(4) { animation-delay: .54s; }
 
   /* La tarjeta activa se oculta mientras su modal está en vuelo (evita el doble) */
   .gg-card.is-lifted { visibility: hidden; }
@@ -523,7 +472,11 @@ const srcset = (img: string, ext: string) =>
     /* Columna de imagen: más estrecha que el formulario */
     .gg-modal-media { flex: 0 0 38%; height: auto; align-self: stretch; }
   }
-  .gg-modal-media picture { display: block; width: 100%; height: 100%; }
+  /* Imagen FUERA DE FLUJO (como en las tarjetas de la grilla): así su relación de aspecto no
+     infla la altura de la columna ni estira el modal más que el formulario (evita el hueco de
+     papel gris bajo los formularios cortos). La columna toma su altura del formulario y la foto
+     la cubre por completo. */
+  .gg-modal-media picture { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
   .gg-modal-media img {
     width: 100%; height: 100%;
     object-fit: cover;
@@ -587,6 +540,19 @@ const srcset = (img: string, ext: string) =>
 
   /* --- Formulario (dentro del modal) --- */
   .gg-form { display: flex; flex-direction: column; gap: clamp(18px, 2.2vw, 24px); }
+  /* Encabezado de grupo (formularios con varios grupos, p. ej. referidos). */
+  .gg-group-legend {
+    margin: 0;
+    padding-top: clamp(14px, 2vw, 20px);
+    border-top: 1px solid color-mix(in srgb, var(--color-tinta) 14%, transparent);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--color-bronce);
+  }
+  .gg-form > .gg-group-legend:first-child { padding-top: 0; border-top: 0; }
   .gg-field { display: flex; flex-direction: column; }
   .gg-label {
     display: block;
@@ -641,7 +607,6 @@ const srcset = (img: string, ext: string) =>
     flex: 0 0 auto;
     background: transparent;
     border: 0;
-    border-bottom: 2px solid color-mix(in srgb, var(--color-tinta) 18%, transparent);
     padding: 9px 0;
     margin-right: 38px;
     font-family: inherit;
@@ -650,10 +615,11 @@ const srcset = (img: string, ext: string) =>
     letter-spacing: .01em;
     color: color-mix(in srgb, var(--color-tinta) 55%, transparent);
     cursor: pointer;
-    transition: color .25s ease, border-color .25s ease, transform .16s var(--ease-out);
+    transition: color .25s ease, transform .16s var(--ease-out);
   }
   .gg-seg-btn:active { transform: scale(.96); }
-  .gg-seg-btn.is-on { color: var(--color-bronce); border-bottom-color: var(--color-bronce); }
+  /* Seleccionado: solo color/peso (sin la línea dorada bajo el botón). */
+  .gg-seg-btn.is-on { color: var(--color-bronce); font-weight: 600; }
 
   .gg-form-foot { margin-top: clamp(4px, 1vw, 10px); }
   .gg-submit {

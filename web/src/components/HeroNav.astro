@@ -15,19 +15,29 @@
 //               de la derecha (queda solo el logo blanco sobre la foto). Al cubrirse por la
 //               lámina de contenido (is-on-light), el logo hace crossfade a un botón
 //               hamburguesa que abre un DRAWER lateral con esos mismos enlaces.
-interface Props { variant?: 'hero' | 'solid' | 'overlay'; minimal?: boolean }
-const { variant = 'hero', minimal = false } = Astro.props;
+interface Props { variant?: 'hero' | 'solid' | 'overlay'; minimal?: boolean; scrollReveal?: boolean }
+const { variant = 'hero', minimal = false, scrollReveal = false } = Astro.props;
 
 const links = [
   { label: 'Propiedades', href: '/propiedades' },
   { label: 'Nosotros', href: '/nosotros' },
   { label: 'Contáctanos', href: '/contacto' },
 ];
+// Enlaces del menú lateral (drawer): set ampliado y ÚNICO para toda la web. Incluye Inicio y,
+// entre Nosotros y Contáctanos, los dos servicios. (La navbar horizontal conserva su set corto.)
+const drawerLinks = [
+  { label: 'Inicio', href: '/' },
+  { label: 'Propiedades', href: '/propiedades' },
+  { label: 'Nosotros', href: '/nosotros' },
+  { label: 'Invierte desde el extranjero', href: '/invertir-desde-el-extranjero' },
+  { label: 'Plan de referidos', href: '/referidos' },
+  { label: 'Contáctanos', href: '/contacto' },
+];
 const wa = 'https://wa.me/584122398253';
 const path = Astro.url.pathname;
 const isActive = (href: string) => path === href || path.startsWith(href + '/');
 ---
-<header class:list={['heronav', `heronav--${variant}`, minimal && 'heronav--minimal']}>
+<header class:list={['heronav', `heronav--${variant}`, minimal && 'heronav--minimal', scrollReveal && 'heronav--scroll-reveal']}>
   <div class="heronav-inner">
     {minimal ? (
       <div class="heronav-morph">
@@ -35,14 +45,21 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
           <img class="heronav-logo-img heronav-logo-colored" src="/brand/grupoglam-diamond-white.png" alt="Grupo Glam" width="384" height="410" />
           <img class="heronav-logo-img heronav-logo-dark" src="/brand/grupoglam-diamond-dark.png" alt="" aria-hidden="true" width="384" height="410" />
         </a>
-        <button id="gg-drawer-open" type="button" class="heronav-morph-burger" data-drawer-open aria-label="Abrir menú" aria-expanded="false" aria-controls="gg-drawer">
-          <span></span><span></span><span></span>
-        </button>
+        <!-- Estado final (tras pasar la barra de specs): hamburguesa + logo negro a su derecha. -->
+        <div class="heronav-morph-bar">
+          <button id="gg-drawer-open" type="button" class="heronav-morph-burger" data-drawer-open aria-label="Abrir menú" aria-expanded="false" aria-controls="gg-drawer">
+            <span></span><span></span><span></span>
+          </button>
+          <a href="/" class="heronav-morph-mark gg-logo-link" aria-label="Grupo Glam Inmobiliaria — inicio">
+            <img class="heronav-morph-mark-img heronav-morph-mark--dark" src="/brand/grupoglam-diamond-dark.png" alt="Grupo Glam" width="384" height="410" />
+            <img class="heronav-morph-mark-img heronav-morph-mark--white" src="/brand/grupoglam-diamond-white.png" alt="" aria-hidden="true" width="384" height="410" />
+          </a>
+        </div>
       </div>
     ) : (
       <Fragment>
         <div class="heronav-left">
-          {variant === 'hero' && (
+          {(variant === 'hero' || scrollReveal) && (
             <button id="gg-hero-drawer-open" type="button" class="heronav-hero-burger" data-drawer-open aria-label="Abrir menú" aria-expanded="false" aria-controls="gg-drawer">
               <span></span><span></span><span></span>
             </button>
@@ -61,7 +78,7 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
           <a href={wa} target="_blank" rel="noopener" class="heronav-wa">WhatsApp</a>
         </nav>
 
-        <button id="gg-menu-open" type="button" class="heronav-burger" aria-label="Abrir menú" aria-expanded="false">
+        <button type="button" class="heronav-burger" data-drawer-open aria-label="Abrir menú" aria-expanded="false" aria-controls="gg-drawer">
           <span></span><span></span><span></span>
         </button>
       </Fragment>
@@ -69,9 +86,11 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   </div>
 </header>
 
-{(minimal || variant === 'hero') && (
-  <!-- Drawer lateral (detalle de propiedad y home): se abre desde la izquierda, donde vive el
-       botón hamburguesa. Scrim + panel oscuro con los enlaces. En la home ocupa 30% (--home). -->
+{(
+  <!-- Drawer lateral ÚNICO y compartido en TODA la web (home, detalle, Nosotros, Contáctanos,
+       Propiedades…): mismo menú en todos lados, como el footer y la navbar. Se abre desde la
+       izquierda con cualquier hamburguesa ([data-drawer-open]). En la home ocupa 30% en
+       escritorio (--home); en móvil y el resto, un ancho usable. -->
   <div id="gg-drawer" class:list={['gg-drawer', !minimal && 'gg-drawer--home']} hidden>
     <div class="gg-drawer-scrim" data-drawer-close></div>
     <aside class="gg-drawer-panel" role="dialog" aria-modal="true" aria-label="Menú de navegación">
@@ -82,24 +101,12 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
         </button>
       </div>
       <nav class="gg-drawer-nav" aria-label="Principal">
-        {links.map((item) => (
+        {drawerLinks.map((item) => (
           <a href={item.href} class:list={['gg-drawer-link', isActive(item.href) && 'is-active']} aria-current={isActive(item.href) ? 'page' : undefined}>{item.label}</a>
         ))}
       </nav>
       <a href={wa} target="_blank" rel="noopener" class="gg-drawer-wa">WhatsApp</a>
     </aside>
-  </div>
-)}
-
-{!minimal && (
-  <!-- Menú móvil a pantalla completa (siempre oscuro) -->
-  <div id="gg-menu" class="heronav-menu" hidden>
-    <button id="gg-menu-close" type="button" class="heronav-menu-close" aria-label="Cerrar menú">✕</button>
-    <img src="/brand/grupoglam-diamond-white.png" alt="Grupo Glam" width="384" height="410" class="heronav-menu-logo" />
-    {links.map((item) => (
-      <a href={item.href} class="heronav-menu-link">{item.label}</a>
-    ))}
-    <a href={wa} target="_blank" rel="noopener" class="heronav-menu-wa">WhatsApp</a>
   </div>
 )}
 
@@ -190,20 +197,21 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   }
   .heronav-wa:active { transform: scale(0.97); }
 
+  /* Hamburguesa (3 líneas) UNIFICADA en toda la web: mismas líneas limpias que la de la home
+     (sin recuadro ni línea dorada corta). Caja de 44px para buen área táctil; líneas de 30px. */
   .heronav-burger {
     display: none;
     flex-direction: column;
     justify-content: center;
-    gap: 6px;
+    align-items: center;
+    gap: 5px;
     width: 44px; height: 44px;
-    padding: 11px;
+    padding: 0;
     background: transparent;
-    border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
-    border-radius: 2px;
+    border: 0;
     cursor: pointer;
   }
-  .heronav-burger span { height: 1.5px; width: 100%; display: block; background: currentColor; }
-  .heronav-burger span:last-child { width: 70%; background: #C9A46A; }
+  .heronav-burger span { display: block; width: 30px; height: 1.6px; background: currentColor; border-radius: 1px; }
 
   /* ---- Home (variante hero): hamburguesa + deslizamiento del logo al aparecer el fondo negro ----
      Sobre el hero: solo el logo en la esquina superior izquierda. Cuando la lámina clara cubre
@@ -260,6 +268,31 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   @media (prefers-reduced-motion: reduce) {
     .heronav--hero .heronav-left .heronav-logo { transition: none; }
     .heronav--hero .heronav-hero-burger { transition-property: opacity, visibility; }
+  }
+
+  /* ---- Variante SÓLIDA con revelado por scroll (página Propiedades) ----
+     El navbar arranca como el sólido normal (logo a la izquierda + enlaces). Al scrollear,
+     copia EXACTAMENTE el gesto de la home al cubrirse (sección "Inmuebles destacados"): el
+     logo se desliza a la derecha y, en su hueco, aparece la hamburguesa que despliega el
+     drawer lateral. Solo cambia de posición (transform) → compositado y fluido. */
+  .heronav--scroll-reveal .heronav-left .heronav-logo {
+    transition: transform .45s cubic-bezier(.4, 0, .1, 1);
+  }
+  @media (min-width: 881px) {
+    .heronav--scroll-reveal .heronav-hero-burger { display: flex; }
+    .heronav--scroll-reveal.is-scrolled .heronav-hero-burger {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(-50%) translateX(0);
+    }
+    .heronav--scroll-reveal.is-scrolled .heronav-left .heronav-logo {
+      transform: translateX(clamp(42px, 4vw, 54px));
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .heronav--scroll-reveal .heronav-left .heronav-logo { transition: none; }
+    .heronav--scroll-reveal .heronav-hero-burger { transition-property: opacity, visibility; }
   }
 
   .gg-logo-link:focus-visible,
@@ -358,67 +391,101 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   .heronav--solid .heronav-logo-brand { opacity: 1; }
 
   /* ---- Variante MINIMAL (solo detalle de propiedad) ----
-     Sin enlaces a la derecha: el logo y un botón hamburguesa comparten la MISMA celda de
-     una rejilla (se apilan) y hacen crossfade según el fondo bajo el navbar:
-       · sobre la foto (is-on-dark): logo blanco visible, hamburguesa oculta.
-       · cubierto por la lámina (is-on-light): logo se desvanece → hamburguesa (tinta) aparece.
-     El color de las líneas hereda del currentColor del navbar (tinta sobre la lámina clara). */
+     Coreografía por scroll (la conduce el script del detalle con .pd-logo-off / .pd-nav-on,
+     NO elementFromPoint). El logo y la barra final comparten la MISMA celda (se apilan):
+       · base (sobre la foto): solo el logo blanco arriba a la izquierda.
+       · .pd-logo-off (la lámina de specs llega arriba y lo cubre): el logo se desvanece.
+       · .pd-nav-on (la barra de specs ya pasó del todo): entran la hamburguesa + el logo
+         negro monocromo a su derecha, y acompañan el resto del recorrido. Sin fondo: esta
+         página es la única sin navbar con fondo. */
   .heronav--minimal .heronav-morph {
     display: grid;
     align-items: center;
     justify-items: start;
   }
   .heronav--minimal .heronav-morph > * { grid-area: 1 / 1; }
-  .heronav--minimal .heronav-morph-logo,
-  .heronav--minimal .heronav-morph-burger {
-    transition: opacity .35s ease, transform .35s ease, visibility .35s;
-  }
   /* El logo minimal solo se ve sobre la foto → siempre el diamante blanco (sin swap a oscuro). */
   .heronav--minimal .heronav-morph-logo .heronav-logo-dark { display: none; }
   .heronav--minimal .heronav-morph-logo .heronav-logo-colored { opacity: 1; }
+  .heronav--minimal .heronav-morph-logo {
+    transition: opacity .45s ease, transform .45s cubic-bezier(.23, 1, .32, 1), visibility .45s;
+  }
 
+  /* Barra final: hamburguesa (izq) + logo negro (der). Oculta hasta .pd-nav-on. */
+  .heronav--minimal .heronav-morph-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: clamp(13px, 1.3vw, 18px);
+    color: #14101C;                     /* líneas de la hamburguesa en tinta (sobre lámina clara) */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .45s ease, visibility .45s, color .4s ease;
+  }
   .heronav-morph-burger {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: flex-start;            /* líneas alineadas al borde izquierdo */
     gap: 5px;
-    width: 44px;
-    height: 44px;
-    padding: 11px;
-    margin-left: -11px;                 /* alinea las líneas con el borde izq. del logo */
+    width: 30px;
+    height: 24px;
+    padding: 0;
     background: transparent;
     border: 0;
     cursor: pointer;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transform: scale(.92);
   }
   .heronav-morph-burger span {
-    height: 1.6px;
-    width: 100%;
     display: block;
+    width: 30px;
+    height: 1.6px;
     background: currentColor;
     border-radius: 1px;
   }
+  .heronav-morph-mark { position: relative; display: inline-flex; height: clamp(28px, 3vw, 34px); }
+  .heronav-morph-mark-img { height: 100%; width: auto; display: block; transition: opacity .45s ease; }
+  /* La variante blanca se superpone a la oscura y se revela sobre fondo oscuro. */
+  .heronav-morph-mark--white { position: absolute; top: 0; left: 0; opacity: 0; }
 
-  /* Estado cubierto (lámina clara debajo): intercambio logo → hamburguesa. */
-  .heronav--minimal.is-on-light .heronav-morph-logo {
+  /* Estado: la lámina cubre el navbar → el logo blanco desaparece. */
+  .heronav--minimal.pd-logo-off .heronav-morph-logo {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transform: scale(.92);
+    transform: translateY(-6px);
   }
-  .heronav--minimal.is-on-light .heronav-morph-burger {
+  /* Estado: la barra de specs ya pasó → entran hamburguesa + logo negro (las 3 líneas salen
+     con un leve escalonado; el logo las sigue). */
+  .heronav--minimal.pd-nav-on .heronav-morph-bar {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transform: scale(1);
   }
+  .heronav--minimal .heronav-morph-burger span,
+  .heronav--minimal .heronav-morph-mark {
+    transform: translateY(-7px);
+    transition: transform .5s cubic-bezier(.23, 1, .32, 1);
+  }
+  .heronav--minimal.pd-nav-on .heronav-morph-burger span,
+  .heronav--minimal.pd-nav-on .heronav-morph-mark { transform: none; }
+  .heronav--minimal.pd-nav-on .heronav-morph-burger span:nth-child(1) { transition-delay: .04s; }
+  .heronav--minimal.pd-nav-on .heronav-morph-burger span:nth-child(2) { transition-delay: .11s; }
+  .heronav--minimal.pd-nav-on .heronav-morph-burger span:nth-child(3) { transition-delay: .18s; }
+  .heronav--minimal.pd-nav-on .heronav-morph-mark { transition-delay: .2s; }
+
+  /* Contraste adaptativo del estado final: cuando el navbar pasa sobre una banda oscura
+     (data-navtone="dark", p. ej. "Características"), la hamburguesa y el logo monocromo se
+     animan a BLANCO; sobre fondo claro vuelven a tinta. Lo conmuta el script del detalle con
+     .pd-on-dark; la transición vive en color/opacity (arriba). */
+  .heronav--minimal.pd-on-dark .heronav-morph-bar { color: #F6F3EC; }
+  .heronav--minimal.pd-on-dark .heronav-morph-mark--dark { opacity: 0; }
+  .heronav--minimal.pd-on-dark .heronav-morph-mark--white { opacity: 1; }
 
   @media (prefers-reduced-motion: reduce) {
     .heronav--minimal .heronav-morph-logo,
-    .heronav--minimal .heronav-morph-burger { transition-property: opacity, visibility; }
+    .heronav--minimal .heronav-morph-bar { transition-property: opacity, visibility; }
+    .heronav--minimal .heronav-morph-burger span,
+    .heronav--minimal .heronav-morph-mark { transition: none; transform: none; }
   }
 
   /* ---- Drawer lateral (menú del detalle) ---- */
@@ -440,11 +507,14 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   .gg-drawer-panel {
     position: absolute;
     top: 0; left: 0; bottom: 0;
-    width: min(86vw, 340px);
+    width: min(88vw, 380px);
     display: flex;
     flex-direction: column;
     padding: clamp(22px, 4vw, 36px) clamp(22px, 4vw, 34px);
-    background: #0B0A11;
+    /* Morado de la cobertura del hero (el que rodea al diamante del vídeo, #241A2E) con un
+       degradado oscuro MUY suave (solo un poco), en vez del casi-negro anterior (#0B0A11). */
+    background: radial-gradient(135% 85% at 50% 4%, #2A1F38 0%, #241A2E 48%, #1B1526 100%);
+    overflow-y: auto;                       /* con 6 enlaces, scroll si la pantalla es corta */
     box-shadow: 24px 0 60px -30px rgba(0, 0, 0, .7);
     /* Salida (base) más rápida que la entrada; curva de drawer iOS (Ionic). */
     transform: translateX(-100%);
@@ -452,8 +522,12 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
     will-change: transform;
   }
   .gg-drawer.is-open .gg-drawer-panel { transform: translateX(0); transition-duration: .34s; }
-  /* En la home el panel ocupa el 30% del ancho de pantalla (el móvil se afinará aparte). */
-  .gg-drawer--home .gg-drawer-panel { width: 30vw; }
+  /* Ancho ÚNICO para TODOS los drawers (home, detalle, Nosotros, etc.): en escritorio UN TERCIO
+     de la pantalla (33.33vw); en móvil el ancho usable base de arriba. El cap alto deja que el
+     tercio se vea completo también en monitores anchos. */
+  @media (min-width: 881px) {
+    .gg-drawer-panel { width: clamp(320px, 33.333vw, 680px); }
+  }
   .gg-drawer-top {
     display: flex;
     align-items: center;
@@ -461,36 +535,57 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
     margin-bottom: clamp(30px, 6vw, 52px);
   }
   .gg-drawer-logo { width: 60px; height: auto; display: block; }
+  /* Cierre: botón circular con filete bronce que se RELLENA en hover mientras el aspa gira 90°
+     (micro-interacción cuidada; nada de la "X" pelada por defecto). */
   .gg-drawer-close {
-    width: 44px; height: 44px;
+    width: 42px; height: 42px;
     display: grid;
     place-items: center;
     background: transparent;
-    border: 0;
+    border: 1px solid color-mix(in srgb, #C9A46A 42%, transparent);
+    border-radius: 999px;
     color: #F6F3EC;
     cursor: pointer;
-    transition: color .2s ease, transform .16s ease;
+    transition:
+      background .35s cubic-bezier(.23, 1, .32, 1),
+      border-color .35s cubic-bezier(.23, 1, .32, 1),
+      color .35s cubic-bezier(.23, 1, .32, 1),
+      transform .45s cubic-bezier(.23, 1, .32, 1);
   }
-  .gg-drawer-close:hover { color: #C9A46A; }
-  .gg-drawer-close:active { transform: scale(.95); }
+  .gg-drawer-close:hover {
+    background: #C9A46A;
+    border-color: #C9A46A;
+    color: #0B0A11;
+    transform: rotate(90deg);
+  }
+  .gg-drawer-close:active { transform: rotate(90deg) scale(.9); }
+  @media (prefers-reduced-motion: reduce) {
+    .gg-drawer-close { transition: background .3s ease, border-color .3s ease, color .3s ease; }
+    .gg-drawer-close:hover, .gg-drawer-close:active { transform: none; }
+  }
   .gg-drawer-nav {
     display: flex;
     flex-direction: column;
-    gap: clamp(18px, 3vw, 26px);
-    padding-left: clamp(22px, 2.6vw, 34px);
+    gap: clamp(16px, 2.6vw, 24px);
+    /* Enlaces corridos un poco más a la derecha (dentro del panel). */
+    padding-left: clamp(34px, 4.4vw, 54px);
   }
+  /* Enlaces del menú: EXACTAMENTE la tipografía de los títulos de tarjeta de Contáctanos
+     (.gg-card-title) → Fraunces (display), peso 400, caja natural. El hover/activo COLOREA el
+     botón en dorado (antes se subrayaba con un filete dorado fino). */
   .gg-drawer-link {
     width: fit-content;
     color: #F6F3EC;
     text-decoration: none;
+    font-family: var(--font-display);
     font-weight: 400;
-    font-size: clamp(1.4rem, 4vw, 1.7rem);
-    letter-spacing: .01em;
-    box-shadow: inset 0 -1px 0 rgba(201, 164, 106, 0);
-    transition: box-shadow .3s ease, color .3s ease;
+    font-size: clamp(1.5rem, 4.4vw, 1.9rem);
+    letter-spacing: -.01em;
+    text-transform: uppercase;
+    transition: color .3s ease;
   }
   .gg-drawer-link:hover,
-  .gg-drawer-link.is-active { box-shadow: inset 0 -1px 0 rgba(201, 164, 106, .9); }
+  .gg-drawer-link.is-active { color: #C9A46A; }
   .gg-drawer-wa {
     margin-top: auto;                    /* ancla el botón al fondo del panel */
     display: inline-flex;
@@ -517,84 +612,16 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   @media (prefers-reduced-motion: reduce) {
     .gg-drawer-panel { transition: none; }
   }
-
-  /* ---- Menú móvil ---- */
-  .heronav-menu {
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 34px;
-    background: rgba(11, 10, 17, .96);
-    backdrop-filter: blur(6px);
-    font-family: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
-    animation: gg-fade .3s ease both;
-  }
-  .heronav-menu[hidden] { display: none; }
-  .heronav-menu-close {
-    position: absolute;
-    top: 26px; right: clamp(20px, 5vw, 54px);
-    width: 44px; height: 44px;
-    background: transparent;
-    border: 1px solid rgba(246, 243, 236, .28);
-    border-radius: 2px;
-    color: #F6F3EC;
-    font-size: 20px; line-height: 1;
-    cursor: pointer;
-  }
-  .heronav-menu-logo { width: 76px; height: auto; display: block; margin-bottom: 6px; }
-  .heronav-menu-link {
-    color: #F6F3EC;
-    text-decoration: none;
-    font-weight: 300;
-    font-size: 1.9rem;
-    letter-spacing: .02em;
-  }
-  .heronav-menu-wa {
-    margin-top: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    color: #100E17;
-    text-decoration: none;
-    background: #C9A46A;
-    border-radius: 2px;
-    padding: 14px 30px;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-  }
-  .heronav-menu-close:focus-visible,
-  .heronav-menu-link:focus-visible,
-  .heronav-menu-wa:focus-visible { outline: 2px solid #C9A46A; outline-offset: 4px; }
 </style>
-
-<script>
-  const openBtn = document.getElementById('gg-menu-open');
-  const closeBtn = document.getElementById('gg-menu-close');
-  const menu = document.getElementById('gg-menu');
-  const setOpen = (open: boolean) => {
-    if (!menu) return;
-    menu.hidden = !open;
-    openBtn?.setAttribute('aria-expanded', String(open));
-  };
-  openBtn?.addEventListener('click', () => setOpen(true));
-  closeBtn?.addEventListener('click', () => setOpen(false));
-  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
-</script>
 
 <script>
   // Drawer lateral (solo detalle de propiedad · variante minimal). Abre/cierra con animación
   // interrumpible (clases + transición CSS), bloquea el scroll del body, mueve el foco al
   // cierre, lo devuelve al abridor, atrapa Tab dentro del panel y cierra con Esc / scrim / enlace.
   const drawer = document.getElementById('gg-drawer');
-  // Múltiples abridores: la home (#gg-hero-drawer-open) y el detalle de propiedad
-  // (#gg-drawer-open), ambos con [data-drawer-open]. Recordamos el último para devolverle el foco.
+  // Drawer ÚNICO compartido por toda la web. Lo abre cualquier hamburguesa [data-drawer-open]:
+  // la de la home (#gg-hero-drawer-open), la del detalle (#gg-drawer-open) y la hamburguesa móvil
+  // (.heronav-burger) del resto de páginas. Recordamos el último abridor para devolverle el foco.
   const drawerOpeners = Array.from(
     document.querySelectorAll<HTMLElement>('[data-drawer-open]')
   );
@@ -645,7 +672,7 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
   // CENTRO del navbar: elementFromPoint respeta el apilamiento del efecto "scroll-over" y
   // devuelve la banda que está DELANTE (la que realmente se ve). Con eso decidimos si el
   // navbar debe ir claro (sobre oscuro) u oscuro (sobre claro). rAF-throttled → sin jank.
-  const heronav = document.querySelector('.heronav--hero, .heronav--overlay');
+  const heronav = document.querySelector('.heronav--hero, .heronav--overlay:not(.heronav--minimal)');
   if (heronav instanceof HTMLElement) {
     const inner = heronav.querySelector('.heronav-inner');
     let ticking = false;
@@ -657,22 +684,33 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
       const ref = inner instanceof HTMLElement ? inner : heronav;
       const box = ref.getBoundingClientRect();
       const x = Math.round(window.innerWidth / 2);
-      // Punto de muestreo vertical. Para el hero el navbar es más delgado que antes, pero el
-      // fondo debe aparecer con el MISMO timing de siempre → muestreamos en el centro del navbar
-      // ORIGINAL (más alto), desacoplado de su altura actual. clamp() replica el CSS previo
+      // Franja vertical que ocupa el navbar (de su borde superior al inferior). Para el hero el
+      // navbar es más delgado que antes, pero el cambio debe seguir el MISMO timing de siempre →
+      // medimos sobre la altura del navbar ORIGINAL (más alto). clamp() replica el CSS previo
       // (padding vertical clamp(20,3.4vw,34) + logo clamp(30,3.4vw,38)). Para 'overlay' se usa
-      // el centro real del navbar (su altura no cambió).
+      // la caja real del navbar (su altura no cambió).
       const clampPx = (min: number, vw: number, max: number) =>
         Math.min(Math.max(min, (vw / 100) * window.innerWidth), max);
-      const y = isHeroNav
-        ? Math.round(clampPx(20, 3.4, 34) + clampPx(30, 3.4, 38) / 2)
-        : Math.round(box.top + box.height / 2);
-      // El header tiene pointer-events:none (sus enlaces no caen en el centro), así que
-      // elementFromPoint atraviesa el navbar y devuelve la banda que hay debajo.
-      const hit = document.elementFromPoint(x, y);
-      const band = hit ? hit.closest('[data-navtone]') : null;
-      // Sin banda (o por encima de todo) → asumimos oscuro (hero) → navbar claro.
-      const dark = !band || band.getAttribute('data-navtone') !== 'light';
+      const top = isHeroNav ? 2 : Math.round(box.top + 2);
+      const bottom = isHeroNav
+        ? Math.round(clampPx(20, 3.4, 34) * 2 + clampPx(30, 3.4, 38))
+        : Math.round(box.bottom - 2);
+      // Muestreamos VARIOS puntos a lo alto del navbar (no solo el centro). Regla: si CUALQUIER
+      // punto cae sobre una banda clara, el navbar conserva su fondo oscuro sólido (legible sobre
+      // claro y sobre oscuro). Solo "desaparece" (transparente) cuando TODO el navbar entra por
+      // completo en una banda oscura → ya no se transparenta cuando apenas la mitad ha entrado y
+      // la otra mitad sigue sobre el fondo claro de la sección anterior (perdía contraste).
+      // El header tiene pointer-events:none (sus enlaces no caen en el centro x), así que
+      // elementFromPoint atraviesa el navbar y devuelve la banda que hay debajo en cada punto.
+      const ys = [top, Math.round((top + bottom) / 2), bottom];
+      let anyLight = false;
+      for (const y of ys) {
+        const hit = document.elementFromPoint(x, y);
+        const band = hit ? hit.closest('[data-navtone]') : null;
+        if (band && band.getAttribute('data-navtone') === 'light') { anyLight = true; break; }
+      }
+      // Sin banda clara bajo ningún punto (incl. hero, por encima de todo) → oscuro → navbar claro.
+      const dark = !anyLight;
       heronav.classList.toggle('is-on-dark', dark);
       heronav.classList.toggle('is-on-light', !dark);
     };
@@ -684,5 +722,28 @@ const isActive = (href: string) => path === href || path.startsWith(href + '/');
     addEventListener('resize', onScroll, { passive: true });
     addEventListener('load', apply);
     apply();
+  }
+
+  // Revelado por scroll del navbar sólido (página Propiedades): al bajar, añade .is-scrolled
+  // → el logo desliza y aparece la hamburguesa del drawer (mismo gesto que la home en
+  // "Inmuebles destacados"). Inicialmente, sin scroll, queda como el sólido de siempre.
+  // rAF-throttled (mismo patrón que el contraste adaptativo); histéresis mínima para no
+  // parpadear en el umbral.
+  const srNav = document.querySelector('.heronav--scroll-reveal');
+  if (srNav instanceof HTMLElement) {
+    let srTicking = false;
+    const srApply = () => {
+      srTicking = false;
+      const y = window.scrollY || document.documentElement.scrollTop;
+      const on = srNav.classList.contains('is-scrolled');
+      // Umbral asimétrico: activa a 28px, desactiva a 6px (evita jitter al borde del hero).
+      if (!on && y > 28) srNav.classList.add('is-scrolled');
+      else if (on && y < 6) srNav.classList.remove('is-scrolled');
+    };
+    const srOnScroll = () => {
+      if (!srTicking) { srTicking = true; requestAnimationFrame(srApply); }
+    };
+    addEventListener('scroll', srOnScroll, { passive: true });
+    srApply();
   }
 </script>

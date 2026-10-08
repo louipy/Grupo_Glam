@@ -13,37 +13,97 @@ const reputacion = {
 };
 
 // PLACEHOLDER: reseñas reales (nombre + zona + cita). Se muestran como tarjetas del carrusel.
+// img: PLACEHOLDER — imágenes recicladas de /destacados (demo) solo para visualizar el
+// carrusel y su scroll; se sustituirán por las fotos reales de cada cliente.
 const testimonios = [
   {
     name: 'María Alejandra B.',
     context: 'Los Palos Grandes',
     quote: 'Llevábamos más de un año con el apartamento publicado sin una sola oferta seria. Grupo Glam lo vendió en menos de tres meses, y por encima del precio que esperábamos.',
+    img: '/destacados/home/los-palos-grandes-interior-1280.jpg',
   },
   {
     name: 'Ricardo Estévez',
     context: 'La Castellana',
     quote: 'El acompañamiento fue impecable de principio a fin. Cada visita llegaba precalificada; no perdimos tiempo con curiosos.',
+    img: '/destacados/home/la-castellana-jardin-1280.jpg',
   },
   {
     name: 'Carolina Machado',
     context: 'Altamira',
     quote: 'Compramos desde el exterior confiando en sus videos y su asesoría. La propiedad resultó tal cual la mostraron.',
+    img: '/destacados/home/altamira-terraza-1280.jpg',
   },
 ];
 
 // Estrella (24×24). Cinco adyacentes en un viewBox 120×24 → recortar al 90% = 4,5 de 5.
 const starPath = 'M12 1 L14.47 8.6 L22.46 8.6 L16 13.3 L18.47 20.9 L12 16.2 L5.53 20.9 L8 13.3 L1.54 8.6 L9.53 8.6 Z';
 const starsX = [0, 24, 48, 72, 96];
+
+// Reseñas ESCRITAS para el slide automático (como las de Google, en estilo de marca).
+// PLACEHOLDER: sustituir por las reseñas reales del perfil de Google Business.
+const reviews = [
+  { name: 'Gabriela Mendoza', context: 'Chacao', when: 'hace 2 semanas', stars: 5,
+    text: 'Vendieron mi apartamento más rápido de lo que imaginaba y con una atención impecable. Cada paso explicado con total claridad.' },
+  { name: 'José Luis Paredes', context: 'Las Mercedes', when: 'hace 1 mes', stars: 5,
+    text: 'Profesionales de verdad. Precalifican a cada interesado, así que solo recibí visitas serias y cerramos sin sobresaltos.' },
+  { name: 'Andreína Rangel', context: 'El Hatillo', when: 'hace 3 meses', stars: 5,
+    text: 'Compré desde Madrid confiando en sus videos y su asesoría legal. Todo resultó tal cual me lo mostraron, cero sorpresas.' },
+  { name: 'Eduardo Villamizar', context: 'Sebucán', when: 'hace 5 días', stars: 4,
+    text: 'Muy buen acompañamiento y transparencia en la negociación. La documentación avanzó más rápido de lo que esperaba.' },
+  { name: 'Patricia Golindano', context: 'La Castellana', when: 'hace 2 meses', stars: 5,
+    text: 'Nos guiaron con paciencia en cada trámite. Se nota la experiencia y el respaldo legal detrás de cada operación.' },
+];
+// Tonos del avatar (inicial): set sobrio afín a la marca, variado para distinguir a cada autor.
+const avatarColors = ['#B4884E', '#2E4034', '#5A4632', '#3A4A5A', '#8A5A3C'];
 ---
 <section class="tst bg-[var(--color-lino)]" aria-labelledby="tst-title">
   <div class="tst-wrap">
-    <header class="tst-head">
-      <h2 id="tst-title" class="tst-title">Lo que dicen quienes ya confiaron</h2>
-    </header>
-
     <div class="tst-grid">
-      <!-- Riel izquierdo: reputación de Google (logo monocromo + estrellas doradas 4,5/5) -->
+      <!-- Riel izquierdo: título + reputación de Google (logo monocromo + estrellas 4,5/5) + CTA -->
       <div class="tst-review">
+        <h2 id="tst-title" class="tst-title">Que te lo cuenten quienes ya confiaron</h2>
+
+        <!-- Slide automático de reseñas escritas (estilo Google, lenguaje de marca). El track
+             se desplaza solo; pausa al hover/focus; los puntos permiten saltar. Ver script. -->
+        <div class="tst-reviews" aria-roledescription="carrusel" aria-label="Reseñas de clientes en Google">
+          <div class="tst-reviews-viewport">
+            <div class="tst-reviews-track" data-reviews-track>
+              {reviews.map((r, i) => (
+                <figure class="tst-rev" role="group" aria-roledescription="reseña" aria-label={`Reseña ${i + 1} de ${reviews.length}`}>
+                  <div class="tst-rev-head">
+                    <span class="tst-rev-avatar" style={`--c:${avatarColors[i % avatarColors.length]}`} aria-hidden="true">{r.name.charAt(0)}</span>
+                    <span class="tst-rev-id">
+                      <span class="tst-rev-name">{r.name}</span>
+                      <span class="tst-rev-meta">{r.context} · {r.when}</span>
+                    </span>
+                    <svg class="tst-rev-src" viewBox="0 0 24 24" role="img" aria-label="Reseña publicada en Google">
+                      <path d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.88c2.27-2.09 3.58-5.17 3.58-8.81z"/>
+                      <path d="M12 24c3.24 0 5.96-1.08 7.94-2.92l-3.88-3c-1.08.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.71-4.95H1.28v3.09A12 12 0 0 0 12 24z"/>
+                      <path d="M5.29 14.28a7.2 7.2 0 0 1 0-4.56V6.63H1.28a12 12 0 0 0 0 10.74z"/>
+                      <path d="M12 4.75c1.76 0 3.34.6 4.58 1.79l3.44-3.44C17.95 1.16 15.24 0 12 0A12 12 0 0 0 1.28 6.63l4.01 3.09C6.23 6.86 8.88 4.75 12 4.75z"/>
+                    </svg>
+                  </div>
+                  <span class="tst-rev-stars" style={`--rating:${(r.stars / 5) * 100}%`} role="img" aria-label={`${r.stars} de 5 estrellas`}>
+                    <svg class="tst-rev-stars-svg tst-rev-stars-base" viewBox="0 0 120 24" aria-hidden="true">
+                      {starsX.map((x) => (<path transform={`translate(${x})`} d={starPath} />))}
+                    </svg>
+                    <svg class="tst-rev-stars-svg tst-rev-stars-fill" viewBox="0 0 120 24" aria-hidden="true">
+                      {starsX.map((x) => (<path transform={`translate(${x})`} d={starPath} />))}
+                    </svg>
+                  </span>
+                  <p class="tst-rev-text">{`“${r.text}”`}</p>
+                </figure>
+              ))}
+            </div>
+          </div>
+          <div class="tst-reviews-ctrl">
+            <button type="button" class="tst-reviews-arrow" data-reviews-next aria-label="Ver la siguiente reseña">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+
         <div class="tst-review-rep">
         <a
           class="tst-review-link"
@@ -85,19 +145,12 @@ const starsX = [0, 24, 48, 72, 96];
         <div
           class="tst-track"
           role="list"
-          tabindex="0"
-          aria-label="Testimonios de clientes. Usa las flechas o desplázate para navegar."
+          aria-label="Testimonios de clientes"
         >
           {testimonios.map((t) => (
             <article class="tst-card" role="listitem">
-              <div class="tst-card-ph" aria-hidden="true">
-                <svg viewBox="0 0 24 24" class="tst-card-ph-icon">
-                  <rect x="3" y="5" width="18" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
-                  <circle cx="8.5" cy="10" r="1.5" fill="currentColor"/>
-                  <path d="M5 17l4-4 3 2.5 3-3.5 4 5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
-                </svg>
-                <span>Fotografía del cliente</span>
-              </div>
+              <!-- PLACEHOLDER: imagen reciclada de /destacados para ver el carrusel. -->
+              <img class="tst-card-img" src={t.img} alt="" loading="lazy" decoding="async" />
               <div class="tst-card-overlay">
                 <span class="tst-card-tag">{t.name} · {t.context}</span>
                 <p class="tst-card-quote">{`“${t.quote}”`}</p>
@@ -127,11 +180,10 @@ const starsX = [0, 24, 48, 72, 96];
     border-top: 1px solid color-mix(in srgb, var(--color-bronce) 22%, transparent);
   }
 
-  .tst-head { margin-bottom: clamp(40px, 5.5vw, 76px); }
-  /* En VERSALES, conservando exactamente el mismo espacio/envoltura de antes (varias líneas):
-     en una sola línea se veía raro. */
+  /* Título dentro del riel izquierdo, encima del logo de Google. En versales. */
   .tst-title {
     margin: 0;
+    font-family: 'Playfair Display Variable', 'Playfair Display', Georgia, serif;
     font-weight: 300;
     font-size: clamp(1.75rem, 3vw, 2.5rem);
     line-height: 1.12;
@@ -139,6 +191,8 @@ const starsX = [0, 24, 48, 72, 96];
     text-transform: uppercase;
     color: var(--color-tinta);
     max-width: 22ch;
+    /* Ligero corrimiento a la derecha (solo el título; el bloque de reseña queda igual). */
+    margin-left: clamp(8px, 2vw, 28px);
   }
 
   /* Rejilla: riel izquierdo (reputación Google) + carrusel a la derecha.
@@ -162,27 +216,133 @@ const starsX = [0, 24, 48, 72, 96];
     }
   }
 
-  /* El titular conserva su alineación de margen con "Quiénes somos" (no va full-bleed),
-     pero se recuesta un poco más a la izquierda en pantallas anchas. */
-  .tst-head { margin-left: clamp(-180px, calc((1280px - 100vw) / 2), 0px); }
+  /* ---- Slide automático de reseñas escritas (estilo Google en lenguaje de marca) ---- */
+  .tst-reviews {
+    /* Centrado en el espacio del riel (igual que el bloque de Google y el botón). */
+    align-self: center;
+    width: 100%;
+    max-width: 420px;
+    margin-inline: auto;
+  }
+  .tst-reviews-viewport { overflow: hidden; border-radius: 3px; }
+  .tst-reviews-track {
+    display: flex;
+    will-change: transform;
+    transition: transform .6s cubic-bezier(.23, 1, .32, 1);
+  }
+  .tst-rev {
+    flex: 0 0 100%;
+    min-width: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(11px, 1.3vw, 15px);
+    padding: clamp(18px, 2vw, 24px);
+    background: color-mix(in srgb, var(--color-papel) 72%, #fff);
+    border: 1px solid color-mix(in srgb, var(--color-bronce) 20%, transparent);
+    border-radius: 3px;
+  }
+  .tst-rev-head { display: flex; align-items: center; gap: 12px; }
+  .tst-rev-avatar {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--c, var(--color-bronce));
+    color: #F5F3EE;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .tst-rev-id { display: flex; flex-direction: column; min-width: 0; margin-right: auto; }
+  .tst-rev-name {
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: .01em;
+    color: var(--color-tinta);
+  }
+  .tst-rev-meta {
+    margin-top: 2px;
+    font-size: 11.5px;
+    letter-spacing: .02em;
+    color: var(--color-humo);
+  }
+  /* "G" de Google (colores originales) → señala el origen de la reseña, discreto. */
+  .tst-rev-src { flex: 0 0 auto; width: 17px; height: 17px; display: block; }
+  .tst-rev-src path:nth-child(1) { fill: #4285F4; }
+  .tst-rev-src path:nth-child(2) { fill: #34A853; }
+  .tst-rev-src path:nth-child(3) { fill: #FBBC05; }
+  .tst-rev-src path:nth-child(4) { fill: #EA4335; }
+  /* Estrellas por reseña (mismo amarillo real de Google; vacías en gris claro). */
+  .tst-rev-stars { position: relative; display: inline-block; line-height: 0; }
+  .tst-rev-stars-svg { display: block; height: 15px; width: auto; }
+  .tst-rev-stars-base { color: #DADCE0; fill: currentColor; }
+  .tst-rev-stars-fill {
+    position: absolute;
+    inset: 0;
+    color: #FBBC04;
+    fill: currentColor;
+    clip-path: inset(0 calc(100% - var(--rating)) 0 0);
+  }
+  .tst-rev-text {
+    margin: 0;
+    font-weight: 300;
+    font-size: clamp(.92rem, 1vw, 1rem);
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--color-tinta) 86%, transparent);
+    text-wrap: pretty;
+  }
+  /* Control: una sola flecha discreta para pasar a la siguiente reseña (aunque sea automática). */
+  .tst-reviews-ctrl {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: clamp(12px, 1.4vw, 16px);
+  }
+  .tst-reviews-arrow {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: color-mix(in srgb, var(--color-tinta) 42%, transparent);
+    cursor: pointer;
+    transition: color .3s ease, transform .25s cubic-bezier(.23, 1, .32, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tst-reviews-arrow:hover { color: var(--color-bronce); transform: translateX(3px); }
+  }
+  .tst-reviews-arrow:active { transform: translateX(1px) scale(.95); }
+  .tst-reviews-arrow:focus-visible { outline: 2px solid var(--color-bronce); outline-offset: 3px; border-radius: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    .tst-reviews-track { transition: none; }
+    .tst-reviews-arrow { transition: color .3s ease; }
+    .tst-reviews-arrow:hover, .tst-reviews-arrow:active { transform: none; }
+  }
 
-  /* ---- Riel: logo de Google + estrellas ---- */
+  /* ---- Riel: título + logo de Google + estrellas ---- */
   /* Estira el riel a lo alto de la fila y empuja su contenido al fondo, de modo que la base
      del logo/estrellas quede a la misma altura que la parte inferior del placeholder. */
+  /* Riel izquierdo apilado desde arriba y alineado a la izquierda: título, luego el
+     bloque de reputación de Google (logo + estrellas + nota) justo debajo, y el CTA. */
   .tst-review {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    align-self: stretch;
-    justify-content: flex-end;
-    /* Separación pedida: sube el bloque logo+estrellas ~2 cm y deja el botón debajo. */
-    gap: 2cm;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: clamp(22px, 2.6vw, 34px);
   }
-  /* Agrupa logo + estrellas + nota para moverlos como una unidad, sin alterar su spacing. */
+  /* Agrupa logo + estrellas + nota. Centrado horizontalmente (junto al botón) y bajado un
+     poco más respecto al título, que se queda arriba a la izquierda. */
   .tst-review-rep {
     display: flex;
     flex-direction: column;
     align-items: center;
+    align-self: center;
+    margin-top: clamp(18px, 3.5vw, 48px);
   }
   .tst-review-link {
     display: inline-flex;
@@ -204,8 +364,12 @@ const starsX = [0, 24, 48, 72, 96];
     width: auto;
     height: clamp(84px, 10vw, 140px);
   }
-  /* Monocromo tinta (negro), como el muro de aliados: sobrescribe los fills de marca. */
-  .tst-review-logo path { fill: var(--color-tinta); }
+  /* Colores originales de Google: los 4 trazos del logo van en orden azul · verde ·
+     amarillo · rojo. */
+  .tst-review-logo path:nth-child(1) { fill: #4285F4; }
+  .tst-review-logo path:nth-child(2) { fill: #34A853; }
+  .tst-review-logo path:nth-child(3) { fill: #FBBC05; }
+  .tst-review-logo path:nth-child(4) { fill: #EA4335; }
 
   /* Estrellas (4,5/5) con el amarillo real de Google; vacías en gris claro (como reseñas). */
   .tst-stars {
@@ -235,10 +399,11 @@ const starsX = [0, 24, 48, 72, 96];
      Animación sutil y limpia (color + leve elevación); feedback físico al presionar. */
   .tst-review-cta {
     display: inline-flex;
+    align-self: center;
     align-items: center;
     font-family: inherit;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 14px;
     letter-spacing: .04em;
     line-height: 1;
     white-space: nowrap;
@@ -247,7 +412,7 @@ const starsX = [0, 24, 48, 72, 96];
     background: transparent;
     border: 1px solid color-mix(in srgb, var(--color-bronce) 52%, transparent);
     border-radius: 2px;
-    padding: 12px 20px;
+    padding: 16px 30px;
     cursor: pointer;
     transition:
       background-color 240ms cubic-bezier(0.23, 1, 0.32, 1),
@@ -275,40 +440,72 @@ const starsX = [0, 24, 48, 72, 96];
   /* Ancho acotado + empujado a la derecha de la sección: el placeholder es más pequeño y
      muestra UNA sola imagen a la vez (la tarjeta llena el 100% de este carril, sin que
      asomen las vecinas). */
-  .tst-carousel { position: relative; min-width: 0; width: 100%; }
+  /* Carril de scroll horizontal nativo: el usuario pasa de una reseña a otra desplazando.
+     La rueda del ratón se reconduce a este eje SOLO mientras el cursor está encima (ver
+     script); en táctil funciona el swipe nativo. El scroll-snap asienta cada foto. */
+  .tst-carousel {
+    position: relative;
+    min-width: 0;
+    width: 100%;
+    /* Container query: las tarjetas se dimensionan contra el ancho visible de este carril. */
+    container-type: inline-size;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;            /* Firefox: sin barra */
+  }
+  .tst-carousel::-webkit-scrollbar { display: none; }  /* WebKit: sin barra */
+  /* Filmstrip: las tarjetas van en fila dentro del carril desplazable. max-content hace que
+     el track crezca para contener las 3 fotos a ancho completo → overflow horizontal real. */
   .tst-track {
     display: flex;
-    gap: clamp(16px, 1.6vw, 24px);
-    overflow-x: auto;
-    /* Proximity (no mandatory): el rueda→horizontal desliza libre y atado al scroll, y al
-       soltar asienta suave en la tarjeta más cercana sin pelear con el desplazamiento. */
-    scroll-snap-type: x proximity;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    /* Aire lateral para que asome la tarjeta vecina sin recortarse contra los bordes. */
-    padding-inline: 2px;
-    padding-bottom: 2px;
-  }
-  .tst-track::-webkit-scrollbar { display: none; }
-  /* Foco de teclado: reemplaza el acceso que daban las flechas (←/→ desplazan el carril). */
-  .tst-track:focus-visible {
-    outline: 2px solid var(--color-bronce);
-    outline-offset: 4px;
-    border-radius: 4px;
+    width: max-content;
   }
 
   .tst-card {
     position: relative;
-    /* Una sola foto por vista: la tarjeta llena el 100% del carril (ya acotado y alineado a
-       la derecha), así se muestra una imagen a la vez y las flechas pasan de una a otra. */
-    flex: 0 0 100%;
+    /* Una sola foto por vista: cada tarjeta ocupa exactamente el ancho visible del carril
+       (100cqw = container query width), así se muestra una imagen a la vez sin que asomen las
+       vecinas. Es también lo que crea el overflow (3 × ancho) que hace desplazable el carril. */
+    flex: 0 0 100cqw;
+    scroll-snap-align: start;
     aspect-ratio: 16 / 9;
-    scroll-snap-align: center;
     border-radius: 3px;
     overflow: hidden;
     isolation: isolate;
     /* Placeholder de foto: degradado oscuro (mimetiza un retrato) hasta cargar las reales. */
     background: linear-gradient(158deg, #2b2732 0%, #16131c 100%);
+  }
+  /* Imagen de la tarjeta (placeholder reciclado): cubre el carril bajo el degradado/overlay. */
+  .tst-card-img {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .6s cubic-bezier(.23, 1, .32, 1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tst-card:hover .tst-card-img { transform: scale(1.04); }
+  }
+
+  /* Reveal al entrar la sección en viewport: cada tarjeta aparece con un leve fundido +
+     desplazamiento, escalonadas. Solo opacity/transform (compositado). Sin JS/IO o con
+     reduced-motion → se muestran de una (clase .in la pone el script, o el fallback). */
+  .tst-card {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity .7s cubic-bezier(.23, 1, .32, 1), transform .7s cubic-bezier(.23, 1, .32, 1);
+  }
+  .tst-track.in .tst-card { opacity: 1; transform: none; }
+  .tst-track.in .tst-card:nth-child(2) { transition-delay: 80ms; }
+  .tst-track.in .tst-card:nth-child(3) { transition-delay: 160ms; }
+  @media (prefers-reduced-motion: reduce) {
+    .tst-card { opacity: 1; transform: none; transition: none; }
+    .tst-card-img { transition: none; }
   }
   .tst-card-ph {
     position: absolute;
@@ -366,30 +563,111 @@ const starsX = [0, 24, 48, 72, 96];
 </style>
 
 <script>
-  // Rueda/scroll dentro del placeholder → desplazamiento horizontal del carril, atado 1:1
-  // al gesto del usuario (sin autoplay, sin inercia añadida). En los extremos soltamos el
-  // scroll para que la página siga corriendo con normalidad (no atrapamos al usuario).
-  document.querySelectorAll<HTMLElement>('.tst-track').forEach((track) => {
-    track.addEventListener(
-      'wheel',
-      (e) => {
-        // El gesto horizontal nativo (trackpad) ya funciona: no lo tocamos.
-        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+  // Las fotos SOLO se mueven cuando el usuario hace scroll con el cursor ENCIMA del carril.
+  // En vez de reconducir el scroll píxel a píxel (que peleaba con el snap y volvía lento el
+  // scroll de la página), cada GESTO de rueda avanza UNA reseña con desplazamiento suave:
+  //  · se intercepta el scroll (preventDefault) SOLO cuando hay una tarjeta siguiente;
+  //  · en el primer/último extremo NO se toca → el scroll pasa a la página y esta baja/sube
+  //    con fluidez (adiós al "lagaso").
+  // En táctil funciona el swipe nativo del carril; el scroll nativo mantiene el índice al día.
+  (function () {
+    const carousel = document.querySelector<HTMLElement>('.tst-carousel');
+    if (!carousel) return;
+    const cards = Array.from(carousel.querySelectorAll<HTMLElement>('.tst-card'));
+    if (cards.length <= 1) return;
 
-        const max = track.scrollWidth - track.clientWidth;
-        if (max <= 0) return; // nada que desplazar
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let index = 0;
+    let cooldown = false;
 
-        const atStart = track.scrollLeft <= 0;
-        const atEnd = track.scrollLeft >= max - 1;
-        const forward = e.deltaY > 0;
+    const goTo = (i: number) => {
+      index = Math.min(Math.max(i, 0), cards.length - 1);
+      carousel.scrollTo({ left: index * carousel.clientWidth, behavior: reduce ? 'auto' : 'smooth' });
+    };
 
-        // Borde alcanzado en la dirección del gesto → dejar pasar el scroll a la página.
-        if ((forward && atEnd) || (!forward && atStart)) return;
+    carousel.addEventListener('wheel', (e: WheelEvent) => {
+      // Eje dominante: ruedas verticales mandan deltaY; trackpads horizontales, deltaX.
+      const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (!delta) return;
+      const next = index + (delta > 0 ? 1 : -1);
+      if (next < 0 || next >= cards.length) return;   // extremo → deja pasar a la página
+      e.preventDefault();
+      if (cooldown) return;                            // una tarjeta por gesto, sin saltos múltiples
+      cooldown = true;
+      goTo(next);
+      setTimeout(() => { cooldown = false; }, reduce ? 0 : 420);
+    }, { passive: false });
 
-        e.preventDefault();
-        track.scrollLeft += e.deltaY;
-      },
-      { passive: false },
-    );
-  });
+    // Si el usuario desliza a mano (táctil) mantenemos el índice sincronizado (rAF-throttled).
+    let raf = 0;
+    carousel.addEventListener('scroll', () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        index = Math.round(carousel.scrollLeft / carousel.clientWidth);
+      });
+    }, { passive: true });
+
+    addEventListener('resize', () => goTo(index), { passive: true });
+  })();
+
+  // Reveal escalonado de las tarjetas al entrar la sección en viewport (una sola vez).
+  // El CSS hace la animación; aquí solo se activa con la clase .in. Fallback: si no hay
+  // IntersectionObserver o hay reduced-motion, se muestran de inmediato.
+  (function () {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const carousel = document.querySelector<HTMLElement>('.tst-carousel');
+    const track = document.querySelector<HTMLElement>('.tst-track');
+    if (!track || !carousel) return;
+    if (reduce || !('IntersectionObserver' in window)) { track.classList.add('in'); return; }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { track.classList.add('in'); io.disconnect(); }
+      });
+    }, { threshold: 0.2 });
+    // Observa el carril visible (tamaño del viewport del carrusel), no el track de 3× de ancho.
+    io.observe(carousel);
+  })();
+
+  // Slide AUTOMÁTICO de reseñas escritas: el track avanza solo cada ~5s con desplazamiento
+  // suave (transform + easing). Pausa al pasar el cursor / enfocar dentro, y cuando la pestaña
+  // no está visible. Los puntos saltan a una reseña y reinician el ciclo. Con reduced-motion no
+  // auto-avanza (pero los puntos siguen funcionando, sin transición).
+  (function () {
+    const root = document.querySelector<HTMLElement>('.tst-reviews');
+    if (!root) return;
+    const track = root.querySelector<HTMLElement>('[data-reviews-track]');
+    if (!track) return;
+    const slides = Array.from(track.children);
+    const nextBtn = root.querySelector<HTMLButtonElement>('[data-reviews-next]');
+    if (slides.length <= 1) return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const DURATION = 5200;
+    let index = 0;
+    let timer = 0;
+
+    const render = () => {
+      track.style.transform = `translateX(${-index * 100}%)`;
+    };
+    const go = (n: number) => { index = (n + slides.length) % slides.length; render(); };
+
+    const stop = () => { if (timer) { clearInterval(timer); timer = 0; } };
+    const start = () => {
+      if (reduce) return;
+      stop();
+      timer = window.setInterval(() => go(index + 1), DURATION);
+    };
+
+    // La flecha avanza una reseña y reinicia el ciclo automático.
+    nextBtn?.addEventListener('click', () => { go(index + 1); start(); });
+    root.addEventListener('mouseenter', stop);
+    root.addEventListener('mouseleave', start);
+    root.addEventListener('focusin', stop);
+    root.addEventListener('focusout', start);
+    document.addEventListener('visibilitychange', () => { document.hidden ? stop() : start(); });
+
+    render();
+    start();
+  })();
 </script>

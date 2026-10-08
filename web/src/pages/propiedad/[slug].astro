@@ -1,6 +1,9 @@
 ---
 import Base from '../../layouts/Base.astro';
 import HeroNav from '../../components/HeroNav.astro';
+import CatalogoPropiedadCard from '../../components/CatalogoPropiedadCard.astro';
+import { Image } from 'astro:assets';
+import mariaLuisaNolck from '../../assets/equipo/maria-luisa-nolck.jpg';
 import { propiedadesDemo, type PropiedadDemo } from '../../data/propiedades.sample';
 import { precioES } from '../../lib/formato';
 
@@ -9,9 +12,6 @@ import { precioES } from '../../lib/formato';
 // propiedades similares) sobre la cabecera y el pie del sitio (Base → HeroNav + Footer).
 // El diseño es autocontenido con su propia paleta literal (dorado #C9A46A, tinta #14101C,
 // papel #FCFBF8/#F3F0E9); se conservan esos valores tal cual para copiarlo sin desviaciones.
-
-const slugOf = (p: PropiedadDemo) =>
-  `${p.operacion}-${p.tipo}-${p.zonaSlug}-${p.ref.toLowerCase()}`;
 
 export function getStaticPaths() {
   const slug = (p: PropiedadDemo) =>
@@ -42,8 +42,6 @@ const hiRes = new Set(['la-castellana-jardin', 'sebucan-edificio', 'altamira-ter
 const srcsetFull = (img: string, ext: string) =>
   `/destacados/${img}-640.${ext} 640w, /destacados/${img}-1280.${ext} 1280w, /destacados/${img}-1920.${ext} 1920w, /destacados/${img}-2560.${ext} 2560w` +
   (hiRes.has(img) ? `, /destacados/${img}-3840.${ext} 3840w` : '');
-const srcsetCard = (img: string, ext: string) =>
-  `/destacados/${img}-640.${ext} 640w, /destacados/${img}-1280.${ext} 1280w`;
 
 const wa = 'https://wa.me/584122398253';
 const city = 'Caracas';
@@ -83,14 +81,13 @@ const description = [
   `Grupo Glam acompaña cada operación con asesoría integral —valoración, documentación y negociación bajo estándares internacionales— para proteger tu patrimonio en cada paso.`,
 ];
 
-// Asesor (contenido demo, como el resto de propiedades.sample).
+// Asesor (contenido demo, integrante real del equipo · foto en src/assets/equipo).
 const agent = {
-  name: 'Valentina Rojas',
+  name: 'María Luisa Nolck',
   role: 'Asesora inmobiliaria senior',
   phone: '+58 412 239 8253',
-  email: 'valentina@grupoglam.com',
+  email: 'marialuisa@grupoglam.com',
 };
-const agentInitials = agent.name.split(' ').map((w) => w[0]).slice(0, 2).join('');
 
 // Galería: la foto principal ocupa el primer slot (grande); el resto son slots pendientes.
 const galleryPhs = [
@@ -100,6 +97,14 @@ const galleryPhs = [
   'Baño principal en mármol',
   'Terraza / balcón',
 ];
+// Slides del visor (lightbox): refleja la galería 1:1. El primer slot es la foto real; el
+// resto son slots pendientes (mismo placeholder de marca). Cuando se carguen fotos reales,
+// el visor las sirve automáticamente. Todos comparten forma para evitar narrowing en el template.
+const gallerySlides = galleryPhs.map((caption, idx) =>
+  idx === 0 && foto
+    ? { kind: 'photo' as const, img: foto.img, alt: foto.alt, caption, tono: p.tono }
+    : { kind: 'pending' as const, img: '', alt: '', caption, tono: p.tono }
+);
 
 // Características (contenido demo representativo, coherente con el diseño).
 const unitFeatures = [
@@ -113,19 +118,12 @@ const buildingFeatures = [
 
 const showMap = p.lat != null && p.lng != null;
 
-// Propiedades similares (hasta 4, priorizando la misma operación).
+// Propiedades similares (hasta 4, priorizando la misma operación). Se sirven con la MISMA
+// tarjeta del catálogo (CatalogoPropiedadCard) → idéntico diseño y comportamiento.
 const similar = propiedadesDemo
   .filter((x) => x.ref !== p.ref)
   .sort((a, b) => Number(b.operacion === p.operacion) - Number(a.operacion === p.operacion))
-  .slice(0, 4)
-  .map((x) => ({
-    name: x.calle ?? x.titulo,
-    zone: `${x.zona}, ${city}`,
-    price: precioES(x.precio, x.aConsultar),
-    href: `/propiedad/${slugOf(x)}`,
-    foto: fotos[x.ref],
-    tono: x.tono,
-  }));
+  .slice(0, 4);
 ---
 <Base
   title={`${p.titulo} — ${p.zona}, ${city} | Grupo Glam Inmobiliaria`}
@@ -196,16 +194,20 @@ const similar = propiedadesDemo
     <!-- Centinela de 1px: su recorrido mide cuánto se ha cubierto el hero (view-timeline --cover). -->
     <div class="pd-reveal-sentinel" aria-hidden="true"></div>
 
-    <!-- SPEC BAR -->
+    <!-- SPEC BAR · al subir y cubrir el hero se ANCLA arriba un instante (dwell que da la
+         altura extra de .pd-specbar-pin) y luego se despega y pasa del todo. El script del
+         detalle sincroniza, en ese recorrido, la desaparición del logo y la entrada del nav. -->
     {specs.length > 0 && (
-      <div class="pd-specbar">
-        <div class="pd-specbar-inner">
-          {specs.map((s) => (
-            <div class="pd-spec">
-              <span class="pd-spec-v">{s.value}</span>
-              <span class="pd-spec-l">{s.label}</span>
-            </div>
-          ))}
+      <div class="pd-specbar-pin">
+        <div class="pd-specbar" id="pd-specbar">
+          <div class="pd-specbar-inner">
+            {specs.map((s) => (
+              <div class="pd-spec">
+                <span class="pd-spec-v">{s.value}</span>
+                <span class="pd-spec-l">{s.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )}
@@ -222,40 +224,64 @@ const similar = propiedadesDemo
         </div>
 
         <aside class="pd-aside">
+          <!-- Cabecera del asesor sobre el morado de marca (#241A2E, el de las bandas oscuras
+               de la home): la foto real entra optimizada por Astro desde el máster de 2105px,
+               así al reducirla al avatar conserva nitidez en pantallas retina. -->
           <div class="pd-agent">
-            <div class="pd-agent-ph" aria-hidden="true">{agentInitials}</div>
-            <div>
-              <span class="pd-agent-k">Tu asesor</span>
+            <span class="pd-agent-photo-wrap">
+              <Image
+                src={mariaLuisaNolck}
+                alt={`${agent.name}, ${agent.role} de Grupo Glam`}
+                width={296}
+                height={296}
+                fit="cover"
+                position="top"
+                quality={90}
+                class="pd-agent-photo"
+                loading="lazy"
+              />
+            </span>
+            <span class="pd-agent-id">
+              <span class="pd-agent-k">Tu asesora</span>
               <span class="pd-agent-name">{agent.name}</span>
               <span class="pd-agent-role">{agent.role}</span>
-            </div>
-          </div>
-          <div class="pd-agent-contact">
-            <a href={wa} target="_blank" rel="noopener" class="pd-agent-cell">
-              <span class="pd-agent-cell-k">Celular / WhatsApp</span>
-              <span class="pd-agent-cell-v">{agent.phone}</span>
-            </a>
-            <a href={`mailto:${agent.email}`} class="pd-agent-cell pd-agent-cell--last">
-              <span class="pd-agent-cell-k">Email</span>
-              <span class="pd-agent-cell-v pd-agent-cell-v--ell">{agent.email}</span>
-            </a>
+            </span>
           </div>
 
           <form class="pd-form" onsubmit="return false">
             <span class="pd-form-title">Solicita más información</span>
-            <label class="pd-field"><input type="text" placeholder="Nombre completo" /></label>
-            <label class="pd-field"><input type="email" placeholder="Correo electrónico" /></label>
-            <label class="pd-field"><input type="tel" placeholder="Teléfono" /></label>
-            <label class="pd-field pd-field--area"><textarea rows="3" placeholder="Tu mensaje (opcional)"></textarea></label>
+            <label class="pd-field">
+              <input type="text" placeholder=" " autocomplete="name" />
+              <span class="pd-field-label">Nombre completo</span>
+            </label>
+            <label class="pd-field">
+              <input type="email" placeholder=" " autocomplete="email" />
+              <span class="pd-field-label">Correo electrónico</span>
+            </label>
+            <label class="pd-field">
+              <input type="tel" placeholder=" " autocomplete="tel" />
+              <span class="pd-field-label">WhatsApp (opcional)</span>
+            </label>
+            <label class="pd-field pd-field--area">
+              <textarea rows="3" placeholder=" "></textarea>
+              <span class="pd-field-label">Tu mensaje (opcional)</span>
+            </label>
             <button type="submit" class="pd-form-submit">Enviar solicitud</button>
-            <a href={wa} target="_blank" rel="noopener" class="pd-form-wa">Escribir por WhatsApp</a>
+
+            <div class="pd-form-sep"><span>o contacto directo</span></div>
+
+            <a href={wa} target="_blank" rel="noopener" class="pd-form-wa">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.73-.85-2-.95-.27-.1-.47-.15-.67.15-.2.3-.77.95-.95 1.15-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.8.37-.27.3-1.05 1.02-1.05 2.5 0 1.47 1.08 2.9 1.23 3.1.15.2 2.11 3.23 5.12 4.53.71.31 1.27.49 1.71.63.72.23 1.37.2 1.89.12.58-.09 1.73-.71 1.98-1.39.24-.68.24-1.26.17-1.39-.07-.12-.27-.2-.57-.35ZM12.04 21.5h-.01a9.47 9.47 0 0 1-4.82-1.32l-.35-.2-3.58.94.96-3.49-.23-.36a9.44 9.44 0 0 1-1.45-5.04c0-5.22 4.26-9.47 9.49-9.47 2.53 0 4.91.99 6.7 2.78a9.42 9.42 0 0 1 2.78 6.7c0 5.22-4.26 9.46-9.47 9.46Zm8.06-17.52A11.36 11.36 0 0 0 12.04.65C5.76.65.65 5.76.65 12.04c0 2 .52 3.95 1.52 5.68L.56 23.35l5.77-1.51a11.35 11.35 0 0 0 5.71 1.46h.01c6.28 0 11.39-5.11 11.39-11.39 0-3.04-1.19-5.9-3.34-8.05Z"/></svg>
+              Escribir por WhatsApp
+            </a>
           </form>
         </aside>
       </div>
     </section>
 
-    <!-- CARACTERÍSTICAS (propiedad + edificio, sin el mapa) -->
-    <section class="pd-feat-sec">
+    <!-- CARACTERÍSTICAS (propiedad + edificio, sin el mapa). data-navtone="dark": al pasar el
+         navbar sobre esta banda oscura, su logo + hamburguesa se animan a blanco (ver script). -->
+    <section class="pd-feat-sec" data-navtone="dark">
       <div class="pd-feat-grid">
         <div class="pd-feat-cols">
           <div>
@@ -303,7 +329,7 @@ const similar = propiedadesDemo
       </div>
       <div class="pd-gal">
         {galleryPhs.map((ph, idx) => (
-          <div class="pd-gal-cell">
+          <button type="button" class="pd-gal-cell" data-gal-open={idx} aria-label={`Ampliar imagen ${idx + 1} de ${galleryPhs.length}: ${ph}`}>
             {idx === 0 && foto ? (
               <picture>
                 <source type="image/avif" srcset={srcsetFull(foto.img, 'avif')} sizes="(min-width:980px) 50vw, 100vw" />
@@ -325,10 +351,44 @@ const similar = propiedadesDemo
                 <span class="pd-pending">Imagen pendiente</span>
               </div>
             )}
-          </div>
+            <span class="pd-gal-zoom" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="M15.5 15.5L21 21M10.5 7.5v6M7.5 10.5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+          </button>
         ))}
       </div>
     </section>
+
+    <!-- VISOR (lightbox): al pulsar una imagen se abre a pantalla completa; flechas laterales
+         (y teclado ←/→) para navegar; Esc o clic en el fondo para cerrar. Solo opacity/transform. -->
+    <div class="pd-lb" id="pd-lb" hidden>
+      <button type="button" class="pd-lb-btn pd-lb-close" data-lb-close aria-label="Cerrar galería">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <button type="button" class="pd-lb-btn pd-lb-nav pd-lb-prev" data-lb-prev aria-label="Imagen anterior">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="pd-lb-viewport" role="dialog" aria-modal="true" aria-label="Galería de imágenes">
+        {gallerySlides.map((s, idx) => (
+          <figure class="pd-lb-slide" data-lb-slide={idx} hidden>
+            {s.kind === 'photo' ? (
+              <picture>
+                <source type="image/avif" srcset={srcsetFull(s.img, 'avif')} sizes="100vw" />
+                <source type="image/webp" srcset={srcsetFull(s.img, 'webp')} sizes="100vw" />
+                <img class="pd-lb-img" src={`/destacados/${s.img}-1920.jpg`} srcset={srcsetFull(s.img, 'jpg')} sizes="100vw" alt={s.alt} decoding="async" />
+              </picture>
+            ) : (
+              <div class="pd-lb-ph" style={`background:${s.tono}`}><span class="pd-pending">Imagen pendiente</span></div>
+            )}
+            <figcaption class="pd-lb-cap">{s.caption}</figcaption>
+          </figure>
+        ))}
+      </div>
+      <button type="button" class="pd-lb-btn pd-lb-nav pd-lb-next" data-lb-next aria-label="Imagen siguiente">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="pd-lb-counter" data-lb-counter aria-hidden="true"></span>
+    </div>
 
     <!-- SIMILAR -->
     {similar.length > 0 && (
@@ -338,41 +398,107 @@ const similar = propiedadesDemo
           <a href="/propiedades" class="pd-sim-back">Volver al catálogo<span class="pd-sim-back-ico"><svg width="16" height="10" viewBox="0 0 18 12" fill="none"><path d="M1 6h15M11 1l5 5-5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></a>
         </div>
         <div class="pd-sim-grid">
-          {similar.map((s) => (
-            <a class="pd-sim-card" href={s.href}>
-              <div class="pd-sim-media">
-                {s.foto ? (
-                  <picture>
-                    <source type="image/avif" srcset={srcsetCard(s.foto.img, 'avif')} sizes="(min-width:1080px) 24vw, (min-width:640px) 46vw, 92vw" />
-                    <source type="image/webp" srcset={srcsetCard(s.foto.img, 'webp')} sizes="(min-width:1080px) 24vw, (min-width:640px) 46vw, 92vw" />
-                    <img
-                      class="pd-sim-img"
-                      src={`/destacados/${s.foto.img}-1280.jpg`}
-                      srcset={srcsetCard(s.foto.img, 'jpg')}
-                      sizes="(min-width:1080px) 24vw, (min-width:640px) 46vw, 92vw"
-                      width="1280"
-                      height="960"
-                      alt={s.foto.alt}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </picture>
-                ) : (
-                  <div class="pd-sim-ph pd-sim-img" style={`background:${s.tono}`}></div>
-                )}
-              </div>
-              <div class="pd-sim-info">
-                <h3 class="pd-sim-name"><span class="pd-sim-name-txt">{s.name}</span></h3>
-                <p class="pd-sim-zone">{s.zone}</p>
-                <p class="pd-sim-price">{s.price}</p>
-              </div>
-            </a>
+          {similar.map((sp, idx) => (
+            <CatalogoPropiedadCard p={sp} img={fotos[sp.ref]?.img} alt={fotos[sp.ref]?.alt} i={idx} />
           ))}
         </div>
       </section>
     )}
     </div>
   </div>
+
+  <script>
+    // Coreografía del navbar minimal del detalle, sincronizada con la barra de specs:
+    //   · logo blanco (sobre la foto) → se desvanece cuando la barra llega arriba y lo cubre.
+    //   · tras pasar la barra del todo → entran hamburguesa + logo negro (acompañan el resto).
+    // Medimos el rect de #pd-specbar; rAF-throttled (mismo patrón que el resto del sitio). El
+    // anclaje (dwell) y el apilado son puro CSS (sticky + scroll-over); esto solo sincroniza.
+    (function () {
+      const nav = document.querySelector('.heronav--minimal');
+      const bar = document.getElementById('pd-specbar');
+      if (!nav || !bar) return;
+      let ticking = false;
+      const apply = () => {
+        ticking = false;
+        const r = bar.getBoundingClientRect();
+        // El logo desaparece cuando la barra ya está arriba (cubre la zona del logo).
+        nav.classList.toggle('pd-logo-off', r.top <= 60);
+        // El nav entra cuando la barra pasó del todo por encima del borde superior.
+        nav.classList.toggle('pd-nav-on', r.bottom <= 0);
+
+        // Contraste adaptativo del estado final: ¿qué banda ([data-navtone]) queda bajo el
+        // navbar? Muestreamos el centro del navbar a 3 alturas; elementFromPoint respeta el
+        // apilamiento del scroll-over y devuelve la banda visible. Si ALGÚN punto cae sobre una
+        // banda clara se trata como claro (conservador en las transiciones); solo cuando TODO el
+        // navbar entra en la banda oscura pasa a blanco. Logo + hamburguesa → blanco/negro.
+        const nb = (nav.querySelector('.heronav-inner') || nav).getBoundingClientRect();
+        const x = Math.round(window.innerWidth / 2);
+        const ys = [Math.round(nb.top + 4), Math.round((nb.top + nb.bottom) / 2), Math.round(nb.bottom - 4)];
+        let anyLight = false;
+        for (const y of ys) {
+          const el = document.elementFromPoint(x, y);
+          const band = el ? el.closest('[data-navtone]') : null;
+          if (band && band.getAttribute('data-navtone') === 'light') { anyLight = true; break; }
+        }
+        nav.classList.toggle('pd-on-dark', !anyLight);
+      };
+      const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(apply); } };
+      addEventListener('scroll', onScroll, { passive: true });
+      addEventListener('resize', onScroll, { passive: true });
+      addEventListener('load', apply);
+      apply();
+    })();
+  </script>
+
+  <script>
+    // Visor de la galería (lightbox): abre la imagen pulsada a pantalla completa, navega con
+    // las flechas laterales o el teclado (←/→), y cierra con Esc / clic en el fondo / botón ✕.
+    // Devuelve el foco a la celda de origen al cerrar. Sin librerías; solo opacity/transform.
+    (function () {
+      const lb = document.getElementById('pd-lb');
+      if (!lb) return;
+      const slides = Array.from(lb.querySelectorAll('[data-lb-slide]'));
+      const counter = lb.querySelector('[data-lb-counter]');
+      const openers = Array.from(document.querySelectorAll('[data-gal-open]'));
+      if (!slides.length) return;
+      let current = 0;
+      let lastFocus = null;
+      let hideTimer = 0;
+
+      const show = (i) => {
+        current = (i + slides.length) % slides.length;
+        slides.forEach((s, idx) => { s.hidden = idx !== current; });
+        if (counter) counter.textContent = (current + 1) + ' / ' + slides.length;
+      };
+      const open = (i) => {
+        lastFocus = document.activeElement;
+        clearTimeout(hideTimer);
+        show(i);
+        lb.hidden = false;
+        document.documentElement.style.overflow = 'hidden';
+        requestAnimationFrame(() => lb.classList.add('is-open'));
+        lb.querySelector('[data-lb-close]').focus();
+      };
+      const close = () => {
+        lb.classList.remove('is-open');
+        document.documentElement.style.overflow = '';
+        hideTimer = window.setTimeout(() => { lb.hidden = true; }, 300);
+        if (lastFocus && lastFocus.focus) lastFocus.focus();
+      };
+
+      openers.forEach((btn) => btn.addEventListener('click', () => open(Number(btn.dataset.galOpen))));
+      lb.querySelector('[data-lb-prev]').addEventListener('click', () => show(current - 1));
+      lb.querySelector('[data-lb-next]').addEventListener('click', () => show(current + 1));
+      lb.querySelector('[data-lb-close]').addEventListener('click', close);
+      lb.addEventListener('click', (e) => { if (e.target === lb) close(); });
+      document.addEventListener('keydown', (e) => {
+        if (lb.hidden) return;
+        if (e.key === 'Escape') close();
+        else if (e.key === 'ArrowLeft') show(current - 1);
+        else if (e.key === 'ArrowRight') show(current + 1);
+      });
+    })();
+  </script>
 
   {showMap && (
     <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -514,16 +640,17 @@ const similar = propiedadesDemo
     position: absolute; left: 0; right: 0; bottom: 0; height: 52%; z-index: 1; pointer-events: none;
     background: linear-gradient(0deg, rgba(11,10,17,.54) 0%, rgba(11,10,17,.14) 60%, rgba(11,10,17,0) 100%);
   }
+  /* Mismo margen lateral que la barra de specs de abajo (.pd-specbar-inner): a sangre
+     completa, sin la caja centrada de 1600px, con el padding lateral clamp(16px, 2.4vw, 44px).
+     Así el título/ubicación/CTA del hero arrancan alineados con "5 Habitaciones…". */
   .pd-hero-inner {
     position: relative;
     z-index: 3;
     height: 100%;
-    max-width: 1600px;
-    margin: 0 auto;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: clamp(28px, 4vw, 56px) clamp(20px, 5vw, 54px);
+    padding: clamp(28px, 4vw, 56px) clamp(16px, 2.4vw, 44px);
   }
   .pd-hero-copy {
     max-width: 760px;
@@ -577,7 +704,7 @@ const similar = propiedadesDemo
   .pd-hero-btn:focus-visible { outline: 2px solid #C9A46A; outline-offset: 3px; }
   .pd-hero-price {
     position: absolute;
-    right: clamp(20px, 5vw, 54px);
+    right: clamp(16px, 2.4vw, 44px);
     bottom: clamp(28px, 4vw, 56px);
     z-index: 3;
     display: flex;
@@ -608,7 +735,13 @@ const similar = propiedadesDemo
   }
 
   /* ---- SPEC BAR ---- */
+  /* Contenedor de anclaje: la barra se queda pegada arriba (sticky) mientras el contenedor
+     está en pantalla; la altura extra respecto a la barra es el "dwell" (el instante que
+     permanece anclada antes de despegarse y pasar del todo). */
+  .pd-specbar-pin { position: relative; z-index: 7; }
   .pd-specbar {
+    position: sticky;
+    top: 0;
     background: #F3F0E9;
     border-bottom: 1px solid rgba(20,16,28,.07);
   }
@@ -628,6 +761,9 @@ const similar = propiedadesDemo
     /* Altura fija = la foto de arriba llega exactamente hasta el borde de esta barra. */
     .pd-specbar { height: var(--pd-spec-h); }
     .pd-specbar-inner { height: 100%; flex-wrap: nowrap; }
+    /* Dwell del anclaje: la barra permanece arriba durante este recorrido extra antes de
+       despegarse. Es el "instante presente" que pediste entre apilado y paso completo. */
+    .pd-specbar-pin { height: calc(var(--pd-spec-h) + clamp(200px, 32vh, 340px)); }
   }
   /* Número + etiqueta EN LÍNEA ("6 HABITACIONES"), alineados a la baseline: el número manda
      (tamaño/peso) y la etiqueta lo acompaña en versalitas. Sin divisiones y sin crecer → se
@@ -659,7 +795,9 @@ const similar = propiedadesDemo
   .pd-desc-sec {
     max-width: 1600px;
     margin: 0 auto;
-    padding: clamp(44px, 5.5vw, 84px) clamp(20px, 5vw, 54px);
+    /* Top reducido: sube "La propiedad" en el eje Y, pegándolo más a la barra de specs.
+       El padding inferior se conserva para no comprimir la separación con Características. */
+    padding: clamp(18px, 2.4vw, 38px) clamp(20px, 5vw, 54px) clamp(44px, 5.5vw, 84px);
   }
   /* Párrafo a la izquierda + tarjeta del asesor a la derecha (el nuevo punto de contacto). */
   .pd-desc-grid {
@@ -673,14 +811,18 @@ const similar = propiedadesDemo
   }
   /* Medida de lectura cómoda (≈74 caracteres) dentro de su columna. */
   .pd-desc-body { max-width: 74ch; }
+  /* "La propiedad": antes era un eyebrow diminuto en versalitas; ahora es un título de
+     sección propiamente dicho (más grande, en tinta, peso ligero editorial como el resto
+     de titulares de la página). */
   .pd-eyebrow {
     display: block;
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .24em;
+    font-weight: 300;
+    font-size: clamp(1.9rem, 3.4vw, 2.9rem);
+    line-height: 1.04;
+    letter-spacing: .01em;
     text-transform: uppercase;
-    color: #B98F55;
-    margin-bottom: clamp(16px, 1.8vw, 24px);
+    color: #14101C;
+    margin-bottom: clamp(18px, 2vw, 28px);
   }
   .pd-desc-p {
     margin: 0 0 1.15em;
@@ -692,136 +834,137 @@ const similar = propiedadesDemo
     text-wrap: pretty;
   }
 
-  /* Aside de contacto (sticky) */
+  /* ---- TARJETA DE CONTACTO (asesor + formulario) ----
+     Morado de marca (#241A2E, el de las bandas oscuras de la home) en cabecera y botones;
+     el resto conserva la paleta crema/oro/tinta de la página. Easing fuerte y tiempos cortos
+     (<220ms) en hover/foco para que se sienta fluida sin latencia. */
   .pd-aside {
+    --morado: #241A2E;
+    --morado-top: #2E2240;      /* cara superior del degradado / hover */
+    --morado-deep: #1B1526;     /* base del degradado */
+    --ease: cubic-bezier(.23, 1, .32, 1);
     position: sticky;
     top: 104px;
     border: 1px solid rgba(20,16,28,.1);
-    border-radius: 2px;
+    border-radius: 3px;
     background: #fff;
     overflow: hidden;
+    box-shadow: 0 24px 48px -32px rgba(20,16,28,.5);
   }
+
+  /* Cabecera del asesor: franja morada con foto + nombre en crema. */
   .pd-agent {
     display: flex;
     gap: 16px;
     align-items: center;
-    padding: clamp(20px, 1.8vw, 26px);
+    padding: clamp(20px, 1.9vw, 26px);
+    background: radial-gradient(135% 130% at 18% 10%, var(--morado-top) 0%, var(--morado) 52%, var(--morado-deep) 100%);
   }
-  .pd-agent-ph {
+  /* Aro dorado alrededor de la foto (padding de 2px sobre un degradado de oro). */
+  .pd-agent-photo-wrap {
     flex: 0 0 auto;
-    width: 72px;
-    height: 72px;
+    width: 74px;
+    height: 74px;
     border-radius: 50%;
-    overflow: hidden;
-    background: radial-gradient(120% 120% at 30% 25%, #E6D3B0 0%, #C9A46A 55%, #B98F55 100%);
-    border: 1px solid rgba(20,16,28,.08);
-    display: grid;
-    place-items: center;
-    font-weight: 600;
-    font-size: 22px;
-    letter-spacing: .04em;
-    color: #100E17;
+    padding: 2px;
+    background: linear-gradient(145deg, #E6D3B0 0%, #C9A46A 48%, #B98F55 100%);
+    box-shadow: 0 8px 20px -10px rgba(11,10,17,.8);
   }
-  .pd-agent-k {
+  .pd-agent-photo {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 20%;   /* encuadra el rostro (parte alta del retrato) */
     display: block;
+  }
+  .pd-agent-id { display: flex; flex-direction: column; min-width: 0; }
+  .pd-agent-k {
     font-weight: 600;
     font-size: 10px;
     letter-spacing: .2em;
     text-transform: uppercase;
-    color: #9A948B;
+    color: rgba(246,243,236,.58);
   }
   .pd-agent-name {
-    display: block;
-    margin-top: 4px;
+    margin-top: 5px;
     font-weight: 500;
-    font-size: 1.3rem;
+    font-size: 1.28rem;
     letter-spacing: .01em;
-    color: #14101C;
+    line-height: 1.12;
+    color: #F6F3EC;
   }
   .pd-agent-role {
-    display: block;
-    margin-top: 2px;
+    margin-top: 3px;
     font-weight: 400;
     font-size: 12.5px;
     letter-spacing: .03em;
-    color: #6E6A63;
+    color: rgba(246,243,236,.7);
   }
-  .pd-agent-contact {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-top: 1px solid rgba(20,16,28,.08);
-  }
-  .pd-agent-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    padding: 16px clamp(18px, 1.6vw, 24px);
-    text-decoration: none;
-    border-right: 1px solid rgba(20,16,28,.08);
-    transition: background .3s ease;
-  }
-  .pd-agent-cell--last { border-right: 0; }
-  .pd-agent-cell:hover { background: #FBF8F1; }
-  .pd-agent-cell-k {
-    font-weight: 600;
-    font-size: 9.5px;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: #9A948B;
-  }
-  .pd-agent-cell-v {
-    font-weight: 500;
-    font-size: 14px;
-    color: #14101C;
-  }
-  .pd-agent-cell-v--ell { overflow: hidden; text-overflow: ellipsis; }
 
+  /* Cuerpo del formulario (blanco). */
   .pd-form {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: clamp(20px, 1.8vw, 26px);
-    border-top: 1px solid rgba(20,16,28,.08);
-    background: #FBFAF6;
+    padding: clamp(20px, 1.9vw, 26px);
+    background: #fff;
   }
   .pd-form-title {
     font-weight: 500;
     font-size: 1.05rem;
     letter-spacing: .01em;
     color: #14101C;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
   }
-  .pd-field {
-    display: flex;
-    align-items: center;
+
+  /* Campos con etiqueta flotante (sin placeholder-as-label): la etiqueta vive dentro del
+     campo y sube al enfocar o cuando hay texto. El input lleva placeholder=" " para activar
+     :placeholder-shown sin mostrar texto fantasma. */
+  .pd-field { position: relative; }
+  .pd-field input,
+  .pd-field textarea {
+    width: 100%;
     border: 1px solid rgba(20,16,28,.16);
     border-radius: 2px;
     background: #fff;
-    padding: 0 14px;
-    height: 48px;
-    transition: border-color .3s ease, box-shadow .3s ease;
-  }
-  .pd-field--area { align-items: stretch; height: auto; padding: 12px 14px; }
-  .pd-field:focus-within {
-    border-color: #C9A46A;
-    box-shadow: 0 0 0 3px rgba(201,164,106,.14);
-  }
-  .pd-field input, .pd-field textarea {
-    flex: 1;
-    width: 100%;
-    border: 0;
-    outline: 0;
-    background: transparent;
     font-family: inherit;
     font-size: 13.5px;
     letter-spacing: .02em;
     color: #14101C;
+    padding: 21px 14px 7px;
+    transition: border-color .2s ease, box-shadow .2s ease;
   }
-  .pd-field textarea { resize: vertical; min-height: 66px; }
+  .pd-field textarea { resize: vertical; min-height: 92px; padding-top: 23px; }
+  .pd-field input:focus,
+  .pd-field textarea:focus {
+    outline: 0;
+    border-color: #C9A46A;
+    box-shadow: 0 0 0 3px rgba(201,164,106,.14);
+  }
+  .pd-field-label {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    font-size: 13.5px;
+    letter-spacing: .02em;
+    color: #9A948B;
+    pointer-events: none;
+    transform-origin: left top;
+    transition: transform .18s var(--ease), color .18s ease;
+  }
+  .pd-field input:focus + .pd-field-label,
+  .pd-field input:not(:placeholder-shown) + .pd-field-label,
+  .pd-field textarea:focus + .pd-field-label,
+  .pd-field textarea:not(:placeholder-shown) + .pd-field-label {
+    transform: translateY(-8px) scale(.8);
+    color: #B98F55;
+  }
+
+  /* Botón primario morado (con relieve sutil). */
   .pd-form-submit {
-    margin-top: 2px;
+    margin-top: 4px;
     width: 100%;
-    background: #100E17;
     color: #F6F3EC;
     border: 0;
     border-radius: 2px;
@@ -832,29 +975,72 @@ const similar = propiedadesDemo
     letter-spacing: .16em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: background .3s ease, color .3s ease;
+    background: linear-gradient(180deg, var(--morado-top) 0%, var(--morado) 100%);
+    transition: transform .16s var(--ease), box-shadow .22s ease, background .22s ease;
   }
-  .pd-form-submit:hover { background: #C9A46A; color: #100E17; }
+  .pd-form-submit:hover {
+    background: linear-gradient(180deg, #38294C 0%, #2A1F38 100%);
+    box-shadow: 0 12px 26px -14px rgba(36,26,46,.8);
+    transform: translateY(-1px);
+  }
+  .pd-form-submit:active { transform: translateY(0) scale(.99); }
   .pd-form-submit:focus-visible { outline: 2px solid #C9A46A; outline-offset: 2px; }
+
+  /* Separador "o contacto directo". */
+  .pd-form-sep {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0;
+    color: #9A948B;
+  }
+  .pd-form-sep::before,
+  .pd-form-sep::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(20,16,28,.1);
+  }
+  .pd-form-sep span {
+    font-size: 10px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  /* WhatsApp: botón contorneado en morado (canal directo). */
   .pd-form-wa {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 9px;
     width: 100%;
-    color: #14101C;
+    color: var(--morado);
     text-decoration: none;
-    border: 1px solid rgba(20,16,28,.18);
+    background: #fff;
+    border: 1px solid rgba(36,26,46,.38);
     border-radius: 2px;
     padding: 14px;
     font-weight: 600;
     font-size: 12px;
     letter-spacing: .14em;
     text-transform: uppercase;
-    transition: border-color .3s ease, color .3s ease;
+    transition: transform .16s var(--ease), background .22s ease, border-color .22s ease;
   }
-  .pd-form-wa:hover { border-color: #C9A46A; color: #B98F55; }
+  .pd-form-wa svg { flex: 0 0 auto; }
+  .pd-form-wa:hover {
+    background: color-mix(in srgb, var(--morado) 7%, #fff);
+    border-color: var(--morado);
+    transform: translateY(-1px);
+  }
+  .pd-form-wa:active { transform: translateY(0) scale(.99); }
   .pd-form-wa:focus-visible { outline: 2px solid #C9A46A; outline-offset: 2px; }
+
+  /* Movimiento reducido: sin desplazamientos de hover en los botones. */
+  @media (prefers-reduced-motion: reduce) {
+    .pd-form-submit, .pd-form-wa { transition: background .22s ease, border-color .22s ease; }
+    .pd-form-submit:hover, .pd-form-wa:hover { transform: none; }
+    .pd-field-label { transition: color .18s ease; }
+  }
 
   /* ---- GALLERY ---- */
   .pd-gal-sec {
@@ -870,11 +1056,17 @@ const similar = propiedadesDemo
     gap: 14px;
     margin-bottom: clamp(22px, 2.6vw, 34px);
   }
+  /* Mismo registro que el título "Inmuebles destacados" de la home (.destacados-title):
+     Playfair Display (serif display), peso 300, versales. Se usa en "GALERÍA" y
+     "Propiedades similares". */
   .pd-h2 {
     margin: 0;
+    font-family: 'Playfair Display Variable', 'Playfair Display', Georgia, serif;
     font-weight: 300;
-    font-size: clamp(1.5rem, 3vw, 2.3rem);
+    font-size: clamp(1.6rem, 3.1vw, 2.6rem);
+    line-height: 1;
     letter-spacing: .01em;
+    text-transform: uppercase;
     color: #14101C;
   }
   .pd-gal-count {
@@ -905,7 +1097,37 @@ const similar = propiedadesDemo
     position: relative;
     background: #EEEAE1;
     overflow: hidden;
+    /* Reset de <button>: la celda es ahora un disparador del visor. */
+    border: 0;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    font: inherit;
+    color: inherit;
+    cursor: zoom-in;
+    display: block;
   }
+  .pd-gal-cell:focus-visible { outline: 2px solid #C9A46A; outline-offset: 3px; }
+  /* Badge de lupa: señala que la imagen se puede ampliar (aparece al pasar / enfocar). */
+  .pd-gal-zoom {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: #F6F3EC;
+    background: color-mix(in srgb, #100E17 55%, transparent);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity .25s cubic-bezier(.23,1,.32,1), transform .25s cubic-bezier(.23,1,.32,1);
+  }
+  .pd-gal-cell:hover .pd-gal-zoom,
+  .pd-gal-cell:focus-visible .pd-gal-zoom { opacity: 1; transform: translateY(0); }
   .pd-gal-cell picture { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
   .pd-gal-img {
     position: absolute;
@@ -929,11 +1151,103 @@ const similar = propiedadesDemo
     .pd-gal-cell:hover .pd-gal-img { transform: scale(1.05); }
   }
 
+  /* ---- VISOR / LIGHTBOX ---- */
+  .pd-lb {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(8px, 2vw, 24px);
+    padding: clamp(16px, 4vw, 54px);
+    background: rgba(11,10,17,.93);
+    opacity: 0;
+    transition: opacity .28s cubic-bezier(.23,1,.32,1);
+  }
+  .pd-lb.is-open { opacity: 1; }
+  .pd-lb[hidden] { display: none; }
+
+  .pd-lb-viewport { position: relative; height: 100%; display: grid; place-items: center; min-width: 0; }
+  .pd-lb-slide {
+    grid-area: 1 / 1;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(12px, 1.6vw, 18px);
+    max-width: 100%;
+    max-height: 100%;
+  }
+  .pd-lb-slide[hidden] { display: none; }
+  .pd-lb-slide picture { display: block; line-height: 0; }
+  .pd-lb-img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    display: block;
+    border-radius: 2px;
+    box-shadow: 0 50px 90px -34px rgba(0,0,0,.75);
+  }
+  .pd-lb-ph {
+    width: min(82vw, 940px);
+    aspect-ratio: 4 / 3;
+    max-height: 80vh;
+    display: grid;
+    place-items: center;
+    border-radius: 2px;
+  }
+  .pd-lb-cap {
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(246,243,236,.72);
+    text-align: center;
+  }
+
+  /* Botones del visor (cerrar + flechas): círculos crema que se doran al hover. */
+  .pd-lb-btn {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: clamp(44px, 5vw, 56px);
+    height: clamp(44px, 5vw, 56px);
+    border-radius: 50%;
+    border: 1px solid rgba(246,243,236,.3);
+    background: rgba(246,243,236,.08);
+    color: #F6F3EC;
+    cursor: pointer;
+    transition: background .25s ease, color .25s ease, border-color .25s ease, transform .16s cubic-bezier(.23,1,.32,1);
+  }
+  .pd-lb-btn:hover { background: #C9A46A; color: #100E17; border-color: #C9A46A; }
+  .pd-lb-btn:active { transform: scale(.92); }
+  .pd-lb-btn:focus-visible { outline: 2px solid #C9A46A; outline-offset: 3px; }
+  .pd-lb-prev { justify-self: start; }
+  .pd-lb-next { justify-self: end; }
+  .pd-lb-close { position: absolute; top: clamp(12px, 3vw, 28px); right: clamp(12px, 3vw, 28px); z-index: 2; }
+  .pd-lb-counter {
+    position: absolute;
+    bottom: clamp(14px, 3vw, 28px);
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(246,243,236,.8);
+    font-size: 12px;
+    letter-spacing: .18em;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pd-gal-zoom { transition: opacity .2s ease; transform: none; }
+    .pd-lb-btn:active { transform: none; }
+  }
+
   /* ---- FEATURES + MAP ---- */
+  /* Banda oscura: mismo fondo que la sección "Contacta al equipo para comenzar" de la home
+     (.cc-oscura, #100E17). El texto se recolorea a crema para el contraste. */
   .pd-feat-sec {
-    background: #F3F0E9;
-    border-top: 1px solid rgba(20,16,28,.07);
-    border-bottom: 1px solid rgba(20,16,28,.07);
+    background: #100E17;
+    border-top: 1px solid rgba(232,228,219,.08);
+    border-bottom: 1px solid rgba(232,228,219,.08);
   }
   .pd-feat-grid {
     max-width: 1600px;
@@ -949,10 +1263,12 @@ const similar = propiedadesDemo
   @media (min-width: 768px) {
     .pd-feat-cols { grid-template-columns: 1fr 1fr; gap: clamp(40px, 5vw, 80px); }
   }
+  /* Títulos de característica: misma tipografía y color (bronce #B98F55, versales), un punto
+     más grandes para ganar legibilidad. */
   .pd-feat-h {
     margin: 0 0 clamp(16px, 1.8vw, 24px);
     font-weight: 600;
-    font-size: 12px;
+    font-size: clamp(14px, 1.3vw, 17px);
     letter-spacing: .2em;
     text-transform: uppercase;
     color: #B98F55;
@@ -967,7 +1283,7 @@ const similar = propiedadesDemo
     align-items: center;
     gap: 10px;
     padding-bottom: 11px;
-    border-bottom: 1px solid rgba(20,16,28,.09);
+    border-bottom: 1px solid rgba(232,228,219,.14);
   }
   .pd-feat-dot {
     width: 5px;
@@ -980,7 +1296,7 @@ const similar = propiedadesDemo
     font-weight: 400;
     font-size: 15px;
     letter-spacing: .01em;
-    color: #3A3540;
+    color: rgba(246,243,236,.84);
   }
   /* ---- UBICACIÓN / MAPA (sección propia a todo el ancho) ---- */
   .pd-loc-sec {
@@ -995,16 +1311,23 @@ const similar = propiedadesDemo
     letter-spacing: .02em;
     color: #6E6A63;
   }
+  /* "Sebucán, Caracas": misma tipografía que los enlaces del menú lateral (drawer) →
+     Fraunces (var(--font-display)), versales, letter-spacing -.01em, pero EN NEGRITA. */
   .pd-map-h {
     margin: 6px 0 clamp(18px, 2vw, 26px);
-    font-weight: 300;
-    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3.2vw, 2.6rem);
     line-height: 1.05;
     letter-spacing: -.01em;
+    text-transform: uppercase;
     color: #14101C;
   }
   .pd-map-frame {
     position: relative;
+    /* Aísla los z-index internos de Leaflet (tiles/marcadores/controles, hasta ~1000) en su
+       propio contexto de apilamiento; si no, atraviesan el visor (lightbox) y lo tapan. */
+    isolation: isolate;
     height: clamp(360px, 50vh, 560px);
     border: 1px solid rgba(20,16,28,.1);
     border-radius: 2px;
@@ -1014,10 +1337,15 @@ const similar = propiedadesDemo
   #gg-map { position: absolute; inset: 0; }
 
   /* ---- SIMILAR ---- */
+  /* Mismos márgenes que la sección "Inmuebles destacados" de la home
+     (max-w-[1920px] mx-auto px-5 md:px-6 pt-20 md:pt-32 pb-12 md:pb-20). */
   .pd-sim-sec {
-    max-width: 1600px;
+    max-width: 1920px;
     margin: 0 auto;
-    padding: clamp(44px, 5.5vw, 84px) clamp(20px, 5vw, 54px);
+    padding: 80px 20px 48px;
+  }
+  @media (min-width: 768px) {
+    .pd-sim-sec { padding: 128px 24px 80px; }
   }
   .pd-sim-head {
     display: flex;
@@ -1052,66 +1380,8 @@ const similar = propiedadesDemo
   @media (min-width: 1080px) {
     .pd-sim-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
-  .pd-sim-card {
-    display: flex;
-    flex-direction: column;
-    text-decoration: none;
-    color: inherit;
-    cursor: pointer;
-    will-change: transform;
-    transition: transform .55s cubic-bezier(.2,0,0,1), box-shadow .55s ease;
-  }
-  .pd-sim-card:focus-visible { outline: 2px solid #C9A46A; outline-offset: 4px; }
-  .pd-sim-media {
-    position: relative;
-    aspect-ratio: 4 / 3;
-    overflow: hidden;
-    background: #EEEAE1;
-  }
-  .pd-sim-media picture { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
-  .pd-sim-img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform .95s cubic-bezier(.2,0,0,1);
-  }
-  .pd-sim-info { padding-top: clamp(12px, 1vw, 16px); }
-  .pd-sim-name {
-    display: inline-block;
-    margin: 0;
-    font-weight: 500;
-    font-size: clamp(1.02rem, 1.2vw, 1.18rem);
-    line-height: 1.16;
-    letter-spacing: .005em;
-    color: #1A1720;
-  }
-  .pd-sim-name-txt {
-    display: inline;
-    box-shadow: inset 0 -1px 0 rgba(201,164,106,0);
-    transition: box-shadow .4s ease;
-  }
-  .pd-sim-zone {
-    margin: 6px 0 0;
-    font-weight: 400;
-    font-size: 12.5px;
-    letter-spacing: .03em;
-    color: #9A948B;
-  }
-  .pd-sim-price {
-    margin: 9px 0 0;
-    font-weight: 400;
-    font-size: clamp(.98rem, 1.05vw, 1.08rem);
-    letter-spacing: .005em;
-    color: #6E6A63;
-  }
-  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-    .pd-sim-card:hover { transform: translateY(-6px); box-shadow: 0 26px 50px -28px rgba(20,16,28,.42); }
-    .pd-sim-card:hover .pd-sim-img { transform: scale(1.055); }
-    .pd-sim-card:hover .pd-sim-name-txt { box-shadow: inset 0 -1px 0 rgba(201,164,106,.9); }
-  }
+  /* Las tarjetas de "Propiedades similares" usan el componente del catálogo
+     (CatalogoPropiedadCard), que trae su propio diseño y comportamiento scoped. */
 
   @media (prefers-reduced-motion: reduce) {
     .pd-hero-media { animation: none; }
